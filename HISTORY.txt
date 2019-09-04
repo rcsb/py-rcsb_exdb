@@ -1,0 +1,8 @@
+# RCSB_EXDB HISTORY
+18-Mar-2019 V0.10 Initial version
+22-Apr-2019 V0.11 Refining API, separate mock tests fro full cache tests, add taxonomy coverage accessors
+23-Apr-2019 V0.12 Consolidated rcsb.exdb.seq into this more general module  (IN PROGRESS)
+25-Jun-2019 V0.13 Update development workflows and cleanup
+28-Jun-2019 V0.14 Migrating code from py-rcsb_utils_anal module for entity instance extraction
+ 4-Sep-2019 V0.15 Added tree, chemical reference loader operations and pipeline build tooling
+#
