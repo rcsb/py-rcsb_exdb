@@ -1,5 +1,7 @@
 # py-rcsb_exdb
 
+[![Build Status](https://dev.azure.com/rcsb/RCSB%20PDB%20Python%20Projects/_apis/build/status/rcsb.py-rcsb_exdb?branchName=master)](https://dev.azure.com/rcsb/RCSB%20PDB%20Python%20Projects/_build/latest?definitionId=18&branchName=master)
+
 RCSB exchange database extraction and loading workflow tools
 
 ## Introduction
