@@ -6,5 +6,5 @@
 28-Jun-2019 V0.14 Migrating code from py-rcsb_utils_anal module for entity instance extraction
  4-Sep-2019 V0.15 Added tree, chemical reference loader operations and pipeline build tooling
 17-Sep-2019 V0.16 Update to latest schemas
-30-Sep-2019 V0.17 Updates for chemical reference and tree cli's and update dependencies.
+30-Sep-2019 V0.17 Updates for chemical reference and tree cli's and update dependencies
 #
