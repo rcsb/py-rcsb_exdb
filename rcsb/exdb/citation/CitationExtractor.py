@@ -57,6 +57,7 @@ class CitationExtractor(object):
                 entryD = self.__selectEntries(selectionList=["citation"], **kwargs)
                 cD["entryD"] = entryD
                 if cacheFilePath:
+                    ok = self.__mU.mkdir(dirPath)
                     ok = self.__mU.doExport(cacheFilePath, cD, **cacheKwargs)
                     logger.info("Saved entry citation results (%d) status %r in %s", len(entryD), ok, cacheFilePath)
         except Exception as e:
@@ -164,7 +165,7 @@ class CitationExtractor(object):
         return len(self.__entryD)
 
     def __selectEntries(self, **kwargs):
-        """  Return a dictionary of PDB entries satifying the input conditions (e.g. method, resolution limit)
+        """  Return a dictionary of PDB entry data subject to input selection and query.
         """
 
         dbName = kwargs.get("dbName", "pdbx_core")
@@ -181,19 +182,19 @@ class CitationExtractor(object):
                     qD = {}
                     if selectionQueryD:
                         qD.update(qD)
-                    selectL = ["_entry_id"]
+                    selectL = ["rcsb_entry_container_identifiers"]
                     selectL.extend(selectionList)
                     selectL = list(set(selectL))
                     dL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
                     logger.info("Selection %r fetch result count %d", selectL, len(dL))
                     #
                     for dD in dL:
-                        if "_entry_id" not in dD:
+                        if "rcsb_entry_container_identifiers" not in dD:
                             continue
-                        entryD[dD["_entry_id"]] = {}
+                        entryD[dD["rcsb_entry_container_identifiers"]["entry_id"]] = {}
                         #
                         for select in selectL:
-                            entryD[dD["_entry_id"]][select] = dD[select] if select in dD else None
+                            entryD[dD["rcsb_entry_container_identifiers"]["entry_id"]][select] = dD[select] if select in dD else None
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))

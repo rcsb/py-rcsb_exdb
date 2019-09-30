@@ -5,7 +5,8 @@
 # Loading worker for tree node list data.
 #
 # Updates:
-#
+#  9-Sep-2019 jdw add AtcProvider() and ChemrefExtractor() for ATC tree.
+# JDW TODO TEST
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -18,7 +19,9 @@ import os.path
 
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
+from rcsb.exdb.chemref.ChemRefExtractor import ChemRefExtractor
 from rcsb.exdb.seq.EntityPolymerExtractor import EntityPolymerExtractor
+from rcsb.utils.chemref.AtcProvider import AtcProvider
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
 from rcsb.utils.struct.CathClassificationProvider import CathClassificationProvider
 from rcsb.utils.struct.ScopClassificationProvider import ScopClassificationProvider
@@ -136,7 +139,7 @@ class TreeNodeListWorker(object):
             collectionName = self.__cfgOb.get("COLLECTION_ENZYME", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-
+            # ----
             # Get the taxon coverage in the current data set -
             cacheKwargs = {"fmt": "pickle"}
             exdbCacheDirPath = os.path.join(self.__cachePath, self.__cfgOb.get("EXDB_CACHE_DIR", sectionName=self.__cfgOb.getDefaultSectionName()))
@@ -161,6 +164,18 @@ class TreeNodeListWorker(object):
             #
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
+            # ---
+            crEx = ChemRefExtractor(self.__cfgOb)
+            atcFilterD = crEx.getChemCompAccessionMapping("ATC")
+            logger.info("Length of ATC filter %d", len(atcFilterD))
+            atcCacheDirPath = os.path.join(self.__cachePath, self.__cfgOb.get("ATC_CACHE_DIR", sectionName=self.__cfgOb.getDefaultSectionName()))
+            atcP = AtcProvider(dirPath=atcCacheDirPath, useCache=useCache)
+            nL = atcP.getTreeNodeList(filterD=atcFilterD)
+            collectionName = self.__cfgOb.get("COLLECTION_ATC", sectionName=sectionName)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+            #
+            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            logger.info("Tree loading operations completed.")
             return True
         except Exception as e:
             logger.exception("Failing with %s", str(e))

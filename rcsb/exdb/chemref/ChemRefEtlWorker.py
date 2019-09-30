@@ -89,6 +89,8 @@ class ChemRefEtlWorker(object):
                 #
                 collectionVersion = sD.getCollectionVersion(collectionName)
                 addValues = {"_schema_version": collectionVersion}
+                #
+                addValues = {}
             #
             dl = DocumentLoader(
                 self.__cfgOb,

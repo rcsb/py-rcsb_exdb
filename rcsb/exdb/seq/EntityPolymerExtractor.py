@@ -290,21 +290,19 @@ class EntityPolymerExtractor(object):
                     qD = {}
                     if selectionQueryD:
                         qD.update(qD)
-                    selectL = ["_entry_id", "rcsb_entry_container_identifiers"]
+                    selectL = ["rcsb_entry_container_identifiers"]
                     dL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
                     logger.info("Selection %r fetch result count %d", selectL, len(dL))
                     #
                     for dD in dL:
-                        if "_entry_id" not in dD:
-                            continue
-                        entryD[dD["_entry_id"]] = {}
                         #
                         if (
                             ("rcsb_entry_container_identifiers" in dD)
+                            and ("entry_id" in dD["rcsb_entry_container_identifiers"])
                             and ("polymer_entity_ids" in dD["rcsb_entry_container_identifiers"])
                             and dD["rcsb_entry_container_identifiers"]["polymer_entity_ids"]
                         ):
-                            entryD[dD["_entry_id"]] = {"polymer_entity_ids": dD["rcsb_entry_container_identifiers"]["polymer_entity_ids"]}
+                            entryD[dD["rcsb_entry_container_identifiers"]["entry_id"]] = {"polymer_entity_ids": dD["rcsb_entry_container_identifiers"]["polymer_entity_ids"]}
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -460,7 +458,7 @@ class EntityPolymerExtractor(object):
                         if resultKey in entryD[entryId]:
                             continue
                         #
-                        qD = {"_entry_id": entryId}
+                        qD = {"rcsb_entity_container_identifiers.entry_id": entryId}
                         qD.update(selectionQueryD)
                         #
                         dL = mg.fetch(dbName, collectionName, selectL, queryD=qD)

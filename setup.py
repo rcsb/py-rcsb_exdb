@@ -42,10 +42,11 @@ setup(
     #
     install_requires=[
         "numpy",
-        "rcsb.utils.io >= 0.41",
-        "rcsb.db >= 0.66",
+        "rcsb.utils.io >= 0.44",
+        "rcsb.db >= 0.74",
+        "rcsb.utils.chemref >= 0.25",
         "rcsb.utils.config >= 0.24",
-        "rcsb.utils.seq >= 0.14",
+        "rcsb.utils.seq >= 0.20",
         "rcsb.utils.ec >= 0.16",
         "rcsb.utils.struct >= 0.20",
         "rcsb.utils.taxonomy >= 0.25",

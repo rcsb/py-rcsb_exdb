@@ -102,22 +102,23 @@ class EntityInstanceExtractor(object):
                 if mg.collectionExists(dbName, collectionName):
                     logger.info("%s %s document count is %d", dbName, collectionName, mg.count(dbName, collectionName))
                     qD = {"rcsb_entry_info.experimental_method": expMethod, "refine.0.ls_d_res_high": {"$lte": resLimit}}
-                    selectL = ["_entry_id", "rcsb_entry_info", "refine"]
+                    selectL = ["rcsb_entry_container_identifiers", "rcsb_entry_info", "refine"]
                     dL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
                     logger.info("Selection %r fetch result count %d", selectL, len(dL))
                     #
                     for dV in dL:
-                        if "_entry_id" not in dV:
+                        if "rcsb_entry_container_identifiers" not in dV:
                             continue
-                        entryD[dV["_entry_id"]] = {}
+                        entryId = dV["rcsb_entry_container_identifiers"]["entry_id"]
+                        entryD[entryId] = {}
                         if "rcsb_entry_info" in dV and "polymer_composition" in dV["rcsb_entry_info"]:
-                            entryD[dV["_entry_id"]] = {
+                            entryD[entryId] = {
                                 "polymer_composition": dV["rcsb_entry_info"]["polymer_composition"],
                                 "experimental_method": dV["rcsb_entry_info"]["experimental_method"],
                             }
                         if "refine" in dV and dV["refine"] and "ls_d_res_high" in dV["refine"][0]:
-                            entryD[dV["_entry_id"]]["ls_d_res_high"] = dV["refine"][0]["ls_d_res_high"]
-                            logger.info("Got res %r", dV["refine"][0]["ls_d_res_high"])
+                            entryD[entryId]["ls_d_res_high"] = dV["refine"][0]["ls_d_res_high"]
+                            logger.debug("Got res %r", dV["refine"][0]["ls_d_res_high"])
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -136,11 +137,11 @@ class EntityInstanceExtractor(object):
                 if mg.collectionExists(dbName, collectionName):
                     logger.info("%s %s document count is %d", dbName, collectionName, mg.count(dbName, collectionName))
                     for entryId in entryIdList:
-                        qD = {"_entry_id": entryId}
+                        qD = {"rcsb_entity_container_identifiers.entry_id": entryId}
                         selectL = ["rcsb_entity_container_identifiers"]
                         tL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
                         #
-                        logger.info("Selection %r fetch result count %d", selectL, len(tL))
+                        logger.debug("Selection %r fetch result count %d", selectL, len(tL))
                         docD[entryId] = [vv["rcsb_entity_container_identifiers"] for vv in tL]
             logger.debug("docD is %r", docD)
         except Exception as e:
@@ -155,6 +156,7 @@ class EntityInstanceExtractor(object):
         resultKey = kwargs.get("resultKey", "selected_polymer_entities")
         savePath = kwargs.get("savePath", "entry-data.pic")
         entryLimit = kwargs.get("entryLimit", None)
+        saveKwargs = kwargs.get("saveKwargs", {"fmt": "pickle"})
         #
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -178,10 +180,10 @@ class EntityInstanceExtractor(object):
                         if resultKey in entryD[entryId]:
                             continue
                         #
-                        qD = {"_entry_id": entryId, "entity_poly.rcsb_entity_polymer_type": "Protein", "entity.rcsb_multiple_source_flag": "N"}
+                        qD = {"rcsb_entity_container_identifiers.entry_id": entryId, "entity_poly.rcsb_entity_polymer_type": "Protein", "entity.rcsb_multiple_source_flag": "N"}
                         #
                         dL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
-                        logger.info("%s query %r fetch result count %d", entryId, qD, len(dL))
+                        logger.debug("%s query %r fetch result count %d", entryId, qD, len(dL))
                         eD = {}
                         for ii, dV in enumerate(dL, 1):
                             rD = {}
@@ -227,7 +229,7 @@ class EntityInstanceExtractor(object):
                         if iCount % 10 == 0:
                             logger.info("Completed polymer entities fetch %d/%d entries", iCount, len(entryD))
                         if iCount % 2000 == 0:
-                            ok = self.__mU.doExport(savePath, entryD, fmt="pickle")
+                            ok = self.__mU.doExport(savePath, entryD, **saveKwargs)
                             logger.info("Saved polymer entity results (%d) status %r in %s", iCount, ok, savePath)
                         if entryLimit and iCount >= entryLimit:
                             logger.info("Quitting after %d", iCount)
@@ -235,8 +237,8 @@ class EntityInstanceExtractor(object):
             #
             # for entryId in entryD:
             #    logger.debug(">>  %s docD  %r" % (entryId, entryD[entryId]))
-            ok = self.__mU.doExport(savePath, entryD, fmt="pickle")
-            logger.info("Saved polymer entity results (%d) status %r in %s", iCount, ok, savePath)
+            ok = self.__mU.doExport(savePath, entryD, **saveKwargs)
+            logger.info("Saved polymer entity results (%d) entries %d status %r in %s", iCount, len(entryD), ok, savePath)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return entryD
@@ -258,6 +260,7 @@ class EntityInstanceExtractor(object):
         dbName = kwargs.get("dbName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_entity_instance_validation")
         savePath = kwargs.get("savePath", "entry-data.pic")
+        saveKwargs = kwargs.get("saveKwargs", {"fmt": "pickle"})
         entryLimit = kwargs.get("entryLimit", None)
         #
         try:
@@ -274,12 +277,19 @@ class EntityInstanceExtractor(object):
                             #    continue
                             vD = {}
                             for asymId in peD["asym_ids"]:
-                                qD = {"_entry_id": entryId, "_asym_id": asymId}
-                                # qD = {'rcsb_entity_instance_container_identifiers.entity_type': 'polymer'}
+                                qD = {
+                                    "rcsb_entity_instance_validation_container_identifiers.entry_id": entryId,
+                                    "rcsb_entity_instance_validation_container_identifiers.asym_id": asymId,
+                                }
+                                # qD = {'rcsb_entity_instance_container_validation_identifiers.entity_type': 'polymer'}
                                 # selectL = ['pdbx_vrpt_instance_results', 'pdbx_unobs_or_zero_occ_residues']
                                 selectL = ["pdbx_vrpt_instance_results"]
                                 tL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
                                 dV = {}
+                                if not tL:
+                                    logger.info("No validation data for %s %s %s(%s)", dbName, collectionName, entryId, asymId)
+                                    continue
+                                #
                                 logger.debug(">>> %s %s (%s) dict key length %d ", collectionName, entryId, asymId, len(tL[0]))
 
                                 #
@@ -315,11 +325,12 @@ class EntityInstanceExtractor(object):
                         if iCount % 500 == 0:
                             logger.info("Completed %d/%d entries", iCount, len(entryD))
                         if iCount % 2000 == 0:
-                            ok = self.__mU.doExport(savePath, entryD, fmt="pickle")
+                            ok = self.__mU.doExport(savePath, entryD, **saveKwargs)
                             logger.info("Saved polymer entity instance results (%d) status %r in %s", iCount, ok, savePath)
                         if entryLimit and iCount >= entryLimit:
                             break
-
+            ok = self.__mU.doExport(savePath, entryD, **saveKwargs)
+            logger.info("Saved polymer instance results (%d) entries %d status %r in %s", iCount, len(entryD), ok, savePath)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return entryD
@@ -381,7 +392,7 @@ class EntityInstanceExtractor(object):
             # -
             for asymId in asymIdL:
                 if asymId not in vD:
-                    logger.error("Missing validatoin data for %s %s %s", entryId, entityId, asymId)
+                    logger.error("Missing validation data for %s %s %s", entryId, entityId, asymId)
                     continue
                 #
                 irDL = vD[asymId]["pdbx_vrpt_instance_results_seq"] if "pdbx_vrpt_instance_results_seq" in vD[asymId] else []
@@ -466,7 +477,7 @@ class EntityInstanceExtractor(object):
                     )
                 #
                 analD[asymId] = {"coverage_inst_refdb": instRefDbSeqCov, "coverage_inst_entity": instSampleSeqCov, "gapD": copy.copy(gapD), "owabRegiond": copy.copy(owabRegD)}
-                logger.info("entry %s entity %s analD %r", entryId, entityId, analD)
+                logger.debug("entry %s entity %s analD %r", entryId, entityId, analD)
         except Exception as e:
             logger.exception("%s failing with %s", entryId, str(e))
         #
