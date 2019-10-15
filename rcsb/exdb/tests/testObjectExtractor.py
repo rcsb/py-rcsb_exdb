@@ -21,13 +21,11 @@ import os
 import pprint
 import time
 import unittest
-
+from collections import defaultdict
 
 from rcsb.db.mongo.Connection import Connection
 from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.io.MarshalUtil import MarshalUtil
-
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -50,12 +48,9 @@ class ObjectExtractorTests(unittest.TestCase):
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
         self.__resourceName = "MONGO_DB"
-        self.__workPath = os.path.join(HERE, "test-output")
+        self.__workPath = os.path.join(TOPDIR, "CACHE", "exdb")
         #
         self.__testEntryCacheKwargs = {"fmt": "json", "indent": 3}
-        # self.__testEntryCachePath = os.path.join(self.__workPath, "entry-data-test-cache.json")
-        #
-        self.__mU = MarshalUtil()
         self.__objectLimitTest = 5
         #
         self.__startTime = time.time()
@@ -83,12 +78,12 @@ class ObjectExtractorTests(unittest.TestCase):
         try:
             obEx = ObjectExtractor(
                 self.__cfgOb,
-                dbName="pdbx_core",
+                databaseName="pdbx_core",
                 collectionName="pdbx_core_entry",
                 cacheFilePath=os.path.join(self.__workPath, "entry-data-test-cache.json"),
                 useCache=False,
                 keyAttribute="entry",
-                uniqueAttributes=["_entry_id"],
+                uniqueAttributes=["rcsb_id"],
                 cacheKwargs=self.__testEntryCacheKwargs,
                 objectLimit=self.__objectLimitTest,
             )
@@ -120,12 +115,12 @@ class ObjectExtractorTests(unittest.TestCase):
         try:
             obEx = ObjectExtractor(
                 self.__cfgOb,
-                dbName="pdbx_core",
+                databaseName="pdbx_core",
                 collectionName="pdbx_core_entity",
                 cacheFilePath=os.path.join(self.__workPath, "entity-data-test-cache.json"),
                 useCache=False,
                 keyAttribute="entity",
-                uniqueAttributes=["_entry_id", "_entity_id"],
+                uniqueAttributes=["rcsb_id"],
                 cacheKwargs=self.__testEntryCacheKwargs,
                 objectLimit=self.__objectLimitTest,
             )
@@ -152,11 +147,143 @@ class ObjectExtractorTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    def testExtractSelectedEntityContent(self):
+        """ Test case - extract selected entity content
+
+        "reference_sequence_identifiers": [
+                    {
+                        "database_name": "UniProt",
+                        "database_accession": "Q5SHN1",
+                        "provenance_source": "SIFTS"
+                    },
+                    {
+                        "database_name": "UniProt",
+                        "database_accession": "Q5SHN1",
+                        "provenance_source": "PDB"
+                    }
+                    ]
+        """
+        try:
+            obEx = ObjectExtractor(
+                self.__cfgOb,
+                databaseName="pdbx_core",
+                collectionName="pdbx_core_entity",
+                cacheFilePath=os.path.join(self.__workPath, "entity-selected-content-test-cache.json"),
+                useCache=False,
+                keyAttribute="entity",
+                uniqueAttributes=["rcsb_id"],
+                cacheKwargs=self.__testEntryCacheKwargs,
+                # objectLimit=self.__objectLimitTest,
+                objectLimit=None,
+                selectionQuery={"entity_poly.rcsb_entity_polymer_type": "Protein"},
+                selectionList=["rcsb_id", "rcsb_entity_container_identifiers.reference_sequence_identifiers"],
+            )
+            eCount = obEx.getCount()
+            logger.info("Entity count is %d", eCount)
+            #
+            #
+            if self.__objectLimitTest is not None:
+                self.assertGreaterEqual(eCount, self.__objectLimitTest)
+                objD = obEx.getObjects()
+                for _, obj in objD.items():
+                    obEx.genPathList(obj, path=None)
+                #
+                pL = obEx.getPathList(filterList=False)
+                logger.debug("Path list (unfiltered) %r", pL)
+                #
+                pL = obEx.getPathList()
+                logger.debug("Path list %r", pL)
+                obEx.setPathList(pL)
+                for ky, obj in objD.items():
+                    obEx.genValueList(obj, path=None)
+                    tD = obEx.getValues()
+                    logger.debug("Index object %r %s", ky, pprint.pformat(tD, indent=3, width=120))
+
+            objD = obEx.getObjects()
+            # logger.info("objD.keys() %r", list(objD.keys()))
+            totCount = 0
+            difCount = 0
+            pdbUnpIdD = defaultdict(int)
+            siftsUnpIdD = defaultdict(int)
+            pdbDifUnpIdD = defaultdict(int)
+            for entityKey, eD in objD.items():
+                try:
+                    siftsS = set()
+                    pdbS = set()
+                    for tD in eD["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"]:
+                        if tD["database_name"] == "UniProt":
+                            if tD["provenance_source"] == "SIFTS":
+                                siftsS.add(tD["database_accession"])
+                                siftsUnpIdD[tD["database_accession"]] += 1
+                            elif tD["provenance_source"] == "PDB":
+                                pdbS.add(tD["database_accession"])
+                                pdbUnpIdD[tD["database_accession"]] += 1
+                        else:
+                            logger.debug("No UniProt for %r", eD["rcsb_entity_container_identifiers"])
+                    logger.debug("PDB assigned sequence length %d", len(pdbS))
+                    logger.debug("SIFTS assigned sequence length %d", len(siftsS))
+
+                    if pdbS and siftsS:
+                        totCount += 1
+                        if pdbS != siftsS:
+                            difCount += 1
+                            for idV in pdbS:
+                                pdbDifUnpIdD[idV] += 1
+
+                except Exception as e:
+                    logger.warning("No identifiers for %s with %s", entityKey, str(e))
+            logger.info("Total %d differences %d", totCount, difCount)
+            logger.info("Unique UniProt ids  PDB %d  SIFTS %d", len(pdbUnpIdD), len(siftsUnpIdD))
+            logger.info("Unique UniProt differences %d ", len(pdbDifUnpIdD))
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
+    def testExtractEntityTaxonomyContent(self):
+        """ Test case - extract unique entity source and host taxonomies
+        """
+        try:
+            obEx = ObjectExtractor(
+                self.__cfgOb,
+                databaseName="pdbx_core",
+                collectionName="pdbx_core_entity",
+                cacheFilePath=os.path.join(self.__workPath, "entity-taxonomy-test-cache.json"),
+                useCache=False,
+                keyAttribute="entity",
+                uniqueAttributes=["rcsb_id"],
+                cacheKwargs=self.__testEntryCacheKwargs,
+                # objectLimit=self.__objectLimitTest,
+                objectLimit=None,
+                selectionQuery={"entity.type": "polymer"},
+                selectionList=["rcsb_id", "rcsb_entity_source_organism.ncbi_taxonomy_id", "rcsb_entity_host_organism.ncbi_taxonomy_id"],
+            )
+            eCount = obEx.getCount()
+            logger.info("Polymer entity count is %d", eCount)
+            taxIdS = set()
+            objD = obEx.getObjects()
+            for _, eD in objD.items():
+                try:
+                    for tD in eD["rcsb_entity_source_organism"]:
+                        taxIdS.add(tD["ncbi_taxonomy_id"])
+                except Exception:
+                    pass
+                try:
+                    for tD in eD["rcsb_entity_host_organism"]:
+                        taxIdS.add(tD["ncbi_taxonomy_id"])
+                except Exception:
+                    pass
+
+            logger.info("Unique taxons %d", len(taxIdS))
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
 
 def objectExtractorSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(ObjectExtractorTests("testExtractEntries"))
     suiteSelect.addTest(ObjectExtractorTests("testExtractEntities"))
+    suiteSelect.addTest(ObjectExtractorTests("testExtractSelectedEntityContent"))
     return suiteSelect
 
 

@@ -20,7 +20,7 @@ import os.path
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.exdb.chemref.ChemRefExtractor import ChemRefExtractor
-from rcsb.exdb.seq.EntityPolymerExtractor import EntityPolymerExtractor
+from rcsb.exdb.seq.TaxonomyExtractor import TaxonomyExtractor
 from rcsb.utils.chemref.AtcProvider import AtcProvider
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
 from rcsb.utils.struct.CathClassificationProvider import CathClassificationProvider
@@ -141,16 +141,13 @@ class TreeNodeListWorker(object):
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ----
             # Get the taxon coverage in the current data set -
-            cacheKwargs = {"fmt": "pickle"}
-            exdbCacheDirPath = os.path.join(self.__cachePath, self.__cfgOb.get("EXDB_CACHE_DIR", sectionName=self.__cfgOb.getDefaultSectionName()))
-            epe = EntityPolymerExtractor(self.__cfgOb, exdbDirPath=exdbCacheDirPath, useCache=useCache, saveCacheKwargs=cacheKwargs)
-            logger.info("Entity polymer cache entry count %d", epe.getEntryCount())
-            tD = epe.getUniqueTaxons()
-            logger.info("Taxon coverage length %d", len(tD))
+            epe = TaxonomyExtractor(self.__cfgOb)
+            tL = epe.getUniqueTaxons()
+            logger.info("Taxon coverage length %d", len(tL))
             #
             tU = TaxonomyProvider(taxDirPath=os.path.join(self.__cachePath, "NCBI"), useCache=useCache)
             fD = {1}
-            for taxId in tD:
+            for taxId in tL:
                 fD.update({k: True for k in tU.getLineage(taxId)})
             logger.info("Filter taxon dictionary length %d", len(fD))
             # logger.info("fD %r" % sorted(fD))

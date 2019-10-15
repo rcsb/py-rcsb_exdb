@@ -2,8 +2,7 @@
 # File: ObjectExtractor.py
 # Date: 26-Jun-2019  jdw
 #
-# Selected utilities to extract entry feature data
-# from the exchange database schema.
+# Utilities to extract document features from the document object server.
 #
 # Updates:
 # 27-Jun-2019  jdw add JSON path tracking utilities.
@@ -28,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class ObjectExtractor(object):
-    """ Utilities to extract entry feature data from the exchange schema.
+    """ Utilities to extract document features from the document object server.
 
     """
 
@@ -81,15 +80,21 @@ class ObjectExtractor(object):
         cacheKwargs = kwargs.get("cacheKwargs", {"fmt": "pickle"})
         useCache = kwargs.get("useCache", True)
         keyAttribute = kwargs.get("keyAttribute", "entry")
+        selectL = kwargs.get("selectionList", [])
         #
         cD = {keyAttribute: {}}
         try:
             if useCache and cacheFilePath and os.access(cacheFilePath, os.R_OK):
                 cD = self.__mU.doImport(cacheFilePath, **cacheKwargs)
             else:
-                objectD = self.__selectObjects(**kwargs)
+                if selectL:
+                    objectD = self.__select(**kwargs)
+                else:
+                    objectD = self.__selectObjects(**kwargs)
                 cD[keyAttribute] = objectD
                 if cacheFilePath:
+                    pth, _ = os.path.split(cacheFilePath)
+                    ok = self.__mU.mkdir(pth)
                     ok = self.__mU.doExport(cacheFilePath, cD, **cacheKwargs)
                     logger.info("Saved object results (%d) status %r in %s", len(objectD), ok, cacheFilePath)
         except Exception as e:
@@ -99,7 +104,7 @@ class ObjectExtractor(object):
     def __selectObjects(self, **kwargs):
         """  Return a dictionary of objects satifying the input conditions (e.g. method, resolution limit)
         """
-        dbName = kwargs.get("dbName", "pdbx_core")
+        databaseName = kwargs.get("databaseName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_entry")
         selectionQueryD = kwargs.get("selectionQuery", {})
         uniqueAttributes = kwargs.get("uniqueAttributes", [])
@@ -111,19 +116,19 @@ class ObjectExtractor(object):
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
-                if mg.collectionExists(dbName, collectionName):
-                    logger.info("%s %s document count is %d", dbName, collectionName, mg.count(dbName, collectionName))
+                if mg.collectionExists(databaseName, collectionName):
+                    logger.info("%s %s document count is %d", databaseName, collectionName, mg.count(databaseName, collectionName))
                     qD = {}
                     if selectionQueryD:
                         qD.update(selectionQueryD)
                     selectL = ["_id"]
-                    dL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
+                    dL = mg.fetch(databaseName, collectionName, selectL, queryD=qD)
                     logger.info("Selection %r fetch result count %d", selectL, len(dL))
                     #
                     for ii, dD in enumerate(dL, 1):
                         if "_id" not in dD:
                             continue
-                        rObj = mg.fetchOne(dbName, collectionName, "_id", dD["_id"])
+                        rObj = mg.fetchOne(databaseName, collectionName, "_id", dD["_id"])
                         rObj["_id"] = str(rObj["_id"])
                         logger.debug("Return Object %s", pprint.pformat(rObj))
                         #
@@ -132,6 +137,45 @@ class ObjectExtractor(object):
                         if objLimit and ii >= objLimit:
                             break
                         logger.debug("Saving %d %s", ii, stKey)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return objectD
+        #
+
+    def __select(self, **kwargs):
+        """  Return a dictionary of object content satifying the input conditions
+             (e.g. method, resolution limit) and selection options.
+        """
+        databaseName = kwargs.get("databaseName", "pdbx_core")
+        collectionName = kwargs.get("collectionName", "pdbx_core_entry")
+        selectionQueryD = kwargs.get("selectionQuery", {})
+        uniqueAttributes = kwargs.get("uniqueAttributes", [])
+        selectL = kwargs.get("selectionList", [])
+        #
+        tV = kwargs.get("objectLimit", None)
+        objLimit = int(tV) if tV is not None else None
+        #
+        objectD = {}
+        try:
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                if mg.collectionExists(databaseName, collectionName):
+                    logger.info("%s %s document count is %d", databaseName, collectionName, mg.count(databaseName, collectionName))
+                    qD = {}
+                    if selectionQueryD:
+                        qD.update(selectionQueryD)
+                    dL = mg.fetch(databaseName, collectionName, selectL, queryD=qD, suppressId=True)
+                    logger.info("Selection %r fetch result count %d", selectL, len(dL))
+                    #
+                    for ii, rObj in enumerate(dL, 1):
+                        stKey = ".".join([rObj[ky] for ky in uniqueAttributes])
+                        # logger.debug("Fetched object (%s) %s", stKey, pprint.pformat(rObj))
+                        objectD[stKey] = copy.copy(rObj)
+                        if objLimit and ii >= objLimit:
+                            break
+                        # logger.debug("Saving %d %s", ii, stKey)
+                        # logger.debug("Current objectD keys %r", list(objectD.keys()))
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return objectD
@@ -224,7 +268,7 @@ class ObjectExtractor(object):
             return funct(jsonPath, value)
 
     def __toPath(self, path):
-        """ Cnvert path strings into path lists.
+        """ Convert path strings into path lists.
         """
         if isinstance(path, list):
             return path  # already in list format

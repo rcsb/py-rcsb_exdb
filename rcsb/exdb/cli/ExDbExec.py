@@ -22,6 +22,7 @@ from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvide
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.exdb.chemref.ChemRefEtlWorker import ChemRefEtlWorker
+from rcsb.exdb.seq.ReferenceSequenceAssignmentUpdater import ReferenceSequenceAssignmentUpdater
 from rcsb.exdb.tree.TreeNodeListWorker import TreeNodeListWorker
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
@@ -62,6 +63,8 @@ def main():
     parser.add_argument("--full", default=True, action="store_true", help="Fresh full load in a new tables/collections (Default)")
     parser.add_argument("--etl_chemref", default=False, action="store_true", help="ETL integrated chemical reference data")
     parser.add_argument("--etl_tree_node_lists", default=False, action="store_true", help="ETL tree node lists")
+    parser.add_argument("--upd_ref_seq", default=False, action="store_true", help="Update reference sequence assignments")
+    #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default=defaultConfigName, help="Configuration section name")
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
@@ -143,6 +146,13 @@ def main():
             ok = crw.load(dataSetId, extResource="DrugBank", loadType=loadType)
             okS = loadStatus(crw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
+        if args.upd_ref_seq:
+            rsau = ReferenceSequenceAssignmentUpdater(cfgOb, useCache=useCache, cachePath=cachePath, fetchLimit=documentLimit, siftsAbbreviated="TEST")
+            lenUpd, numUpd = rsau.doUpdate(dataSetId)
+            logger.info("Reference sequence update length %d numUpd %d", lenUpd, numUpd)
+            okS = loadStatus(rsau.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
+            ok = True
+        #
         logger.info("Operation completed with status %r " % ok and okS)
 
 

@@ -35,10 +35,11 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 class DictMethodResourceProviderFixture(unittest.TestCase):
     def setUp(self):
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
         configName = "site_info_configuration"
         self.__configName = configName
-        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__cachePath)
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
 
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -51,7 +52,7 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
         """Fixture - generate and check resource caches
         """
         try:
-            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
             ret = rp.cacheResources(useCache=False)
             self.assertTrue(ret)
         except Exception as e:
