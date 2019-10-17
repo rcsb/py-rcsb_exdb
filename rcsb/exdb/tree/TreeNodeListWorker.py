@@ -156,6 +156,7 @@ class TreeNodeListWorker(object):
             self.__checkTaxonNodeList(nL)
             logger.info("Starting load taxonomy node tree %d", len(nL))
             collectionName = self.__cfgOb.get("COLLECTION_TAXONOMY", sectionName=sectionName)
+            logger.info("Taxonomy nodes (%d) %r", len(nL), nL[:5])
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
             logger.info("Tree loading operations completed.")
             #
@@ -169,6 +170,7 @@ class TreeNodeListWorker(object):
             atcP = AtcProvider(dirPath=atcCacheDirPath, useCache=useCache)
             nL = atcP.getTreeNodeList(filterD=atcFilterD)
             collectionName = self.__cfgOb.get("COLLECTION_ATC", sectionName=sectionName)
+            logger.debug("ATC node list length %d %r", len(nL), nL[:5])
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
             #
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)

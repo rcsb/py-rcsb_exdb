@@ -8,4 +8,5 @@
 17-Sep-2019 V0.16 Update to latest schemas
 30-Sep-2019 V0.17 Updates for chemical reference and tree cli's and update dependencies
 15-Oct-2019 V0.18 Refactor, add TaxonomyExtractor(), ReferenceSequenceAssignmentUpdater() and friends.
+16-Oct-2019 V0.19 Checkpoint in improving update reference sequences and troubleshooting tree node lists for ATC
 #

@@ -47,7 +47,9 @@ class ReferenceSequenceAssignmentUpdater(object):
 
     def __reload(self, databaseName, collectionName, polymerType, referenceDatabaseName, provSource, **kwargs):
         assignRefD = self.__getPolymerReferenceSequenceAssignments(databaseName, collectionName, polymerType, **kwargs)
-        refIdD = self.__getUniqueAssignments(assignRefD, referenceDatabaseName=referenceDatabaseName, provSource=provSource)
+        # get refIdD = {refId: [entity_id, ....], }
+        refIdD, _ = self.__getUniqueAssignments(assignRefD, referenceDatabaseName=referenceDatabaseName, provSource=provSource)
+        #
         refD, matchD = self.__rebuildReferenceCache(referenceDatabaseName, list(refIdD.keys()), **kwargs)
         return assignRefD, refD, matchD
 
@@ -76,7 +78,9 @@ class ReferenceSequenceAssignmentUpdater(object):
         """ Get all accessions assigned to input reference sequence database for the input polymerType.
 
             Returns:
-             (dict): {"1abc_1": "rcsb_entity_container_identifiers": {"reference_sequence_identifiers": []}, "rcsb_polymer_entity_align": []}
+             (dict): {"1abc_1": "rcsb_entity_container_identifiers": {"reference_sequence_identifiers": []},
+                                "rcsb_polymer_entity_align": [],
+                                "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
         """
         cachePath = kwargs.get("cachePath", ".")
         exDbDir = "exdb"
@@ -102,6 +106,7 @@ class ReferenceSequenceAssignmentUpdater(object):
                     "rcsb_entity_container_identifiers.reference_sequence_identifiers",
                     "rcsb_entity_container_identifiers.auth_asym_ids",
                     "rcsb_polymer_entity_align",
+                    "rcsb_entity_source_organism.ncbi_taxonomy_id",
                 ],
             )
             eCount = obEx.getCount()
@@ -115,21 +120,36 @@ class ReferenceSequenceAssignmentUpdater(object):
 
     def __getUniqueAssignments(self, objD, referenceDatabaseName="UniProt", provSource="PDB"):
         refIdD = defaultdict(list)
+        taxIdD = defaultdict(list)
+        numMissing = 0
         for entityKey, eD in objD.items():
             try:
                 accS = set()
-                for tD in eD["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"]:
+                for ii, tD in enumerate(eD["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"]):
                     if tD["database_name"] == referenceDatabaseName and tD["provenance_source"] == provSource:
                         accS.add(tD["database_accession"])
                         refIdD[tD["database_accession"]].append(entityKey)
+                        #
+                        # pick up the corresponding taxonomy -
+                        try:
+                            taxIdD[tD["database_accession"]].append(eD["rcsb_entity_source_organism"][ii]["ncbi_taxonomy_id"])
+                        except Exception:
+                            logger.warning("Failing taxonomy lookup for %s %r", entityKey, tD["database_accession"])
+
                 logger.debug("PDB assigned sequences length %d", len(accS))
             except Exception as e:
-                logger.warning("No sequence assignments for %s with %s", entityKey, str(e))
+                numMissing += 1
+                logger.debug("No sequence assignments for %s with %s", entityKey, str(e))
         #
-        logger.info("Unique %s accession assignments by %s %d ", referenceDatabaseName, provSource, len(refIdD))
-        return refIdD
+        for refId, taxIdL in taxIdD.items():
+            taxIdL = list(set(taxIdL))
+            if len(taxIdL) > 1:
+                logger.info("Multitple taxIds assigned to reference sequence id %s: %r", refId, taxIdL)
 
-    def __reMapAccessions(self, rsiDL, referenceDatabaseName="UniProt", provSourceL=None):
+        logger.info("Unique %s accession assignments by %s %d (missing %d) ", referenceDatabaseName, provSource, len(refIdD), numMissing)
+        return refIdD, taxIdD
+
+    def __reMapAccessions(self, rsiDL, referenceDatabaseName="UniProt", provSourceL=None, excludeReferenceDatabases=None):
         """Internal method to re-map accessions for the input databae and assignment source
 
         Args:
@@ -140,21 +160,32 @@ class ReferenceSequenceAssignmentUpdater(object):
         Returns:
             bool, list: flag for mapping success, and remapped (and unmapped) accessions in the input object list
         """
+        isMatched = False
         unMapped = 0
         matched = 0
+        excludeReferenceDatabases = excludeReferenceDatabases if excludeReferenceDatabases else ["PDB"]
         provSourceL = provSourceL if provSourceL else []
         retDL = []
         for rsiD in rsiDL:
+            if rsiD["database_name"] in excludeReferenceDatabases:
+                unMapped += 1
+                continue
             if rsiD["database_name"] == referenceDatabaseName and rsiD["provenance_source"] in provSourceL:
                 try:
-                    rsiD["database_accession"] = self.__matchD[rsiD["database_accession"]]["matchedIds"][0]
-                    matched += 1
+                    if len(self.__matchD[rsiD["database_accession"]]["matchedIds"]) == 1:
+                        rsiD["database_accession"] = self.__matchD[rsiD["database_accession"]]["matchedIds"][0]
+                        matched += 1
+                    else:
+                        logger.info("Skipping mapping to multiple superseding accessions %s", rsiD["database_accession"])
+                    #
                 except Exception:
                     unMapped += 1
-                retDL.append(rsiD)
-        return not unMapped, matched, retDL
+            retDL.append(rsiD)
+        if matched == len(retDL):
+            isMatched = True
+        return not unMapped, isMatched, retDL
 
-    def __reMapAlignments(self, alignDL, referenceDatabaseName="UniProt", provSourceL=None):
+    def __reMapAlignments(self, alignDL, referenceDatabaseName="UniProt", provSourceL=None, excludeReferenceDatabases=None):
         """Internal method to re-map alignments for the input databae and assignment source
 
         Args:
@@ -165,19 +196,30 @@ class ReferenceSequenceAssignmentUpdater(object):
         Returns:
             bool, list: flag for mapping success, and remapped (and unmapped) accessions in the input align list
         """
+        isMatched = False
         unMapped = 0
         matched = 0
+        excludeReferenceDatabases = excludeReferenceDatabases if excludeReferenceDatabases else ["PDB"]
         retDL = []
         provSourceL = provSourceL if provSourceL else []
         for alignD in alignDL:
+            if alignD["reference_database_name"] in excludeReferenceDatabases:
+                unMapped += 1
+                continue
             if alignD["reference_database_name"] == referenceDatabaseName and alignD["provenance_code"] in provSourceL:
                 try:
-                    alignD["reference_database_accession"] = self.__matchD[alignD["reference_database_accession"]]["matchedIds"][0]
-                    matched += 1
+                    if len(self.__matchD[alignD["reference_database_accession"]]["matchedIds"]) == 1:
+                        alignD["reference_database_accession"] = self.__matchD[alignD["reference_database_accession"]]["matchedIds"][0]
+                        matched += 1
+                    else:
+                        logger.info("Skipping alignment mapping to multiple superseding accessions %s", alignD["reference_database_accession"])
                 except Exception:
                     unMapped += 1
-                retDL.append(alignD)
-        return not unMapped, matched, retDL
+            retDL.append(alignD)
+        if matched == len(retDL):
+            isMatched = True
+        #
+        return not unMapped, isMatched, retDL
 
     def __getSiftsAccessions(self, entityKey, authAsymIdL):
         retL = []
@@ -209,16 +251,23 @@ class ReferenceSequenceAssignmentUpdater(object):
                     if "reference_sequence_identifiers" in eD["rcsb_entity_container_identifiers"]
                     else None
                 )
+                #
+                #
                 if ersDL:
                     authAsymIdL = eD["rcsb_entity_container_identifiers"]["auth_asym_ids"]
                     isMapped, isMatched, updErsDL = self.__reMapAccessions(ersDL, referenceDatabaseName="UniProt", provSourceL=["PDB"])
+                    #
                     if not isMapped or not isMatched:
                         tL = self.__getSiftsAccessions(entityKey, authAsymIdL)
                         if tL:
-                            logger.info("Using SIFTS accession mapping for %s", entityKey)
-                        updErsDL = tL if tL else updErsDL
-                    if updErsDL:
-                        updateD["rcsb_entity_container_identifiers.reference_sequence_identifiers"] = updErsDL
+                            logger.debug("Using SIFTS accession mapping for %s", entityKey)
+                        else:
+                            logger.info("No alternative SIFTS accession mapping for %s", entityKey)
+                        updErsDL = tL if tL else []
+                    #
+                    if len(updErsDL) < len(ersDL):
+                        logger.info("Incomplete reference sequence mapping update for %s", entityKey)
+                    updateD["rcsb_entity_container_identifiers.reference_sequence_identifiers"] = updErsDL
                 #
                 alignDL = eD["rcsb_polymer_entity_align"] if "rcsb_polymer_entity_align" in eD else None
                 if alignDL and authAsymIdL:
@@ -227,10 +276,14 @@ class ReferenceSequenceAssignmentUpdater(object):
                     if not isMapped or not isMatched:
                         tL = self.__getSiftsAlignments(entityKey, authAsymIdL)
                         if tL:
-                            logger.info("Using SIFTS alignment mapping for %s", entityKey)
+                            logger.debug("Using SIFTS alignment mapping for %s", entityKey)
+                        else:
+                            logger.info("No alternative SIFTS alignment mapping for %s", entityKey)
                         updAlignDL = tL if tL else updAlignDL
-                    if updAlignDL:
-                        updateD["rcsb_polymer_entity_align"] = updAlignDL
+                    #
+                    if len(updAlignDL) < len(alignDL):
+                        logger.info("Incomplete alignment mapping update for %s", entityKey)
+                    updateD["rcsb_polymer_entity_align"] = updAlignDL
                 #
                 if updateD:
                     updateDL.append({"selectD": selectD, "updateD": updateD})
