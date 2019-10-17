@@ -22,7 +22,6 @@ from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvide
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.exdb.chemref.ChemRefEtlWorker import ChemRefEtlWorker
-from rcsb.exdb.seq.ReferenceSequenceAssignmentUpdater import ReferenceSequenceAssignmentUpdater
 from rcsb.exdb.tree.TreeNodeListWorker import TreeNodeListWorker
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
@@ -147,10 +146,10 @@ def main():
             okS = loadStatus(crw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.upd_ref_seq:
-            rsau = ReferenceSequenceAssignmentUpdater(cfgOb, useCache=useCache, cachePath=cachePath, fetchLimit=documentLimit, siftsAbbreviated="TEST")
-            lenUpd, numUpd = rsau.doUpdate(dataSetId)
-            logger.info("Reference sequence update length %d numUpd %d", lenUpd, numUpd)
-            okS = loadStatus(rsau.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
+            # rsau = ReferenceSequenceAssignmentUpdater(cfgOb, useCache=useCache, cachePath=cachePath, fetchLimit=documentLimit, siftsAbbreviated="TEST")
+            # lenUpd, numUpd = rsau.doUpdate(dataSetId)
+            # logger.info("Reference sequence update length %d numUpd %d", lenUpd, numUpd)
+            # okS = loadStatus(rsau.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
             ok = True
         #
         logger.info("Operation completed with status %r " % ok and okS)
