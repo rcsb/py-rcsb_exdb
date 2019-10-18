@@ -122,6 +122,7 @@ class ReferenceSequenceAssignmentProvider(object):
         refIdD = defaultdict(list)
         taxIdD = defaultdict(list)
         numMissing = 0
+        numMissingTaxons = 0
         for entityKey, eD in objD.items():
             try:
                 accS = set()
@@ -134,19 +135,24 @@ class ReferenceSequenceAssignmentProvider(object):
                         try:
                             taxIdD[tD["database_accession"]].append(eD["rcsb_entity_source_organism"][ii]["ncbi_taxonomy_id"])
                         except Exception:
-                            logger.warning("Failing taxonomy lookup for %s %r", entityKey, tD["database_accession"])
+                            logger.debug("Failing taxonomy lookup for %s %r", entityKey, tD["database_accession"])
+                            numMissingTaxons += 1
 
                 logger.debug("PDB assigned sequences length %d", len(accS))
             except Exception as e:
                 numMissing += 1
                 logger.debug("No sequence assignments for %s with %s", entityKey, str(e))
         #
+        numMultipleTaxons = 0
         for refId, taxIdL in taxIdD.items():
             taxIdL = list(set(taxIdL))
             if len(taxIdL) > 1:
-                logger.info("Multitple taxIds assigned to reference sequence id %s: %r", refId, taxIdL)
+                logger.debug("Multitple taxIds assigned to reference sequence id %s: %r", refId, taxIdL)
+                numMultipleTaxons += 1
 
-        logger.info("Unique %s accession assignments by %s %d (missing %d) ", referenceDatabaseName, provSource, len(refIdD), numMissing)
+        logger.info("Entities with missing taxonomy %d", numMissingTaxons)
+        logger.info("Reference sequences with multiple taxonomies %d", numMultipleTaxons)
+        logger.info("Unique %s accession assignments by %s %d (missing assignments %d) ", referenceDatabaseName, provSource, len(refIdD), numMissing)
         return refIdD, taxIdD
 
     #
@@ -180,10 +186,10 @@ class ReferenceSequenceAssignmentProvider(object):
         if useCache and accCacheFilePath and self.__mU.exists(accCacheFilePath) and dataCacheFilePath and self.__mU.exists(dataCacheFilePath):
             dD = self.__mU.doImport(dataCacheFilePath, **cacheKwargs)
             idD = self.__mU.doImport(accCacheFilePath, fmt="json")
-            logger.info("Reading cached reference sequence ID and data cache files %d", len(idD["matchInfo"]))
+            logger.info("Reading cached reference sequence ID and data cache files reference length =%d", len(idD["matchInfo"]))
             # Check for completeness -
             if doMissing:
-                missingS = set(idD["matchInfo"].keys()) - set(idList)
+                missingS = set(idList) - set(idD["matchInfo"].keys())
                 if missingS:
                     logger.info("Reference sequence cache missing %d accessions", len(missingS))
                     extraD, extraIdD = self.__fetchReferenceEntries(refDbName, list(missingS), saveText=saveText, fetchLimit=None)
