@@ -22,7 +22,11 @@ from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvide
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.exdb.chemref.ChemRefEtlWorker import ChemRefEtlWorker
+from rcsb.exdb.seq.ReferenceSequenceAssignmentAdapter import ReferenceSequenceAssignmentAdapter
+from rcsb.exdb.seq.ReferenceSequenceAssignmentProvider import ReferenceSequenceAssignmentProvider
 from rcsb.exdb.tree.TreeNodeListWorker import TreeNodeListWorker
+from rcsb.exdb.utils.ObjectTransformer import ObjectTransformer
+
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -52,6 +56,41 @@ def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
     except Exception as e:
         logger.exception("Failing with %s", str(e))
     return ret
+
+
+def doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=None):
+    try:
+        databaseName = "pdbx_core"
+        collectionName = "pdbx_core_entity"
+        polymerType = "Protein"
+        referenceDatabaseName = "UniProt"
+        provSource = "PDB"
+        #
+        #  -- create cache ---
+        rsaP = ReferenceSequenceAssignmentProvider(
+            cfgOb,
+            databaseName=databaseName,
+            collectionName=collectionName,
+            polymerType=polymerType,
+            referenceDatabaseName=referenceDatabaseName,
+            provSource=provSource,
+            useCache=useCache,
+            cachePath=cachePath,
+            fetchLimit=fetchLimit,
+            siftsAbbreviated="TEST",
+        )
+        ok = rsaP.testCache()
+        if not ok:
+            logger.error("Cache construction fails %s", ok)
+            return False
+        logger.info("Cached reference data count is %d", rsaP.getRefDataCount())
+        #
+        rsa = ReferenceSequenceAssignmentAdapter(refSeqAssignProvider=rsaP)
+        obTr = ObjectTransformer(cfgOb, objectAdapter=rsa)
+        ok = obTr.doTransform(databaseName=databaseName, collectionName=collectionName, fetchLimit=fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": polymerType})
+        return ok
+    except Exception as e:
+        logger.exception("Failing with %s", str(e))
 
 
 def main():
@@ -146,11 +185,8 @@ def main():
             okS = loadStatus(crw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.upd_ref_seq:
-            # rsau = ReferenceSequenceAssignmentUpdater(cfgOb, useCache=useCache, cachePath=cachePath, fetchLimit=documentLimit, siftsAbbreviated="TEST")
-            # lenUpd, numUpd = rsau.doUpdate(dataSetId)
-            # logger.info("Reference sequence update length %d numUpd %d", lenUpd, numUpd)
-            # okS = loadStatus(rsau.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-            ok = True
+            ok = doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=documentLimit)
+            okS = ok
         #
         logger.info("Operation completed with status %r " % ok and okS)
 

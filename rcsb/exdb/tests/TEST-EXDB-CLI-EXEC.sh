@@ -1,5 +1,5 @@
 #!/bin/bash
-# File: TEST-ETL-EXEC-MOCK.sh
+# File: TEST-EXDB-CL-EXEC.sh
 # Date: 3-Sep-2019 jdw
 #
 # Examples

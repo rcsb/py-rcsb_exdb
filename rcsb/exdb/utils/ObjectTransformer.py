@@ -50,8 +50,8 @@ class ObjectTransformer(object):
         ok = self.__transform(databaseName, collectionName, docSelectList)
         #
         if updateId:
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-        return ok
+            okS = self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+        return ok and okS
 
     def __selectObjectIds(self, databaseName, collectionName, selectionQueryD):
         """  Return a list of object identifiers for the input selection query.
