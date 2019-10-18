@@ -39,6 +39,7 @@ class ReferenceSequenceAssignmentProvider(object):
         referenceDatabaseName="UniProt",
         provSource="PDB",
         maxChunkSize=350,
+        fetchLimit=None,
         **kwargs
     ):
         self.__cfgOb = cfgOb
@@ -49,7 +50,7 @@ class ReferenceSequenceAssignmentProvider(object):
         self.__statusList = []
         #
         self.__ssP = self.__fetchSiftsSummaryProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
-        self.__refIdMapD, self.__refD, self.__matchD = self.__reload(databaseName, collectionName, polymerType, referenceDatabaseName, provSource, **kwargs)
+        self.__refIdMapD, self.__refD, self.__matchD = self.__reload(databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs)
 
     def getSiftsSummaryProvider(self):
         return self.__ssP
@@ -72,8 +73,12 @@ class ReferenceSequenceAssignmentProvider(object):
         ok = self.__refIdMapD and self.__matchD and self.__refD and len(self.__refIdMapD) >= len(self.__matchD)
         return ok
 
-    def __reload(self, databaseName, collectionName, polymerType, referenceDatabaseName, provSource, **kwargs):
-        refIdMapD, refD, matchD = self.__rebuildReferenceCache(databaseName, collectionName, polymerType, provSource, referenceDatabaseName, **kwargs)
+    def __reload(self, databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs):
+        assignRefD = self.__getPolymerReferenceSequenceAssignments(databaseName, collectionName, polymerType, fetchLimit)
+        refIdMapD, _ = self.__getAssignmentMap(assignRefD, referenceDatabaseName=referenceDatabaseName, provSource=provSource)
+        #
+        #
+        refD, matchD = self.__rebuildReferenceCache(list(refIdMapD.keys()), referenceDatabaseName, **kwargs)
         return refIdMapD, matchD, refD
 
     def __getPolymerReferenceSequenceAssignments(self, databaseName, collectionName, polymerType, fetchLimit):
@@ -145,22 +150,23 @@ class ReferenceSequenceAssignmentProvider(object):
         return refIdD, taxIdD
 
     #
-    def __rebuildReferenceCache(self, databaseName, collectionName, polymerType, provSource, refDbName, **kwargs):
+    def __rebuildReferenceCache(self, idList, refDbName, **kwargs):
         """
         """
         doMissing = True
         dD = {}
         cachePath = kwargs.get("cachePath", ".")
         dirPath = os.path.join(cachePath, "exdb")
-        cacheKwargs = kwargs.get("cacheKwargs", {"fmt": "json", "indent": 3})
+        # cacheKwargs = kwargs.get("cacheKwargs", {"fmt": "json", "indent": 3})
+        cacheKwargs = kwargs.get("cacheKwargs", {"fmt": "pickle"})
         useCache = kwargs.get("useCache", True)
-        fetchLimit = kwargs.get("fetchLimit", None)
         saveText = kwargs.get("saveText", False)
         #
         ext = "pic" if cacheKwargs["fmt"] == "pickle" else "json"
         fn = refDbName + "-ref-sequence-data-cache" + "." + ext
         dataCacheFilePath = os.path.join(dirPath, fn)
-        fn = refDbName + "-ref-sequence-id-cache" + "." + ext
+        #
+        fn = refDbName + "-ref-sequence-id-cache" + ".json"
         accCacheFilePath = os.path.join(dirPath, fn)
         #
         self.__mU.mkdir(dirPath)
@@ -174,14 +180,13 @@ class ReferenceSequenceAssignmentProvider(object):
         if useCache and accCacheFilePath and self.__mU.exists(accCacheFilePath) and dataCacheFilePath and self.__mU.exists(dataCacheFilePath):
             dD = self.__mU.doImport(dataCacheFilePath, **cacheKwargs)
             idD = self.__mU.doImport(accCacheFilePath, fmt="json")
-
+            logger.info("Reading cached reference sequence ID and data cache files %d", len(idD["matchInfo"]))
             # Check for completeness -
             if doMissing:
-                idList = list(set(idD["refIdMap"].keys()))
                 missingS = set(idD["matchInfo"].keys()) - set(idList)
                 if missingS:
                     logger.info("Reference sequence cache missing %d accessions", len(missingS))
-                    extraD, extraIdD = self.__fetchReferenceEntries(refDbName, list(missingS), saveText=saveText, fetchLimit=fetchLimit)
+                    extraD, extraIdD = self.__fetchReferenceEntries(refDbName, list(missingS), saveText=saveText, fetchLimit=None)
                     dD["refDbCache"].update(extraD["refDbCache"])
                     idD["matchInfo"].update(extraIdD["matchInfo"])
                     if accCacheFilePath and dataCacheFilePath and cacheKwargs:
@@ -191,18 +196,15 @@ class ReferenceSequenceAssignmentProvider(object):
                         logger.info("Cache updated with missing references with status %r", ok1 and ok2)
             #
         else:
-            assignRefD = self.__getPolymerReferenceSequenceAssignments(databaseName, collectionName, polymerType, fetchLimit)
-            refIdMapD, _ = self.__getAssignmentMap(assignRefD, referenceDatabaseName=refDbName, provSource=provSource)
-            idList = list(refIdMapD.keys())
-            dD, idD = self.__fetchReferenceEntries(refDbName, idList, saveText=saveText, fetchLimit=fetchLimit)
-            idD["refIdMap"] = refIdMapD
+
+            dD, idD = self.__fetchReferenceEntries(refDbName, idList, saveText=saveText, fetchLimit=None)
             if accCacheFilePath and dataCacheFilePath and cacheKwargs:
                 self.__mU.mkdir(dirPath)
                 ok1 = self.__mU.doExport(dataCacheFilePath, dD, **cacheKwargs)
                 ok2 = self.__mU.doExport(accCacheFilePath, idD, fmt="json", indent=3)
                 logger.info("Cache save status %r", ok1 and ok2)
 
-        return idD["refIdMap"], idD["matchInfo"], dD["refDbCache"]
+        return idD["matchInfo"], dD["refDbCache"]
 
     def __fetchReferenceEntries(self, refDbName, idList, saveText=False, fetchLimit=None):
         """ Fetch database entries from the input reference sequence database name.

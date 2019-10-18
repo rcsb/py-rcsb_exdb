@@ -11,4 +11,4 @@
 16-Oct-2019 V0.19 Checkpoint in improving update reference sequences and troubleshooting tree node lists for ATC
 17-Oct-2019 V0.20 Checkpoint in refactoring reference sequence update processing.
 18-Oct-2019 V0.21 Test version of document-level update of reference sequence assignments
-#
+18-Oct-2019 V0.22 Update cache file management

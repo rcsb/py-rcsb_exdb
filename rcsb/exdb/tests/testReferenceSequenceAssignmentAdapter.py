@@ -76,6 +76,7 @@ class ReferenceSequenceAssignmentAdapterTests(unittest.TestCase):
                 provSource=provSource,
                 useCache=False,
                 cachePath=self.__cachePath,
+                cacheKwargs=self.__testEntityCacheKwargs,
                 fetchLimit=self.__fetchLimit,
                 siftsAbbreviated="TEST",
             )
@@ -84,7 +85,9 @@ class ReferenceSequenceAssignmentAdapterTests(unittest.TestCase):
             numRef1 = rsaP.getRefDataCount()
             #
             # ---  Reload from cache ---
-            rsaP = ReferenceSequenceAssignmentProvider(self.__cfgOb, referenceDatabaseName=referenceDatabaseName, useCache=True, cachePath=self.__cachePath)
+            rsaP = ReferenceSequenceAssignmentProvider(
+                self.__cfgOb, referenceDatabaseName=referenceDatabaseName, useCache=True, cachePath=self.__cachePath, cacheKwargs=self.__testEntityCacheKwargs
+            )
             ok = rsaP.testCache()
             self.assertTrue(ok)
             numRef2 = rsaP.getRefDataCount()
