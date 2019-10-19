@@ -1,6 +1,6 @@
 numpy
 rcsb.utils.io >= 0.44
-rcsb.db >= 0.80
+rcsb.db >= 0.82
 rcsb.utils.chemref >= 0.26
 rcsb.utils.config >= 0.24
 rcsb.utils.ec >= 0.16

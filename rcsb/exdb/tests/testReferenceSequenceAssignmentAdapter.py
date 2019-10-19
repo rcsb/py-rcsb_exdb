@@ -4,7 +4,7 @@
 # Date:    25-Apr-2019
 #
 # Updates:
-#
+#  2GKI_1,3ZXR_1,2I6F_1,1NQP_1,1NQP_2,1BL4_1,1F9E_1,1SFI_2,1EBO_1,1R6Z_1,1MH3_1,1MH4_1,1MOW_3,1BWM_1 --2I6F_1
 ##
 """
 Tests of reference seequence assignment adapter.

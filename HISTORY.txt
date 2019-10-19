@@ -13,3 +13,4 @@
 18-Oct-2019 V0.21 Test version of document-level update of reference sequence assignments
 18-Oct-2019 V0.22 Update cache file management
 18-Oct-2019 V0.23 Adjust filter behavior, turn off test mode, fix Py27 test parameter.
+19-Oct-2019 V0.24 Handle miscellaneous issues in reference sequence processing from Oct 18 full load

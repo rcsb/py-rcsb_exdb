@@ -69,6 +69,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             #
             if ersDL:
                 retDL = []
+                dupD = {}
                 for ersD in ersDL:
                     isMatched, isExcluded, updErsD = self.__reMapAccessions(entityKey, ersD, referenceDatabaseName, taxIdL, provSourceL)
                     #
@@ -79,7 +80,8 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     if isExcluded:
                         continue
                     #
-                    if not isMatched:
+                    if not isMatched and entityKey not in dupD:
+                        dupD[entityKey] = True
                         siftsAccDL = self.__getSiftsAccessions(entityKey, authAsymIdL)
                         for siftsAccD in siftsAccDL:
                             logger.info("Using SIFTS accession mapping for %s", entityKey)
@@ -100,6 +102,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 pass
             if alignDL and authAsymIdL:
                 retDL = []
+                dupD = {}
                 for alignD in alignDL:
                     isMatched, isExcluded, updAlignD = self.__reMapAlignments(entityKey, alignD, referenceDatabaseName, taxIdL, provSourceL)
                     #
@@ -109,7 +112,8 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     #
                     if isExcluded:
                         continue
-                    if not isMatched:
+                    if not isMatched and entityKey not in dupD:
+                        dupD[entityKey] = True
                         siftsAlignDL = self.__getSiftsAlignments(entityKey, authAsymIdL)
                         for siftsAlignD in siftsAlignDL:
                             logger.info("Using SIFTS mapping for the alignment of %s", entityKey)
@@ -159,6 +163,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         isMatched = False
         isExcluded = False
         excludeReferenceDatabases = excludeReferenceDatabases if excludeReferenceDatabases else ["PDB"]
+        refDbList = ["UniProt", "GenBank", "EMBL", "NDB", "NORINE", "PIR", "PRF", "RefSeq"]
         #
         rId = rsiD["database_accession"]
         logger.debug("%s rId %r db %r prov %r", entityKey, rId, rsiD["database_name"], rsiD["provenance_source"])
@@ -195,8 +200,9 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             except Exception:
                 pass
 
-        elif rsiD["provenance_source"] in provSourceL:
+        elif rsiD["provenance_source"] in provSourceL and rsiD["database_name"] in refDbList:
             logger.info("%s leaving reference accession for %s %s assigned by %r", entityKey, rId, rsiD["database_name"], provSourceL)
+            isMatched = True
         else:
             logger.info("%s leaving a reference accession for %s %s", entityKey, rId, rsiD["database_name"])
         #
@@ -218,6 +224,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         isExcluded = False
         isMatched = False
         excludeReferenceDatabases = excludeReferenceDatabases if excludeReferenceDatabases else ["PDB"]
+        refDbList = ["UniProt", "GenBank", "EMBL", "NDB", "NORINE", "PIR", "PRF", "RefSeq"]
         provSourceL = provSourceL if provSourceL else []
         rId = alignD["reference_database_accession"]
         #
@@ -249,10 +256,11 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 #
             except Exception:
                 pass
-        elif alignD["provenance_code"] in provSourceL:
-            logger.info("%s leaving reference accession for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], provSourceL)
+        elif alignD["provenance_code"] in provSourceL and alignD["reference_database_name"] in refDbList:
+            logger.info("%s leaving reference alignment for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], provSourceL)
+            isMatched = True
         else:
-            logger.info("%s leaving a reference accession for %s %s", entityKey, rId, alignD["reference_database_name"])
+            logger.info("%s leaving a reference alignment for %s %s", entityKey, rId, alignD["reference_database_name"])
         #
         logger.debug("%s isMatched %r isExcluded %r for alignment %r", entityKey, isMatched, isExcluded, rId)
         return isMatched, isExcluded, alignD
