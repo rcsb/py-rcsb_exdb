@@ -94,7 +94,7 @@ class ObjectUpdaterTests(unittest.TestCase):
             #
             obUpd = ObjectUpdater(self.__cfgOb)
             numUpd = obUpd.update(databaseName, collectionName, updateDL)
-            self.assertGreaterEqual(numUpd, self.__objectLimitTest)
+            self.assertGreaterEqual(numUpd, len(updateDL))
             logger.info("Update count is %d", numUpd)
         except Exception as e:
             logger.exception("Failing with %s", str(e))

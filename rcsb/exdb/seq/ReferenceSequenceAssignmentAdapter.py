@@ -35,7 +35,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         self.__matchD = self.__rsaP.getMatchInfo()
 
     def filter(self, obj, **kwargs):
-        isTestMode = True
+        isTestMode = False
         if isTestMode:
             _, _ = self.__filter(copy.deepcopy(obj))
             return True, obj
@@ -61,9 +61,11 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 pass
             #
             try:
-                taxIdL = list(set(obj["rcsb_entity_source_organism"]["ncbi_taxonomy_id"]))
-            except Exception:
-                pass
+                taxIdL = [oD["ncbi_taxonomy_id"] for oD in obj["rcsb_entity_source_organism"]]
+                taxIdL = list(set(taxIdL))
+                logger.debug("%s taxonomy (%d) %r", entityKey, len(taxIdL), taxIdL)
+            except Exception as e:
+                logger.debug("Failing with %s", str(e))
             #
             if ersDL:
                 retDL = []
@@ -169,18 +171,22 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     # no change
                     isMatched = True
                 elif rId in self.__matchD and self.__matchD[rId]["matched"] in ["secondary"]:
+                    logger.debug("secondary %r matched len %d", self.__matchD[rId]["matched"], len(self.__matchD[rId]["matchedIds"]))
                     if len(self.__matchD[rId]["matchedIds"]) == 1:
-                        for mId, mD in self.__matchD[rId]["matchedIds"]:
+                        for mId, mD in self.__matchD[rId]["matchedIds"].items():
                             rsiD["database_accession"] = mId
                             logger.info("%s matched secondary %s -> %s", entityKey, rId, mId)
                             isMatched = True
                     elif taxIdL and len(taxIdL) == 1:
                         #  -- simplest match case --
-                        for mId, mD in self.__matchD[rId]["matchedIds"]:
+                        numM = 0
+                        for mId, mD in self.__matchD[rId]["matchedIds"].items():
                             if taxIdL[0] == mD["taxId"]:
                                 rsiD["database_accession"] = mId
-                                logger.info("%s matched secondary with taxId %r %s -> %s", entityKey, taxIdL[0], rId, mId)
-                                isMatched = True
+                                numM += 1
+                        if numM == 1:
+                            isMatched = True
+                            logger.info("%s matched secondary with taxId %r %s -> %s", entityKey, taxIdL[0], rId, rsiD["database_accession"])
                     elif not taxIdL:
                         logger.info("%s no taxids with UniProt (%s) secondary mapping", entityKey, rId)
                     else:
@@ -224,15 +230,18 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     isMatched = True
                 elif rId in self.__matchD and self.__matchD[rId]["matched"] in ["secondary"]:
                     if len(self.__matchD[rId]["matchedIds"]) == 1:
-                        for mId, mD in self.__matchD[rId]["matchedIds"]:
+                        for mId, mD in self.__matchD[rId]["matchedIds"].items():
                             alignD["reference_database_accession"] = mId
                             isMatched = True
                     elif taxIdL and len(taxIdL) == 1:
                         #  -- simplest match case --
-                        for mId, mD in self.__matchD[rId]["matchedIds"]:
+                        numM = 0
+                        for mId, mD in self.__matchD[rId]["matchedIds"].items():
                             if taxIdL[0] == mD["taxId"]:
                                 alignD["reference_database_accession"] = mId
-                                isMatched = True
+                                numM += 1
+                        if numM == 1:
+                            isMatched = True
                     elif not taxIdL:
                         logger.info("%s no taxids with UniProt (%s) secondary mapping", entityKey, rId)
                     else:

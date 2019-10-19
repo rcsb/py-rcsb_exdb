@@ -12,3 +12,4 @@
 17-Oct-2019 V0.20 Checkpoint in refactoring reference sequence update processing.
 18-Oct-2019 V0.21 Test version of document-level update of reference sequence assignments
 18-Oct-2019 V0.22 Update cache file management
+18-Oct-2019 V0.23 Adjust filter behavior, turn off test mode, fix Py27 test parameter.
