@@ -68,9 +68,8 @@ class ReferenceSequenceAssignmentProvider(object):
         return len(self.__refD)
 
     def testCache(self):
-        ok = self.__refIdMapD and self.__matchD and self.__refD and len(self.__refIdMapD) >= len(self.__matchD)
-        logger.info("Status %r Lengths: refIdMap %d matchD %d refD %d", ok, len(self.__refIdMapD), len(self.__matchD), len(self.__refD))
-        ok = self.__refIdMapD and self.__matchD and self.__refD and len(self.__refIdMapD) >= len(self.__matchD)
+        logger.info("Reference cache lengths: refIdMap %d matchD %d refD %d", len(self.__refIdMapD), len(self.__matchD), len(self.__refD))
+        ok = self.__refIdMapD and self.__matchD and self.__refD
         return ok
 
     def __reload(self, databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs):
