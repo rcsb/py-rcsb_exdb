@@ -73,7 +73,8 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 for ersD in ersDL:
                     isMatched, isExcluded, updErsD = self.__reMapAccessions(entityKey, ersD, referenceDatabaseName, taxIdL, provSourceL)
                     #
-                    if isMatched:
+                    if isMatched and updErsD["database_accession"] not in dupD:
+                        dupD[updErsD["database_accession"]] = True
                         retDL.append(updErsD)
                         continue
                     #
@@ -90,6 +91,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                             logger.info("No alternative SIFTS accession mapping for %s", entityKey)
 
                 if retDL:
+                    logger.debug("%s retDL %r", entityKey, retDL)
                     obj["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"] = retDL
                 else:
                     del obj["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"]
@@ -104,9 +106,11 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 retDL = []
                 dupD = {}
                 for alignD in alignDL:
-                    isMatched, isExcluded, updAlignD = self.__reMapAlignments(entityKey, alignD, referenceDatabaseName, taxIdL, provSourceL)
+                    isMatched, isExcluded, updAlignD, alignHash = self.__reMapAlignments(entityKey, alignD, referenceDatabaseName, taxIdL, provSourceL)
                     #
-                    if isMatched:
+                    if isMatched and alignHash not in dupD:
+                        if alignHash:
+                            dupD[alignHash] = True
                         retDL.append(updAlignD)
                         continue
                     #
@@ -122,6 +126,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                             logger.info("No alternative SIFTS alignment for %s", entityKey)
                     #
                 if retDL:
+                    logger.debug("%s retDL %r", entityKey, retDL)
                     obj["rcsb_polymer_entity_align"] = retDL
                 else:
                     del obj["rcsb_polymer_entity_align"]
@@ -204,7 +209,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             logger.info("%s leaving reference accession for %s %s assigned by %r", entityKey, rId, rsiD["database_name"], provSourceL)
             isMatched = True
         else:
-            logger.info("%s leaving a reference accession for %s %s", entityKey, rId, rsiD["database_name"])
+            logger.info("%s leaving a reference accession for %s %s assigned by %r", entityKey, rId, rsiD["database_name"], rsiD["provenance_source"])
         #
         logger.debug("%s isMatched %r isExcluded %r for accession %r", entityKey, isMatched, isExcluded, rId)
         #
@@ -260,10 +265,30 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             logger.info("%s leaving reference alignment for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], provSourceL)
             isMatched = True
         else:
-            logger.info("%s leaving a reference alignment for %s %s", entityKey, rId, alignD["reference_database_name"])
+            logger.info("%s leaving a reference alignment for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], alignD["provenance_code"])
         #
         logger.debug("%s isMatched %r isExcluded %r for alignment %r", entityKey, isMatched, isExcluded, rId)
-        return isMatched, isExcluded, alignD
+        return isMatched, isExcluded, alignD, self.__hashAlignment(alignD)
+
+    def __hashAlignment(self, aD):
+        """
+        Example:
+
+            {'reference_database_name': 'UniProt', 'reference_database_accession': 'P62942', 'provenance_code': 'PDB',
+              'aligned_regions': [{'entity_beg_seq_id': 1, 'ref_beg_seq_id': 1, 'length': 107}]}]
+        """
+        hsh = None
+        hL = []
+        try:
+            hL.append(aD["reference_database_accession"])
+            for aR in aD["aligned_regions"]:
+                hL.append(aR["entity_beg_seq_id"])
+                hL.append(aR["ref_beg_seq_id"])
+                hL.append(aR["length"])
+            hsh = tuple(hL)
+        except Exception:
+            pass
+        return hsh
 
     def __getSiftsAccessions(self, entityKey, authAsymIdL):
         retL = []
