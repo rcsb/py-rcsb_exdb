@@ -38,7 +38,7 @@ class ReferenceSequenceAssignmentProvider(object):
         polymerType="Protein",
         referenceDatabaseName="UniProt",
         provSource="PDB",
-        maxChunkSize=350,
+        maxChunkSize=300,
         fetchLimit=None,
         **kwargs
     ):
@@ -69,7 +69,15 @@ class ReferenceSequenceAssignmentProvider(object):
 
     def testCache(self):
         logger.info("Reference cache lengths: refIdMap %d matchD %d refD %d", len(self.__refIdMapD), len(self.__matchD), len(self.__refD))
-        ok = self.__refIdMapD and self.__matchD and self.__refD
+        ok = bool(self.__refIdMapD and self.__matchD and self.__refD)
+        #
+        countD = defaultdict(int)
+        logger.info("Match dictionary length %d", len(self.__matchD))
+        for _, mD in self.__matchD.items():
+            if "matched" in mD:
+                countD[mD["matched"]] += 1
+        logger.info("Reference length %d Match length %d coverage %r", len(self.__refD), len(self.__matchD), countD.items())
+
         return ok
 
     def __reload(self, databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs):
@@ -109,9 +117,9 @@ class ReferenceSequenceAssignmentProvider(object):
                 ],
             )
             eCount = obEx.getCount()
-            logger.info("Entity count is %d", eCount)
+            logger.info("Polymer entity count type %s is %d", polymerType, eCount)
             objD = obEx.getObjects()
-            logger.info("Reading polymer entity entity count %d ref accession length %d ", eCount, len(objD))
+            logger.info("Reading polymer entity count %d ref accession length %d ", eCount, len(objD))
             #
         except Exception as e:
             logger.exception("Failing for %s (%s) with %s", databaseName, collectionName, str(e))
@@ -225,7 +233,15 @@ class ReferenceSequenceAssignmentProvider(object):
                 refD, matchD = fobj.fetchList(idList, maxChunkSize=self.__maxChunkSize)
                 dD = {"refDbName": refDbName, "refDbCache": refD}
                 idD = {"matchInfo": matchD}
-
+            #
+            # Check the coverage -
+            #
+            countD = defaultdict(int)
+            logger.info("Match dictionary length %d", len(matchD))
+            for _, mD in matchD.items():
+                if "matched" in mD:
+                    countD[mD["matched"]] += 1
+            logger.info("Reference length %d Match length %d coverage %r", len(refD), len(matchD), countD.items())
         except Exception as e:
             logger.exception("Failing with %s", str(e))
 

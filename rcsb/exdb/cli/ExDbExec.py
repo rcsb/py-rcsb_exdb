@@ -58,7 +58,7 @@ def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
     return ret
 
 
-def doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=None):
+def doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=None, testMode=False):
     try:
         databaseName = "pdbx_core"
         collectionName = "pdbx_core_polymer_entity"
@@ -85,6 +85,8 @@ def doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=None):
             return False
         logger.info("Cached reference data count is %d", rsaP.getRefDataCount())
         #
+        if testMode:
+            return ok
         rsa = ReferenceSequenceAssignmentAdapter(refSeqAssignProvider=rsaP)
         obTr = ObjectTransformer(cfgOb, objectAdapter=rsa)
         ok = obTr.doTransform(databaseName=databaseName, collectionName=collectionName, fetchLimit=fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": polymerType})
@@ -114,6 +116,7 @@ def main():
     parser.add_argument("--mock", default=False, action="store_true", help="Use MOCK repository configuration for testing")
     parser.add_argument("--cache_path", default=None, help="Top cache path for external and local resource files")
     parser.add_argument("--rebuild_cache", default=False, action="store_true", help="Rebuild cached files from remote resources")
+    parser.add_argument("--test_req_seq_cache", default=False, action="store_true", help="Test reference sequence cached files")
     #
     #
     args = parser.parse_args()
@@ -127,6 +130,7 @@ def main():
     configName = args.config_name
     rebuildCache = args.rebuild_cache
     useCache = not args.rebuild_cache
+    testMode = args.test_req_seq_cache
     if not configPath:
         configPath = os.getenv("DBLOAD_CONFIG_PATH", None)
     try:
@@ -186,7 +190,7 @@ def main():
             okS = loadStatus(crw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.upd_ref_seq:
-            ok = doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=documentLimit)
+            ok = doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=documentLimit, testMode=testMode)
             okS = ok
         #
         logger.info("Operation completed with status %r " % ok and okS)

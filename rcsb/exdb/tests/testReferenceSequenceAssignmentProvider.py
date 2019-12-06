@@ -62,7 +62,7 @@ class ReferenceSequenceAssignmentProviderTests(unittest.TestCase):
             rsaP = ReferenceSequenceAssignmentProvider(
                 self.__cfgOb,
                 databaseName="pdbx_core",
-                collectionName="polymer_",
+                collectionName="pdbx_core_polymer_entity",
                 polymerType="Protein",
                 referenceDatabaseName="UniProt",
                 provSource="PDB",
