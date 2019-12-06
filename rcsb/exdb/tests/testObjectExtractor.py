@@ -116,7 +116,7 @@ class ObjectExtractorTests(unittest.TestCase):
             obEx = ObjectExtractor(
                 self.__cfgOb,
                 databaseName="pdbx_core",
-                collectionName="pdbx_core_entity",
+                collectionName="pdbx_core_polymer_entity",
                 cacheFilePath=os.path.join(self.__workPath, "entity-data-test-cache.json"),
                 useCache=False,
                 keyAttribute="entity",
@@ -167,7 +167,7 @@ class ObjectExtractorTests(unittest.TestCase):
             obEx = ObjectExtractor(
                 self.__cfgOb,
                 databaseName="pdbx_core",
-                collectionName="pdbx_core_entity",
+                collectionName="pdbx_core_polymer_entity",
                 cacheFilePath=os.path.join(self.__workPath, "entity-selected-content-test-cache.json"),
                 useCache=False,
                 keyAttribute="entity",
@@ -176,7 +176,7 @@ class ObjectExtractorTests(unittest.TestCase):
                 # objectLimit=self.__objectLimitTest,
                 objectLimit=None,
                 selectionQuery={"entity_poly.rcsb_entity_polymer_type": "Protein"},
-                selectionList=["rcsb_id", "rcsb_entity_container_identifiers.reference_sequence_identifiers"],
+                selectionList=["rcsb_id", "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers"],
             )
             eCount = obEx.getCount()
             logger.info("Entity count is %d", eCount)
@@ -210,7 +210,7 @@ class ObjectExtractorTests(unittest.TestCase):
                 try:
                     siftsS = set()
                     pdbS = set()
-                    for tD in eD["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"]:
+                    for tD in eD["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]:
                         if tD["database_name"] == "UniProt":
                             if tD["provenance_source"] == "SIFTS":
                                 siftsS.add(tD["database_accession"])
@@ -219,7 +219,7 @@ class ObjectExtractorTests(unittest.TestCase):
                                 pdbS.add(tD["database_accession"])
                                 pdbUnpIdD[tD["database_accession"]] += 1
                         else:
-                            logger.debug("No UniProt for %r", eD["rcsb_entity_container_identifiers"])
+                            logger.debug("No UniProt for %r", eD["rcsb_polymer_entity_container_identifiers"])
                     logger.debug("PDB assigned sequence length %d", len(pdbS))
                     logger.debug("SIFTS assigned sequence length %d", len(siftsS))
 
@@ -246,7 +246,7 @@ class ObjectExtractorTests(unittest.TestCase):
             obEx = ObjectExtractor(
                 self.__cfgOb,
                 databaseName="pdbx_core",
-                collectionName="pdbx_core_entity",
+                collectionName="pdbx_core_polymer_entity",
                 cacheFilePath=os.path.join(self.__workPath, "entity-taxonomy-test-cache.json"),
                 useCache=False,
                 keyAttribute="entity",
@@ -254,7 +254,7 @@ class ObjectExtractorTests(unittest.TestCase):
                 cacheKwargs=self.__testEntryCacheKwargs,
                 # objectLimit=self.__objectLimitTest,
                 objectLimit=None,
-                selectionQuery={"entity.type": "polymer"},
+                selectionQuery=None,
                 selectionList=["rcsb_id", "rcsb_entity_source_organism.ncbi_taxonomy_id", "rcsb_entity_host_organism.ncbi_taxonomy_id"],
             )
             eCount = obEx.getCount()

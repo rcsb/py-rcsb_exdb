@@ -55,8 +55,8 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             authAsymIdL = None
             taxIdL = None
             try:
-                ersDL = obj["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"]
-                authAsymIdL = obj["rcsb_entity_container_identifiers"]["auth_asym_ids"]
+                ersDL = obj["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]
+                authAsymIdL = obj["rcsb_polymer_entity_container_identifiers"]["auth_asym_ids"]
             except Exception:
                 pass
             #
@@ -92,9 +92,9 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
 
                 if retDL:
                     logger.debug("%s retDL %r", entityKey, retDL)
-                    obj["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"] = retDL
+                    obj["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"] = retDL
                 else:
-                    del obj["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"]
+                    del obj["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]
                     logger.info("Incomplete reference sequence mapping update for %s", entityKey)
             #
             #

@@ -60,7 +60,7 @@ class ObjectUpdaterTests(unittest.TestCase):
         """
         try:
             databaseName = "pdbx_core"
-            collectionName = "pdbx_core_entity"
+            collectionName = "pdbx_core_polymer_entity"
             obEx = ObjectExtractor(
                 self.__cfgOb,
                 databaseName=databaseName,
@@ -73,7 +73,7 @@ class ObjectUpdaterTests(unittest.TestCase):
                 objectLimit=self.__objectLimitTest,
                 # objectLimit=None,
                 selectionQuery={"entity_poly.rcsb_entity_polymer_type": "Protein"},
-                selectionList=["rcsb_id", "rcsb_entity_container_identifiers.reference_sequence_identifiers"],
+                selectionList=["rcsb_id", "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers"],
             )
             eCount = obEx.getCount()
             logger.info("Entity count is %d", eCount)
@@ -82,10 +82,10 @@ class ObjectUpdaterTests(unittest.TestCase):
             for entityKey, eD in objD.items():
                 try:
                     selectD = {"rcsb_id": entityKey}
-                    tL = eD["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"]
+                    tL = eD["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]
                     tL.append({"database_accession": "1111111", "database_name": "PDB", "provenance_source": "RCSB"})
                     #
-                    updateD = {"rcsb_entity_container_identifiers.reference_sequence_identifiers": tL}
+                    updateD = {"rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers": tL}
                     updateDL.append({"selectD": selectD, "updateD": updateD})
                 except Exception as e:
                     logger.exception("Failing with %s", str(e))

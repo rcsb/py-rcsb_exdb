@@ -61,7 +61,7 @@ class ReferenceSequenceAssignmentAdapterTests(unittest.TestCase):
         """
         try:
             databaseName = "pdbx_core"
-            collectionName = "pdbx_core_entity"
+            collectionName = "pdbx_core_polymer_entity"
             polymerType = "Protein"
             referenceDatabaseName = "UniProt"
             provSource = "PDB"

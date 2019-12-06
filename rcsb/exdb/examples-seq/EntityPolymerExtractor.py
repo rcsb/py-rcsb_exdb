@@ -418,7 +418,7 @@ class EntityPolymerExtractor(object):
 
         """
         dbName = kwargs.get("dbName", "pdbx_core")
-        collectionName = kwargs.get("collectionName", "pdbx_core_entity")
+        collectionName = kwargs.get("collectionName", "pdbx_core_polymer_entity")
         resultKey = kwargs.get("resultKey", "selected_polymer_entities")
 
         entryLimit = kwargs.get("entryLimit", None)
@@ -430,7 +430,7 @@ class EntityPolymerExtractor(object):
                 if mg.collectionExists(dbName, collectionName):
                     logger.info("%s %s document count is %d", dbName, collectionName, mg.count(dbName, collectionName))
                     selectL = [
-                        "rcsb_entity_container_identifiers",
+                        "rcsb_polymer_entity_container_identifiers",
                         "entity.rcsb_multiple_source_flag",
                         "entity_poly.type",
                         "entity_poly.rcsb_entity_polymer_type",
@@ -458,7 +458,7 @@ class EntityPolymerExtractor(object):
                         if resultKey in entryD[entryId]:
                             continue
                         #
-                        qD = {"rcsb_entity_container_identifiers.entry_id": entryId}
+                        qD = {"rcsb_polymer_entity_container_identifiers.entry_id": entryId}
                         qD.update(selectionQueryD)
                         #
                         dL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
@@ -470,7 +470,7 @@ class EntityPolymerExtractor(object):
                             if "entity" in dD:
                                 rD["rcsb_multiple_source_flag"] = dD["entity"]["rcsb_multiple_source_flag"] if "rcsb_multiple_source_flag" in dD["entity"] else "N"
                             #
-                            if "rcsb_entity_container_identifiers" in dD:
+                            if "rcsb_polymer_entity_container_identifiers" in dD:
                                 rD["asym_ids"] = dD["rcsb_entity_container_identifiers"]["asym_ids"] if "asym_ids" in dD["rcsb_entity_container_identifiers"] else []
                                 rD["auth_asym_ids"] = dD["rcsb_entity_container_identifiers"]["auth_asym_ids"] if "auth_asym_ids" in dD["rcsb_entity_container_identifiers"] else []
                                 rD["entity_id"] = dD["rcsb_entity_container_identifiers"]["entity_id"]

@@ -57,7 +57,7 @@ class ObjectTransformerTests(unittest.TestCase):
         """
         try:
             databaseName = "pdbx_core"
-            collectionName = "pdbx_core_entity"
+            collectionName = "pdbx_core_polymer_entity"
             obTr = ObjectTransformer(self.__cfgOb)
             ok = obTr.doTransform(
                 databaseName=databaseName, collectionName=collectionName, fetchLimit=self.__fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": "Protein"}

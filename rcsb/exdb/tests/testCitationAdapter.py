@@ -1,13 +1,13 @@
 ##
-# File:    ReferenceSequenceAssignmentProviderTests.py
+# File:    CitationAdapterTests.py
 # Author:  J. Westbrook
-# Date:    17-Oct-2019
+# Date:    22-Nov-2019
 #
 # Updates:
 #
 ##
 """
-Tests for reference sequence assignment update operations
+Tests of reference seequence assignment adapter.
 """
 
 __docformat__ = "restructuredtext en"
@@ -20,7 +20,10 @@ import os
 import time
 import unittest
 
-from rcsb.exdb.seq.ReferenceSequenceAssignmentProvider import ReferenceSequenceAssignmentProvider
+from rcsb.exdb.citation.CitationAdapter import CitationAdapter
+from rcsb.exdb.utils.ObjectTransformer import ObjectTransformer
+from rcsb.utils.citation.CitationReferenceProvider import CitationReferenceProvider
+from rcsb.utils.citation.JournalTitleAbbreviationProvider import JournalTitleAbbreviationProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -30,9 +33,9 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
-class ReferenceSequenceAssignmentProviderTests(unittest.TestCase):
+class CitationAdapterTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
-        super(ReferenceSequenceAssignmentProviderTests, self).__init__(methodName)
+        super(CitationAdapterTests, self).__init__(methodName)
         self.__verbose = True
 
     def setUp(self):
@@ -43,9 +46,9 @@ class ReferenceSequenceAssignmentProviderTests(unittest.TestCase):
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
         self.__resourceName = "MONGO_DB"
-        self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE", "cit_ref")
         self.__testEntityCacheKwargs = {"fmt": "json", "indent": 3}
-        self.__fetchLimitTest = None
+        self.__fetchLimit = None
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -54,45 +57,37 @@ class ReferenceSequenceAssignmentProviderTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def testAssignmentProvider(self):
+    def testCitationAdapter(self):
         """ Test case - create and read cache reference sequences assignments and related data.
         """
         try:
-            #  -- create cache ---
-            rsaP = ReferenceSequenceAssignmentProvider(
-                self.__cfgOb,
-                databaseName="pdbx_core",
-                collectionName="polymer_",
-                polymerType="Protein",
-                referenceDatabaseName="UniProt",
-                provSource="PDB",
-                useCache=False,
-                cachePath=self.__cachePath,
-                fetchLimit=self.__fetchLimitTest,
-                siftsAbbreviated="TEST",
-            )
-            ok = rsaP.testCache()
-            self.assertTrue(ok)
-            numRef = rsaP.getRefDataCount()
-            self.assertGreaterEqual(numRef, 90)
+            databaseName = "pdbx_core"
+            collectionName = "pdbx_core_entry"
+            useCache = False
             #
-            # ---  Reload from cache ---
-            rsaP = ReferenceSequenceAssignmentProvider(self.__cfgOb, referenceDatabaseName="UniProt", useCache=True, cachePath=self.__cachePath)
-            ok = rsaP.testCache()
+            crP = CitationReferenceProvider(cachePath=self.__cachePath, useCache=useCache)
+            ok = crP.testCache()
             self.assertTrue(ok)
-            numRef = rsaP.getRefDataCount()
-            self.assertGreaterEqual(numRef, 90)
+            jtaP = JournalTitleAbbreviationProvider(cachePath=self.__cachePath, useCache=useCache)
+            ok = jtaP.testCache()
+            self.assertTrue(ok)
+            #
+            ca = CitationAdapter(crP, jtaP)
+            obTr = ObjectTransformer(self.__cfgOb, objectAdapter=ca)
+            ok = obTr.doTransform(databaseName=databaseName, collectionName=collectionName, fetchLimit=self.__fetchLimit)
+            self.assertTrue(ok)
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
 
-def referenceSequenceAssignmentProviderSuite():
+def citationAdapterSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(ReferenceSequenceAssignmentProviderTests("testAssignmentProvider"))
+    suiteSelect.addTest(CitationAdapterTests("testCitationAdapter"))
     return suiteSelect
 
 
 if __name__ == "__main__":
-    mySuite = referenceSequenceAssignmentProviderSuite()
+    mySuite = citationAdapterSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

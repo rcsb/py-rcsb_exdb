@@ -34,7 +34,7 @@ class ReferenceSequenceAssignmentProvider(object):
         self,
         cfgOb,
         databaseName="pdbx_core",
-        collectionName="pdbx_core_entity",
+        collectionName="pdbx_core_polymer_entity",
         polymerType="Protein",
         referenceDatabaseName="UniProt",
         provSource="PDB",
@@ -84,7 +84,7 @@ class ReferenceSequenceAssignmentProvider(object):
         """ Get all accessions assigned to input reference sequence database for the input polymerType.
 
             Returns:
-             (dict): {"1abc_1": "rcsb_entity_container_identifiers": {"reference_sequence_identifiers": []},
+             (dict): {"1abc_1": "rcsb_polymer_entity_container_identifiers": {"reference_sequence_identifiers": []},
                                 "rcsb_polymer_entity_align": [],
                                 "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
         """
@@ -102,8 +102,8 @@ class ReferenceSequenceAssignmentProvider(object):
                 selectionQuery={"entity_poly.rcsb_entity_polymer_type": polymerType},
                 selectionList=[
                     "rcsb_id",
-                    "rcsb_entity_container_identifiers.reference_sequence_identifiers",
-                    "rcsb_entity_container_identifiers.auth_asym_ids",
+                    "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers",
+                    "rcsb_polymer_entity_container_identifiers.auth_asym_ids",
                     "rcsb_polymer_entity_align",
                     "rcsb_entity_source_organism.ncbi_taxonomy_id",
                 ],
@@ -125,7 +125,7 @@ class ReferenceSequenceAssignmentProvider(object):
         for entityKey, eD in objD.items():
             try:
                 accS = set()
-                for ii, tD in enumerate(eD["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"]):
+                for ii, tD in enumerate(eD["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]):
                     if tD["database_name"] == referenceDatabaseName and tD["provenance_source"] == provSource:
                         accS.add(tD["database_accession"])
                         refIdD[tD["database_accession"]].append(entityKey)

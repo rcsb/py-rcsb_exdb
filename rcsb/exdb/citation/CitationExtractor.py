@@ -17,10 +17,8 @@ __license__ = "Apache 2.0"
 import logging
 import os
 
-from rcsb.db.mongo.Connection import Connection
-from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
+from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 from rcsb.utils.io.MarshalUtil import MarshalUtil
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +31,9 @@ class CitationExtractor(object):
     def __init__(self, cfgOb, **kwargs):
         self.__cfgOb = cfgOb
         self.__resourceName = "MONGO_DB"
+        self.__databaseName = "pdbx_core"
+        self.__collectionName = "pdbx_core_entry"
+        #
         self.__mU = MarshalUtil()
         #
         self.__entryD = self.__rebuildCache(**kwargs)
@@ -54,7 +55,7 @@ class CitationExtractor(object):
                 logger.info("Using cached entry citation file %s", cacheFilePath)
                 cD = self.__mU.doImport(cacheFilePath, **cacheKwargs)
             else:
-                entryD = self.__selectEntries(selectionList=["citation"], **kwargs)
+                entryD = self.__extractCitations()
                 cD["entryD"] = entryD
                 if cacheFilePath:
                     ok = self.__mU.mkdir(dirPath)
@@ -164,39 +165,29 @@ class CitationExtractor(object):
     def getEntryCount(self):
         return len(self.__entryD)
 
-    def __selectEntries(self, **kwargs):
-        """  Return a dictionary of PDB entry data subject to input selection and query.
+    def __extractCitations(self):
+        """ Test case - extract unique entity source and host taxonomies
         """
-
-        dbName = kwargs.get("dbName", "pdbx_core")
-        collectionName = kwargs.get("collectionName", "pdbx_core_entry")
-        selectionList = kwargs.get("selectionList", [])
-        selectionQueryD = kwargs.get("entrySelectionQuery", {})
-        #
-        entryD = {}
         try:
-            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                mg = MongoDbUtil(client)
-                if mg.collectionExists(dbName, collectionName):
-                    logger.info("%s %s document count is %d", dbName, collectionName, mg.count(dbName, collectionName))
-                    qD = {}
-                    if selectionQueryD:
-                        qD.update(qD)
-                    selectL = ["rcsb_entry_container_identifiers"]
-                    selectL.extend(selectionList)
-                    selectL = list(set(selectL))
-                    dL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
-                    logger.info("Selection %r fetch result count %d", selectL, len(dL))
-                    #
-                    for dD in dL:
-                        if "rcsb_entry_container_identifiers" not in dD:
-                            continue
-                        entryD[dD["rcsb_entry_container_identifiers"]["entry_id"]] = {}
-                        #
-                        for select in selectL:
-                            entryD[dD["rcsb_entry_container_identifiers"]["entry_id"]][select] = dD[select] if select in dD else None
-
+            obEx = ObjectExtractor(
+                self.__cfgOb,
+                databaseName=self.__databaseName,
+                collectionName=self.__collectionName,
+                cacheFilePath=None,
+                useCache=False,
+                keyAttribute="entry",
+                uniqueAttributes=["rcsb_id"],
+                cacheKwargs=None,
+                objectLimit=None,
+                selectionQuery={},
+                selectionList=["rcsb_id", "citation"],
+            )
+            eCount = obEx.getCount()
+            logger.info("Entry count is %d", eCount)
+            objD = obEx.getObjects()
+            for ky, eD in objD.items():
+                logger.info("%s: %r", ky, eD)
+            return objD
         except Exception as e:
             logger.exception("Failing with %s", str(e))
-        return entryD
-        #
+        return {}

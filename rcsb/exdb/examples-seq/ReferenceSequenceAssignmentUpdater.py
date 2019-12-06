@@ -33,7 +33,9 @@ class ReferenceSequenceAssignmentUpdater(object):
 
     """
 
-    def __init__(self, cfgOb, databaseName="pdbx_core", collectionName="pdbx_core_entity", polymerType="Protein", referenceDatabaseName="UniProt", provSource="PDB", **kwargs):
+    def __init__(
+        self, cfgOb, databaseName="pdbx_core", collectionName="pdbx_core_polymer_entity", polymerType="Protein", referenceDatabaseName="UniProt", provSource="PDB", **kwargs
+    ):
         self.__cfgOb = cfgOb
         self.__polymerType = polymerType
         self.__mU = MarshalUtil()

@@ -129,7 +129,7 @@ class EntityInstanceExtractor(object):
         """
         """
         dbName = "pdbx_core"
-        collectionName = "pdbx_core_entity"
+        collectionName = "pdbx_core_polymer_entity"
         docD = {}
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -137,12 +137,12 @@ class EntityInstanceExtractor(object):
                 if mg.collectionExists(dbName, collectionName):
                     logger.info("%s %s document count is %d", dbName, collectionName, mg.count(dbName, collectionName))
                     for entryId in entryIdList:
-                        qD = {"rcsb_entity_container_identifiers.entry_id": entryId}
-                        selectL = ["rcsb_entity_container_identifiers"]
+                        qD = {"rcsb_polymer_entity_container_identifiers.entry_id": entryId}
+                        selectL = ["rcsb_polymer_entity_container_identifiers"]
                         tL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
                         #
                         logger.debug("Selection %r fetch result count %d", selectL, len(tL))
-                        docD[entryId] = [vv["rcsb_entity_container_identifiers"] for vv in tL]
+                        docD[entryId] = [vv["rcsb_polymer_entity_container_identifiers"] for vv in tL]
             logger.debug("docD is %r", docD)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -152,7 +152,7 @@ class EntityInstanceExtractor(object):
         """  Add 'selected_polymer_entities' satisfying the input contiditions and add this to the input entry dictionary.
         """
         dbName = kwargs.get("dbName", "pdbx_core")
-        collectionName = kwargs.get("collectionName", "pdbx_core_entity")
+        collectionName = kwargs.get("collectionName", "pdbx_core_polymer_entity")
         resultKey = kwargs.get("resultKey", "selected_polymer_entities")
         savePath = kwargs.get("savePath", "entry-data.pic")
         entryLimit = kwargs.get("entryLimit", None)
@@ -164,7 +164,7 @@ class EntityInstanceExtractor(object):
                 if mg.collectionExists(dbName, collectionName):
                     logger.info("%s %s document count is %d", dbName, collectionName, mg.count(dbName, collectionName))
                     selectL = [
-                        "rcsb_entity_container_identifiers",
+                        "rcsb_polymer_entity_container_identifiers",
                         "entity_poly.type",
                         "entity_poly.pdbx_seq_one_letter_code_can",
                         "rcsb_entity_source_organism.ncbi_taxonomy_id",
@@ -180,7 +180,11 @@ class EntityInstanceExtractor(object):
                         if resultKey in entryD[entryId]:
                             continue
                         #
-                        qD = {"rcsb_entity_container_identifiers.entry_id": entryId, "entity_poly.rcsb_entity_polymer_type": "Protein", "entity.rcsb_multiple_source_flag": "N"}
+                        qD = {
+                            "rcsb_polymer_entity_container_identifiers.entry_id": entryId,
+                            "entity_poly.rcsb_entity_polymer_type": "Protein",
+                            "entity.rcsb_multiple_source_flag": "N",
+                        }
                         #
                         dL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
                         logger.debug("%s query %r fetch result count %d", entryId, qD, len(dL))
@@ -188,9 +192,9 @@ class EntityInstanceExtractor(object):
                         for ii, dV in enumerate(dL, 1):
                             rD = {}
                             logger.debug("%s (%4d) d is %r", entryId, ii, dV)
-                            if "rcsb_entity_container_identifiers" in dV and "asym_ids" in dV["rcsb_entity_container_identifiers"]:
-                                rD["asym_ids"] = dV["rcsb_entity_container_identifiers"]["asym_ids"]
-                                rD["entity_id"] = dV["rcsb_entity_container_identifiers"]["entity_id"]
+                            if "rcsb_polymer_entity_container_identifiers" in dV and "asym_ids" in dV["rcsb_polymer_entity_container_identifiers"]:
+                                rD["asym_ids"] = dV["rcsb_polymer_entity_container_identifiers"]["asym_ids"]
+                                rD["entity_id"] = dV["rcsb_polymer_entity_container_identifiers"]["entity_id"]
                             if "entity_poly" in dV and "type" in dV["entity_poly"]:
                                 rD["type"] = dV["entity_poly"]["type"]
                                 rD["seq_one_letter_code_can"] = dV["entity_poly"]["pdbx_seq_one_letter_code_can"]
@@ -258,7 +262,7 @@ class EntityInstanceExtractor(object):
             entryD: { }
         """
         dbName = kwargs.get("dbName", "pdbx_core")
-        collectionName = kwargs.get("collectionName", "pdbx_core_entity_instance_validation")
+        collectionName = kwargs.get("collectionName", "pdbx_core_polymer_entity_instance")
         savePath = kwargs.get("savePath", "entry-data.pic")
         saveKwargs = kwargs.get("saveKwargs", {"fmt": "pickle"})
         entryLimit = kwargs.get("entryLimit", None)
@@ -278,8 +282,8 @@ class EntityInstanceExtractor(object):
                             vD = {}
                             for asymId in peD["asym_ids"]:
                                 qD = {
-                                    "rcsb_entity_instance_validation_container_identifiers.entry_id": entryId,
-                                    "rcsb_entity_instance_validation_container_identifiers.asym_id": asymId,
+                                    "rcsb_polymer_entity_instance_container_identifiers.entry_id": entryId,
+                                    "rcsb_polymer_entity_instance_container_identifiers.asym_id": asymId,
                                 }
                                 # qD = {'rcsb_entity_instance_container_validation_identifiers.entity_type': 'polymer'}
                                 # selectL = ['pdbx_vrpt_instance_results', 'pdbx_unobs_or_zero_occ_residues']
@@ -507,7 +511,7 @@ class EntityInstanceExtractor(object):
 
         # Find the indicies of changes in "condition"
         dV = np.diff(condition)
-        idx, = dV.nonzero()
+        (idx,) = dV.nonzero()
 
         # We need to start things after the change in "condition". Therefore,
         # we'll shift the index by 1 to the right.

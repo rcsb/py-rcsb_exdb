@@ -61,7 +61,7 @@ def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
 def doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=None):
     try:
         databaseName = "pdbx_core"
-        collectionName = "pdbx_core_entity"
+        collectionName = "pdbx_core_polymer_entity"
         polymerType = "Protein"
         referenceDatabaseName = "UniProt"
         provSource = "PDB"
@@ -162,6 +162,7 @@ def main():
     # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
     ##
     #  Rebuild or check resource cache
+    okS = True
     ok = buildResourceCache(cfgOb, configName, cachePath, rebuildCache=rebuildCache)
     if not ok:
         logger.error("Cache rebuild or check failure (rebuild %r) %r", rebuildCache, cachePath)

@@ -26,13 +26,13 @@ class TaxonomyExtractor(object):
     def __init__(self, cfgOb):
         self.__cfgOb = cfgOb
         self.__databaseName = "pdbx_core"
-        self.__collectionName = "pdbx_core_entity"
+        self.__collectionName = "pdbx_core_polymer_entity"
 
     def getUniqueTaxons(self):
-        taxIdL = self.__testExtractEntityTaxons()
+        taxIdL = self.__extractEntityTaxons()
         return taxIdL
 
-    def __testExtractEntityTaxons(self):
+    def __extractEntityTaxons(self):
         """ Test case - extract unique entity source and host taxonomies
         """
         try:
@@ -46,7 +46,8 @@ class TaxonomyExtractor(object):
                 uniqueAttributes=["rcsb_id"],
                 cacheKwargs=None,
                 objectLimit=None,
-                selectionQuery={"entity.type": "polymer"},
+                # selectionQuery={"entity.type": "polymer"},
+                selectionQuery=None,
                 selectionList=["rcsb_id", "rcsb_entity_source_organism.ncbi_taxonomy_id", "rcsb_entity_host_organism.ncbi_taxonomy_id"],
             )
             eCount = obEx.getCount()
