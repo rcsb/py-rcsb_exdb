@@ -159,7 +159,7 @@ class ReferenceSequenceAssignmentProvider(object):
 
         logger.info("Entities with missing taxonomy %d", numMissingTaxons)
         logger.info("Reference sequences with multiple taxonomies %d", numMultipleTaxons)
-        logger.info("Unique %s accession assignments by %s %d (missing assignments %d) ", referenceDatabaseName, provSource, len(refIdD), numMissing)
+        logger.info("Unique %s accession assignments by %s %d (entities missing archive accession assignments %d) ", referenceDatabaseName, provSource, len(refIdD), numMissing)
         return refIdD, taxIdD
 
     #
@@ -193,7 +193,8 @@ class ReferenceSequenceAssignmentProvider(object):
         if useCache and accCacheFilePath and self.__mU.exists(accCacheFilePath) and dataCacheFilePath and self.__mU.exists(dataCacheFilePath):
             dD = self.__mU.doImport(dataCacheFilePath, **cacheKwargs)
             idD = self.__mU.doImport(accCacheFilePath, fmt="json")
-            logger.info("Reading cached reference sequence ID and data cache files reference length =%d", len(idD["matchInfo"]))
+            logger.info("Reading cached reference sequence ID and data cache files - match reference length %d", len(idD["matchInfo"]))
+            idD["matchInfo"] = self.__rebuildReferenceMatchIndex(dD["refDbCache"], idList)
             # Check for completeness -
             if doMissing:
                 missingS = set(idList) - set(idD["matchInfo"].keys())
@@ -202,11 +203,15 @@ class ReferenceSequenceAssignmentProvider(object):
                     extraD, extraIdD = self.__fetchReferenceEntries(refDbName, list(missingS), saveText=saveText, fetchLimit=None)
                     dD["refDbCache"].update(extraD["refDbCache"])
                     idD["matchInfo"].update(extraIdD["matchInfo"])
+                    #
+                    idD["matchInfo"] = self.__rebuildReferenceMatchIndex(dD["refDbCache"], idList)
+                    #
                     if accCacheFilePath and dataCacheFilePath and cacheKwargs:
                         self.__mU.mkdir(dirPath)
                         ok1 = self.__mU.doExport(dataCacheFilePath, dD, **cacheKwargs)
                         ok2 = self.__mU.doExport(accCacheFilePath, idD, fmt="json", indent=3)
                         logger.info("Cache updated with missing references with status %r", ok1 and ok2)
+
             #
         else:
 
@@ -218,6 +223,12 @@ class ReferenceSequenceAssignmentProvider(object):
                 logger.info("Cache save status %r", ok1 and ok2)
 
         return idD["matchInfo"], dD["refDbCache"]
+
+    def __rebuildReferenceMatchIndex(self, referenceD, idList):
+        fobj = UniProtUtils()
+        logger.info("Rebuilding match index on idList(%d) using reference data (%d)", len(idList), len(referenceD))
+        matchD = fobj.rebuildMatchResultIndex(idList, referenceD)
+        return matchD
 
     def __fetchReferenceEntries(self, refDbName, idList, saveText=False, fetchLimit=None):
         """ Fetch database entries from the input reference sequence database name.
@@ -241,7 +252,7 @@ class ReferenceSequenceAssignmentProvider(object):
             for _, mD in matchD.items():
                 if "matched" in mD:
                     countD[mD["matched"]] += 1
-            logger.info("Reference length %d Match length %d coverage %r", len(refD), len(matchD), countD.items())
+            logger.info("Reference length %d match length %d coverage %r", len(refD), len(matchD), countD.items())
         except Exception as e:
             logger.exception("Failing with %s", str(e))
 
