@@ -73,6 +73,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 for ersD in ersDL:
                     isMatched, isExcluded, updErsD = self.__reMapAccessions(entityKey, ersD, referenceDatabaseName, taxIdL, provSourceL)
                     #
+                    logger.info("isMatched %r isExcluded %r updErsD %r", isMatched, isExcluded, updErsD)
                     if isMatched and updErsD["database_accession"] not in dupD:
                         dupD[updErsD["database_accession"]] = True
                         retDL.append(updErsD)
@@ -138,7 +139,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         return ok, obj
 
     def __reMapAccessions(self, entityKey, rsiD, referenceDatabaseName, taxIdL, provSourceL, excludeReferenceDatabases=None):
-        """Internal method to re-map accession for the input databae and assignment source
+        """Internal method to re-map accession for the input database and assignment source
 
         Args:
             rsiDL (list): list of accession

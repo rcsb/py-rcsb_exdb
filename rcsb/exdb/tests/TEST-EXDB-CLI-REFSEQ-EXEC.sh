@@ -8,3 +8,5 @@ exdb_exec_cli --mock  --upd_ref_seq --cache_path ../../../CACHE  --config_path .
 #
 exdb_exec_cli --test_req_seq_cache --mock  --upd_ref_seq --cache_path ../../../CACHE  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info_configuration >& ./test-output/LOGUPDREFSEQTEST
 #
+exdb_exec_cli --mock --full --etl_uniprot --cache_path ../../../CACHE  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info_configuration >& ./test-output/LOGUNIPROT
+#

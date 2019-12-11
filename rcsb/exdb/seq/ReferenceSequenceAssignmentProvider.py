@@ -61,6 +61,11 @@ class ReferenceSequenceAssignmentProvider(object):
     def getRefData(self):
         return self.__refD
 
+    def getDocuments(self, formatType="exchange"):
+        fobj = UniProtUtils(saveText=False)
+        exObjD = fobj.reformat(self.__refD, formatType=formatType)
+        return list(exObjD.values())
+
     def getRefIdMap(self):
         return self.__refIdMapD
 
