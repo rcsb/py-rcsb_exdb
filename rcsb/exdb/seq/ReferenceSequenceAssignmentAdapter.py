@@ -33,20 +33,134 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         self.__ssP = self.__rsaP.getSiftsSummaryProvider()
         self.__refD = self.__rsaP.getRefData()
         self.__matchD = self.__rsaP.getMatchInfo()
+        #
 
     def filter(self, obj, **kwargs):
         isTestMode = False
         if isTestMode:
-            _, _ = self.__filter(copy.deepcopy(obj))
-            return True, obj
+            ok1, tObj = self.__filterAccessions(copy.deepcopy(obj))
+            ok2, tObj = self.__filterFeatures(tObj)
+            return ok1 and ok2, obj
         else:
-            return self.__filter(obj)
+            ok1, obj = self.__filterAccessions(obj)
+            ok2, obj = self.__filterFeatures(obj)
+            return ok1 and ok2, obj
 
-    def __filter(self, obj):
+    def __filterFeatures(self, obj):
+        ok = True
+        try:
+            if not ("rcsb_polymer_entity_container_identifiers" in obj and "rcsb_id" in obj):
+                return False, obj
+            entityKey = obj["rcsb_id"]
+            eciD = obj["rcsb_polymer_entity_container_identifiers"]
+            #
+            logger.info(" ------------- Running feature filter on %r --------------", entityKey)
+            #
+            rsDL = []
+            soDL = []
+            #
+            try:
+                rsDL = eciD["reference_sequence_identifiers"]
+            except Exception:
+                pass
+            #
+            # try:
+            #    raDL = eciD["related_annotation_identifiers"]
+            # except Exception:
+            #     pass
+
+            try:
+                soDL = obj["rcsb_entity_source_organism"]
+            except Exception:
+                pass
+            #
+            # rsD {'database_name': 'UniProt', 'database_accession': 'P06881', 'provenance_source': 'PDB'}
+            unpIdS = set()
+            for rsD in rsDL:
+                if "database_name" in rsD and rsD["database_name"] == "UniProt" and "database_accession" in rsD:
+                    unpIdS.add(rsD["database_accession"])
+            #
+            unpGeneDL = []
+            unpAnnDL = []
+            goIdL = []
+
+            for unpId in unpIdS:
+                uD = self.__refD[unpId] if unpId in self.__refD else None
+                if not uD:
+                    logger.info("%s unexpected UniProt accession %r", entityKey, unpId)
+                    continue
+                if "gene" in uD and "taxonomy_id" in uD:
+                    taxId = int(uD["taxonomy_id"])
+                    logger.debug("%s : %r gene names %r", entityKey, unpId, uD["gene"])
+                    for tD in uD["gene"]:
+                        unpGeneDL.append({"provenance_code": "UniProt", "value": tD["name"], "taxonomy_id": taxId})
+                if "dbReferences" in uD:
+                    logger.debug("%s : %r references %d", entityKey, unpId, len(uD["dbReferences"]))
+                    for tD in uD["dbReferences"]:
+                        if "resource" in tD and "id_code" in tD and tD["resource"] in ["GO", "Pfam", "InterPro"]:
+                            unpAnnDL.append({"provenance_source": "UniProt", "resource_identifier": tD["id_code"], "resource_name": tD["resource"]})
+                            if tD["resource"] in ["GO"]:
+                                goIdL.append(tD["id_code"])
+            #
+            # raD {'resource_identifier': 'PF00503', 'provenance_source': 'SIFTS', 'resource_name': 'Pfam'}
+            # "provenance_source":  <"PDB"|"RCSB"|"SIFTS"|"UniProt"> "GO", "InterPro", "Pfam"
+            #
+            # for ii, raD in enumerate(raDL):
+            #    logger.info("raD (%d) related annotation %r", ii, raD["resource_name"])
+            # ------------
+            # filter existing annotations
+            if "related_annotation_identifiers" in eciD:
+                qL = []
+                for qD in eciD["related_annotation_identifiers"]:
+                    if qD["provenance_source"] != "UniProt":
+                        qL.append(qD)
+                eciD["related_annotation_identifiers"] = qL
+
+            for unpAnnD in unpAnnDL:
+                eciD.setdefault("related_annotation_identifiers", []).append(unpAnnD)
+            #
+            if goIdL:
+                goLin = []
+                goLin = self.__rsaP.getGeneOntologyLineage(goIdL)
+                if goLin:
+                    eciD["related_annotation_lineage"] = goLin
+            #
+            # --------------  Add gene names -----------------
+            #'rcsb_gene_name': [{'value': <gene>, 'provenance_code': <"PDB Primary Data"|"UniProt">}, ...]
+            numSource = len(soDL)
+            logger.debug("%s unpGeneDL %r", entityKey, unpGeneDL)
+            for ii, soD in enumerate(soDL):
+                if "ncbi_taxonomy_id" not in soD:
+                    continue
+                logger.debug("soD (%d) taxonomy %r", ii, soD["ncbi_taxonomy_id"])
+                # Filter any existing annotations
+                if "rcsb_gene_name" in soD:
+                    qL = []
+                    for qD in soD["rcsb_gene_name"]:
+                        if qD["provenance_code"] != "UniProt":
+                            qL.append(qD)
+                    soD["rcsb_gene_name"] = qL
+                taxId = soD["ncbi_taxonomy_id"]
+                for unpGeneD in unpGeneDL:
+                    # Only for matching taxonomies
+                    if taxId == unpGeneD["taxonomy_id"]:
+                        # skip cases with primary annotations and multiple sources
+                        if "rcsb_gene_name" in soD and numSource > 1:
+                            logger.warning("%s skipping special chimeric case", entityKey)
+                            continue
+                        soD.setdefault("rcsb_gene_name", []).append({"provenance_code": unpGeneD["provenance_code"], "value": unpGeneD["value"]})
+
+        except Exception as e:
+            ok = False
+            logger.exception("Feature filter adapter failing with error with %s", str(e))
+        #
+        return ok, obj
+
+    def __filterAccessions(self, obj):
         ok = True
         try:
             entityKey = obj["rcsb_id"]
-            logger.info(" ------------- Running filter on %r --------------", entityKey)
+            logger.info(" ------------- Running accession filter on %r --------------", entityKey)
             #
             referenceDatabaseName = "UniProt"
             provSourceL = "PDB"
@@ -58,7 +172,8 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 ersDL = obj["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]
                 authAsymIdL = obj["rcsb_polymer_entity_container_identifiers"]["auth_asym_ids"]
             except Exception:
-                pass
+                logger.debug("%s no reference assignment protein sequence.", entityKey)
+
             #
             try:
                 taxIdL = [oD["ncbi_taxonomy_id"] for oD in obj["rcsb_entity_source_organism"]]
@@ -74,6 +189,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     isMatched, isExcluded, updErsD = self.__reMapAccessions(entityKey, ersD, referenceDatabaseName, taxIdL, provSourceL)
                     #
                     logger.info("isMatched %r isExcluded %r updErsD %r", isMatched, isExcluded, updErsD)
+
                     if isMatched and updErsD["database_accession"] not in dupD:
                         dupD[updErsD["database_accession"]] = True
                         retDL.append(updErsD)

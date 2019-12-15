@@ -21,6 +21,7 @@ from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
 from rcsb.utils.seq.UniProtUtils import UniProtUtils
+from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,19 @@ class ReferenceSequenceAssignmentProvider(object):
         self.__statusList = []
         #
         self.__ssP = self.__fetchSiftsSummaryProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
-        self.__refIdMapD, self.__refD, self.__matchD = self.__reload(databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs)
+        self.__goP = self.__fetchGoProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
+        self.__refIdMapD, self.__matchD, self.__refD = self.__reload(databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs)
+
+    def getGeneOntologyLineage(self, goIdL):
+        # "id" "name" "resource"
+        gL = []
+        try:
+            gTupL = self.__goP.getUniqueDescendants(goIdL)
+            for gTup in gTupL:
+                gL.append({"id": gTup[0], "name": gTup[1], "resource": "GO"})
+        except Exception as e:
+            logger.exception("Failing for %r with %s", goIdL, str(e))
+        return gL
 
     def getSiftsSummaryProvider(self):
         return self.__ssP
@@ -89,8 +102,14 @@ class ReferenceSequenceAssignmentProvider(object):
         assignRefD = self.__getPolymerReferenceSequenceAssignments(databaseName, collectionName, polymerType, fetchLimit)
         refIdMapD, _ = self.__getAssignmentMap(assignRefD, referenceDatabaseName=referenceDatabaseName, provSource=provSource)
         #
+        entryIdL = [rcsbId[:4] for rcsbId in assignRefD]
+        siftsUniProtL = self.__ssP.getEntryUniqueIdentifiers(entryIdL, idType="UNPID")
+        logger.info("Incorporating %d SIFTS accessions for %d entries", len(siftsUniProtL), len(entryIdL))
+        unpIdList = sorted(set(list(refIdMapD.keys()) + siftsUniProtL))
         #
-        refD, matchD = self.__rebuildReferenceCache(list(refIdMapD.keys()), referenceDatabaseName, **kwargs)
+        logger.info("Rebuild cache for %d UniProt accessions (consolidated)", len(unpIdList))
+        #
+        matchD, refD = self.__rebuildReferenceCache(unpIdList, referenceDatabaseName, **kwargs)
         return refIdMapD, matchD, refD
 
     def __getPolymerReferenceSequenceAssignments(self, databaseName, collectionName, polymerType, fetchLimit):
@@ -118,7 +137,9 @@ class ReferenceSequenceAssignmentProvider(object):
                     "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers",
                     "rcsb_polymer_entity_container_identifiers.auth_asym_ids",
                     "rcsb_polymer_entity_align",
-                    "rcsb_entity_source_organism.ncbi_taxonomy_id",
+                    # "rcsb_entity_source_organism.ncbi_taxonomy_id",
+                    "rcsb_polymer_entity_container_identifiers.related_annotation_identifiers",
+                    "rcsb_entity_source_organism",
                 ],
             )
             eCount = obEx.getCount()
@@ -275,3 +296,14 @@ class ReferenceSequenceAssignmentProvider(object):
         ssP = SiftsSummaryProvider(srcDirPath=srcDirPath, cacheDirPath=cacheDirPath, useCache=useCache, abbreviated=abbreviated, cacheKwargs=cacheKwargs)
         logger.info("ssP entry count %d", ssP.getEntryCount())
         return ssP
+
+    def __fetchGoProvider(self, cfgOb, configName, **kwargs):
+        cachePath = kwargs.get("cachePath", ".")
+        useCache = kwargs.get("useCache", True)
+        #
+        cacheDirPath = os.path.join(cachePath, cfgOb.get("EXDB_CACHE_DIR", sectionName=configName))
+        logger.debug("goP %r %r", cacheDirPath, useCache)
+        goP = GeneOntologyProvider(goDirPath=cacheDirPath, useCache=useCache)
+        ok = goP.testCache()
+        logger.info("Gene Ontology (%r) root node count %r", ok, goP.getRootNodes())
+        return goP

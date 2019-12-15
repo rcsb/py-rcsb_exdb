@@ -18,3 +18,4 @@
  5-Dec-2019 V0.26 Add support for entity typed schema and update dependencies.
  6-Dec-2019 V0.27 Add match index cache recovery.1
 11-Dec-2019 V0.28 Adding reference sequence loader and moving pipeline to py38.
+15-Dec-2019 V0.29 Added methods to load UniProt features
