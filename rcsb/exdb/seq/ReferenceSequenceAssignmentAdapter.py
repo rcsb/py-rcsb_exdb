@@ -188,7 +188,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 for ersD in ersDL:
                     isMatched, isExcluded, updErsD = self.__reMapAccessions(entityKey, ersD, referenceDatabaseName, taxIdL, provSourceL)
                     #
-                    logger.info("isMatched %r isExcluded %r updErsD %r", isMatched, isExcluded, updErsD)
+                    logger.debug("isMatched %r isExcluded %r updErsD %r", isMatched, isExcluded, updErsD)
 
                     if isMatched and updErsD["database_accession"] not in dupD:
                         dupD[updErsD["database_accession"]] = True
