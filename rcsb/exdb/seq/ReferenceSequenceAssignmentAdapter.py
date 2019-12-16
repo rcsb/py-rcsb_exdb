@@ -126,7 +126,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     eciD["related_annotation_lineage"] = goLin
             #
             # --------------  Add gene names -----------------
-            #'rcsb_gene_name': [{'value': <gene>, 'provenance_code': <"PDB Primary Data"|"UniProt">}, ...]
+            #
             numSource = len(soDL)
             logger.debug("%s unpGeneDL %r", entityKey, unpGeneDL)
             for ii, soD in enumerate(soDL):
