@@ -54,6 +54,13 @@ class ReferenceSequenceAssignmentProvider(object):
         self.__goP = self.__fetchGoProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__refIdMapD, self.__matchD, self.__refD = self.__reload(databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs)
 
+    def goIdExists(self, goId):
+        try:
+            return self.__goP.exists(goId)
+        except Exception as e:
+            logger.exception("Failing for %r with %s", goId, str(e))
+        return False
+
     def getGeneOntologyLineage(self, goIdL):
         # "id" "name" "resource"
         gL = []
@@ -219,7 +226,7 @@ class ReferenceSequenceAssignmentProvider(object):
         if useCache and accCacheFilePath and self.__mU.exists(accCacheFilePath) and dataCacheFilePath and self.__mU.exists(dataCacheFilePath):
             dD = self.__mU.doImport(dataCacheFilePath, **cacheKwargs)
             idD = self.__mU.doImport(accCacheFilePath, fmt="json")
-            logger.info("Reading cached reference sequence ID and data cache files - match reference length %d", len(idD["matchInfo"]))
+            logger.info("Reading cached reference sequence ID and data cache files - cached match reference length %d", len(idD["matchInfo"]))
             idD["matchInfo"] = self.__rebuildReferenceMatchIndex(dD["refDbCache"], idList)
             # Check for completeness -
             if doMissing:
@@ -237,7 +244,6 @@ class ReferenceSequenceAssignmentProvider(object):
                         ok1 = self.__mU.doExport(dataCacheFilePath, dD, **cacheKwargs)
                         ok2 = self.__mU.doExport(accCacheFilePath, idD, fmt="json", indent=3)
                         logger.info("Cache updated with missing references with status %r", ok1 and ok2)
-
             #
         else:
 

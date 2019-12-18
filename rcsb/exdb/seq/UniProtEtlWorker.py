@@ -71,7 +71,7 @@ class UniProtEtlWorker(object):
                 polymerType="Protein",
                 referenceDatabaseName="UniProt",
                 provSource="PDB",
-                useCache=False,
+                useCache=self.__useCache,
                 cachePath=self.__cachePath,
                 fetchLimit=self.__documentLimit,
                 siftsAbbreviated="TEST",

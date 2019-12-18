@@ -98,9 +98,13 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     logger.debug("%s : %r references %d", entityKey, unpId, len(uD["dbReferences"]))
                     for tD in uD["dbReferences"]:
                         if "resource" in tD and "id_code" in tD and tD["resource"] in ["GO", "Pfam", "InterPro"]:
-                            unpAnnDL.append({"provenance_source": "UniProt", "resource_identifier": tD["id_code"], "resource_name": tD["resource"]})
                             if tD["resource"] in ["GO"]:
-                                goIdL.append(tD["id_code"])
+                                if self.__rsaP.goIdExists(tD["id_code"]):
+                                    goIdL.append(tD["id_code"])
+                                else:
+                                    continue
+                            unpAnnDL.append({"provenance_source": "UniProt", "resource_identifier": tD["id_code"], "resource_name": tD["resource"]})
+
             #
             # raD {'resource_identifier': 'PF00503', 'provenance_source': 'SIFTS', 'resource_name': 'Pfam'}
             # "provenance_source":  <"PDB"|"RCSB"|"SIFTS"|"UniProt"> "GO", "InterPro", "Pfam"
@@ -163,7 +167,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             logger.info(" ------------- Running accession filter on %r --------------", entityKey)
             #
             referenceDatabaseName = "UniProt"
-            provSourceL = "PDB"
+            provSourceL = ["PDB"]
             alignDL = None
             ersDL = None
             authAsymIdL = None
@@ -213,7 +217,6 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 else:
                     del obj["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]
                     logger.info("Incomplete reference sequence mapping update for %s", entityKey)
-            #
             #
             try:
                 alignDL = obj["rcsb_polymer_entity_align"]

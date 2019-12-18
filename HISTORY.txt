@@ -19,3 +19,4 @@
  6-Dec-2019 V0.27 Add match index cache recovery.1
 11-Dec-2019 V0.28 Adding reference sequence loader and moving pipeline to py38.
 15-Dec-2019 V0.29 Added methods to load UniProt features
+17-Dec-2019 V0.30 Pre-filter GOIDs and add ExDbWorkflow module with simple wf entry points
