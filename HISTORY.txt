@@ -21,3 +21,4 @@
 15-Dec-2019 V0.29 Added methods to load UniProt features
 17-Dec-2019 V0.30 Pre-filter GOIDs and add ExDbWorkflow module with simple wf entry points
 20-Dec-2019 V0.31 Adjust package definition
+23-Dec-2019 V0.32 Change protocol for supplementing accessions and EC annotations.

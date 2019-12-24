@@ -18,6 +18,7 @@ from collections import defaultdict
 
 
 from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
+from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
 from rcsb.utils.seq.UniProtUtils import UniProtUtils
@@ -52,6 +53,7 @@ class ReferenceSequenceAssignmentProvider(object):
         #
         self.__ssP = self.__fetchSiftsSummaryProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__goP = self.__fetchGoProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
+        self.__ecP = self.__fetchEcProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__refIdMapD, self.__matchD, self.__refD = self.__reload(databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs)
 
     def goIdExists(self, goId):
@@ -71,6 +73,9 @@ class ReferenceSequenceAssignmentProvider(object):
         except Exception as e:
             logger.exception("Failing for %r with %s", goIdL, str(e))
         return gL
+
+    def getEcProvider(self):
+        return self.__ecP
 
     def getSiftsSummaryProvider(self):
         return self.__ssP
@@ -313,3 +318,14 @@ class ReferenceSequenceAssignmentProvider(object):
         ok = goP.testCache()
         logger.info("Gene Ontology (%r) root node count %r", ok, goP.getRootNodes())
         return goP
+
+    def __fetchEcProvider(self, cfgOb, configName, **kwargs):
+        cachePath = kwargs.get("cachePath", ".")
+        useCache = kwargs.get("useCache", True)
+        #
+        cacheDirPath = os.path.join(cachePath, cfgOb.get("ENZYME_CLASSIFICATION_CACHE_DIR", sectionName=configName))
+        logger.debug("ecP %r %r", cacheDirPath, useCache)
+        ecP = EnzymeDatabaseProvider(enzymeDirPath=cacheDirPath, useCache=useCache)
+        ok = ecP.testCache()
+        logger.info("Enzyme cache status %r", ok)
+        return ecP

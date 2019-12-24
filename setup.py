@@ -28,7 +28,7 @@ setup(
     url="https://github.com/rcsb/py-rcsb_exdb",
     #
     license="Apache 2.0",
-    classifiers=(
+    classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Natural Language :: English",
@@ -37,7 +37,7 @@ setup(
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
-    ),
+    ],
     entry_points={"console_scripts": ["exdb_exec_cli=rcsb.exdb.cli.ExDbExec:main"]},
     #
     install_requires=[

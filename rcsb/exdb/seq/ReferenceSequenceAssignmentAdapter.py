@@ -24,6 +24,30 @@ logger = logging.getLogger(__name__)
 class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
     """  Selected utilities to update reference sequence assignments information
          in the core_entity collection.
+
+        "pdbx_ec" : "5.2.1.8",
+        "rcsb_ec_lineage" : [
+            {
+                "id" : "5",
+                "depth" : NumberInt(1),
+                "name" : "Isomerases"
+            },
+            {
+                "id" : "5.2",
+                "depth" : NumberInt(2),
+                "name" : "cis-trans-Isomerases"
+            },
+            {
+                "id" : "5.2.1",
+                "depth" : NumberInt(3),
+                "name" : "cis-trans Isomerases (only sub-subclass identified to date)"
+            },
+            {
+                "id" : "5.2.1.8",
+                "depth" : NumberInt(4),
+                "name" : "peptidylprolyl isomerase"
+            }
+        ],
     """
 
     def __init__(self, refSeqAssignProvider):
@@ -31,6 +55,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         #
         self.__rsaP = refSeqAssignProvider
         self.__ssP = self.__rsaP.getSiftsSummaryProvider()
+        self.__ecP = self.__rsaP.getEcProvider()
         self.__refD = self.__rsaP.getRefData()
         self.__matchD = self.__rsaP.getMatchInfo()
         #
@@ -54,7 +79,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             entityKey = obj["rcsb_id"]
             eciD = obj["rcsb_polymer_entity_container_identifiers"]
             #
-            logger.info(" ------------- Running feature filter on %r --------------", entityKey)
+            logger.debug(" ------------- Running feature filter on %r --------------", entityKey)
             #
             rsDL = []
             soDL = []
@@ -74,6 +99,10 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             except Exception:
                 pass
             #
+            try:
+                peObj = obj["rcsb_polymer_entity"]
+            except Exception:
+                pass
             # rsD {'database_name': 'UniProt', 'database_accession': 'P06881', 'provenance_source': 'PDB'}
             unpIdS = set()
             for rsD in rsDL:
@@ -87,7 +116,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             for unpId in unpIdS:
                 uD = self.__refD[unpId] if unpId in self.__refD else None
                 if not uD:
-                    logger.info("%s unexpected UniProt accession %r", entityKey, unpId)
+                    logger.info("%s no data for unexpected UniProt accession %r", entityKey, unpId)
                     continue
                 if "gene" in uD and "taxonomy_id" in uD:
                     taxId = int(uD["taxonomy_id"])
@@ -153,7 +182,44 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                             logger.warning("%s skipping special chimeric case", entityKey)
                             continue
                         soD.setdefault("rcsb_gene_name", []).append({"provenance_code": unpGeneD["provenance_code"], "value": unpGeneD["value"]})
-
+                #
+                # Remapping/extending EC assignments.
+                if peObj:
+                    linL = []
+                    enzD = {}
+                    if "rcsb_enzyme_class_combined" in peObj:
+                        logger.debug("%s PDB EC assignment %r", entityKey, peObj["rcsb_enzyme_class_combined"])
+                        enzD = {tD["ec"]: tD["provenance_source"] for tD in peObj["rcsb_enzyme_class_combined"]}
+                        logger.info("%s PDB EC assignment mapped %r", entityKey, enzD)
+                    #
+                    unpEcD = {}
+                    for unpId in unpIdS:
+                        uD = self.__refD[unpId] if unpId in self.__refD else None
+                        if not uD:
+                            logger.info("%s no data for unexpected UniProt accession %r", entityKey, unpId)
+                            continue
+                        if "dbReferences" in uD:
+                            logger.debug("%s : %r references %d", entityKey, unpId, len(uD["dbReferences"]))
+                            for tD in uD["dbReferences"]:
+                                if "resource" in tD and "id_code" in tD and tD["resource"] in ["EC"]:
+                                    logger.debug("%s UniProt accession %r EC %r", entityKey, unpId, tD)
+                                    tEc = self.__ecP.normalize(tD["id_code"])
+                                    if self.__ecP.exists(tEc):
+                                        unpEcD[tEc] = "UniProt"
+                    # integrate the UniProt data and update the object -
+                    if unpEcD:
+                        logger.info("%s UniProt EC assignment %r", entityKey, unpEcD)
+                        for ecId in unpEcD:
+                            if ecId in enzD:
+                                continue
+                            enzD[ecId] = unpEcD[ecId]
+                        for ecId in enzD:
+                            tL = self.__ecP.getLineage(ecId)
+                            if tL:
+                                linL.extend(tL)
+                        peObj["rcsb_enzyme_class_combined"] = [{"ec": k, "provenance_source": v} for k, v in enzD.items()]
+                        peObj["rcsb_ec_lineage"] = [{"depth": tup[0], "id": tup[1], "name": tup[2]} for tup in linL]
+                    #
         except Exception as e:
             ok = False
             logger.exception("Feature filter adapter failing with error with %s", str(e))
@@ -164,7 +230,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         ok = True
         try:
             entityKey = obj["rcsb_id"]
-            logger.info(" ------------- Running accession filter on %r --------------", entityKey)
+            logger.debug(" ------------- Running accession filter on %r --------------", entityKey)
             #
             referenceDatabaseName = "UniProt"
             provSourceL = ["PDB"]
@@ -190,23 +256,19 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 retDL = []
                 dupD = {}
                 for ersD in ersDL:
-                    isMatched, isExcluded, updErsD = self.__reMapAccessions(entityKey, ersD, referenceDatabaseName, taxIdL, provSourceL)
+                    isMatchedRefDb, isMatchedAltDb, updErsD = self.__reMapAccessions(entityKey, ersD, referenceDatabaseName, taxIdL, provSourceL)
                     #
-                    logger.debug("isMatched %r isExcluded %r updErsD %r", isMatched, isExcluded, updErsD)
+                    logger.debug("isMatchedRefDb %r isMatchedAltDb %r updErsD %r", isMatchedRefDb, isMatchedAltDb, updErsD)
 
-                    if isMatched and updErsD["database_accession"] not in dupD:
+                    if (isMatchedRefDb or isMatchedAltDb) and updErsD["database_accession"] not in dupD:
                         dupD[updErsD["database_accession"]] = True
                         retDL.append(updErsD)
-                        continue
                     #
-                    if isExcluded:
-                        continue
-                    #
-                    if not isMatched and entityKey not in dupD:
+                    if not isMatchedRefDb and entityKey not in dupD:
                         dupD[entityKey] = True
                         siftsAccDL = self.__getSiftsAccessions(entityKey, authAsymIdL)
                         for siftsAccD in siftsAccDL:
-                            logger.info("Using SIFTS accession mapping for %s", entityKey)
+                            logger.info("Using/adding SIFTS accession mapping for %s", entityKey)
                             retDL.append(siftsAccD)
                         if not siftsAccDL:
                             logger.info("No alternative SIFTS accession mapping for %s", entityKey)
@@ -226,21 +288,19 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 retDL = []
                 dupD = {}
                 for alignD in alignDL:
-                    isMatched, isExcluded, updAlignD, alignHash = self.__reMapAlignments(entityKey, alignD, referenceDatabaseName, taxIdL, provSourceL)
+                    isMatchedRefDb, isMatchedAltDb, updAlignD, alignHash = self.__reMapAlignments(entityKey, alignD, referenceDatabaseName, taxIdL, provSourceL)
                     #
-                    if isMatched and alignHash not in dupD:
+                    if (isMatchedRefDb or isMatchedAltDb) and alignHash not in dupD:
                         if alignHash:
                             dupD[alignHash] = True
                         retDL.append(updAlignD)
-                        continue
                     #
-                    if isExcluded:
-                        continue
-                    if not isMatched and entityKey not in dupD:
+
+                    if not isMatchedRefDb and entityKey not in dupD:
                         dupD[entityKey] = True
                         siftsAlignDL = self.__getSiftsAlignments(entityKey, authAsymIdL)
                         for siftsAlignD in siftsAlignDL:
-                            logger.info("Using SIFTS mapping for the alignment of %s", entityKey)
+                            logger.info("Using/adding SIFTS mapping for the alignment of %s", entityKey)
                             retDL.append(siftsAlignD)
                         if not siftsAlignDL:
                             logger.info("No alternative SIFTS alignment for %s", entityKey)
@@ -261,12 +321,13 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         """Internal method to re-map accession for the input database and assignment source
 
         Args:
-            rsiDL (list): list of accession
+            rsiDL (list): current list of accession
             databaseName (str, optional): resource database name. Defaults to 'UniProt'.
             provSource (str, optional): assignment provenance. Defaults to 'PDB'.
 
         Returns:
-            bool, dict: flag for mapping success, and remapped (and unmapped) accessions in the input object list
+            bool, bool, dict: flag for mapping success, flag for a supported reference database,
+                              and remapped (and unmapped) accessions in the input object list
 
         Example:
                     "P14118": {
@@ -285,8 +346,8 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     "matched": "secondary"
                 },
         """
-        isMatched = False
-        isExcluded = False
+        isMatchedRefDb = False
+        isMatchedAltDb = False
         excludeReferenceDatabases = excludeReferenceDatabases if excludeReferenceDatabases else ["PDB"]
         refDbList = ["UniProt", "GenBank", "EMBL", "NDB", "NORINE", "PIR", "PRF", "RefSeq"]
         #
@@ -294,19 +355,19 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         logger.debug("%s rId %r db %r prov %r", entityKey, rId, rsiD["database_name"], rsiD["provenance_source"])
         #
         if rsiD["database_name"] in excludeReferenceDatabases:
-            isExcluded = True
+            isMatchedAltDb = False
         elif rsiD["database_name"] == referenceDatabaseName and rsiD["provenance_source"] in provSourceL:
             try:
                 if rId in self.__matchD and self.__matchD[rId]["matched"] in ["primary"]:
                     # no change
-                    isMatched = True
+                    isMatchedRefDb = True
                 elif rId in self.__matchD and self.__matchD[rId]["matched"] in ["secondary"]:
                     logger.debug("secondary %r matched len %d", self.__matchD[rId]["matched"], len(self.__matchD[rId]["matchedIds"]))
                     if len(self.__matchD[rId]["matchedIds"]) == 1:
                         for mId, mD in self.__matchD[rId]["matchedIds"].items():
                             rsiD["database_accession"] = mId
                             logger.info("%s matched secondary %s -> %s", entityKey, rId, mId)
-                            isMatched = True
+                            isMatchedRefDb = True
                     elif taxIdL and len(taxIdL) == 1:
                         #  -- simplest match case --
                         numM = 0
@@ -315,7 +376,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                                 rsiD["database_accession"] = mId
                                 numM += 1
                         if numM == 1:
-                            isMatched = True
+                            isMatchedRefDb = True
                             logger.info("%s matched secondary with taxId %r %s -> %s", entityKey, taxIdL[0], rId, rsiD["database_accession"])
                     elif not taxIdL:
                         logger.info("%s no taxids with UniProt (%s) secondary mapping", entityKey, rId)
@@ -327,13 +388,13 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
 
         elif rsiD["provenance_source"] in provSourceL and rsiD["database_name"] in refDbList:
             logger.info("%s leaving reference accession for %s %s assigned by %r", entityKey, rId, rsiD["database_name"], provSourceL)
-            isMatched = True
+            isMatchedRefDb = True
         else:
             logger.info("%s leaving a reference accession for %s %s assigned by %r", entityKey, rId, rsiD["database_name"], rsiD["provenance_source"])
         #
-        logger.debug("%s isMatched %r isExcluded %r for accession %r", entityKey, isMatched, isExcluded, rId)
+        logger.debug("%s isMatched %r isExcluded %r for accession %r", entityKey, isMatchedRefDb, isMatchedAltDb, rId)
         #
-        return isMatched, isExcluded, rsiD
+        return isMatchedRefDb, isMatchedAltDb, rsiD
 
     def __reMapAlignments(self, entityKey, alignD, referenceDatabaseName, taxIdL, provSourceL, excludeReferenceDatabases=None):
         """Internal method to re-map alignments for the input databae and assignment source
@@ -344,27 +405,28 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             provSourceL (list, optional): assignment provenance. Defaults to 'PDB'.
 
         Returns:
-            bool, list: flag for mapping success, and remapped (and unmapped) accessions in the input align list
+            bool, bool, list: flag for mapping success (refdb), flag for mapping success (altdb),
+                               and remapped (and unmapped) accessions in the input align list
         """
-        isExcluded = False
-        isMatched = False
+        isMatchedAltDb = False
+        isMatchedRefDb = False
         excludeReferenceDatabases = excludeReferenceDatabases if excludeReferenceDatabases else ["PDB"]
         refDbList = ["UniProt", "GenBank", "EMBL", "NDB", "NORINE", "PIR", "PRF", "RefSeq"]
         provSourceL = provSourceL if provSourceL else []
         rId = alignD["reference_database_accession"]
         #
         if alignD["reference_database_name"] in excludeReferenceDatabases:
-            isExcluded = True
+            isMatchedAltDb = False
         elif alignD["reference_database_name"] == referenceDatabaseName and alignD["provenance_code"] in provSourceL:
             try:
                 if rId in self.__matchD and self.__matchD[rId]["matched"] in ["primary"]:
                     # no change
-                    isMatched = True
+                    isMatchedRefDb = True
                 elif rId in self.__matchD and self.__matchD[rId]["matched"] in ["secondary"]:
                     if len(self.__matchD[rId]["matchedIds"]) == 1:
                         for mId, mD in self.__matchD[rId]["matchedIds"].items():
                             alignD["reference_database_accession"] = mId
-                            isMatched = True
+                            isMatchedRefDb = True
                     elif taxIdL and len(taxIdL) == 1:
                         #  -- simplest match case --
                         numM = 0
@@ -373,7 +435,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                                 alignD["reference_database_accession"] = mId
                                 numM += 1
                         if numM == 1:
-                            isMatched = True
+                            isMatchedRefDb = True
                     elif not taxIdL:
                         logger.info("%s no taxids with UniProt (%s) secondary mapping", entityKey, rId)
                     else:
@@ -383,12 +445,13 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 pass
         elif alignD["provenance_code"] in provSourceL and alignD["reference_database_name"] in refDbList:
             logger.info("%s leaving reference alignment for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], provSourceL)
-            isMatched = True
+            isMatchedRefDb = False
+            isMatchedAltDb = False
         else:
             logger.info("%s leaving a reference alignment for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], alignD["provenance_code"])
         #
-        logger.debug("%s isMatched %r isExcluded %r for alignment %r", entityKey, isMatched, isExcluded, rId)
-        return isMatched, isExcluded, alignD, self.__hashAlignment(alignD)
+        logger.debug("%s isMatched %r isExcluded %r for alignment %r", entityKey, isMatchedRefDb, isMatchedAltDb, rId)
+        return isMatchedRefDb, isMatchedAltDb, alignD, self.__hashAlignment(alignD)
 
     def __hashAlignment(self, aD):
         """
