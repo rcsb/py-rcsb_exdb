@@ -217,7 +217,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                             tL = self.__ecP.getLineage(ecId)
                             if tL:
                                 linL.extend(tL)
-                        peObj["rcsb_enzyme_class_combined"] = [{"ec": k, "provenance_source": v} for k, v in enzD.items()]
+                        peObj["rcsb_enzyme_class_combined"] = [{"ec": k, "provenance_source": v, "depth": k.count(".") + 1} for k, v in enzD.items()]
                         peObj["rcsb_ec_lineage"] = [{"depth": tup[0], "id": tup[1], "name": tup[2]} for tup in linL]
                     #
         except Exception as e:
