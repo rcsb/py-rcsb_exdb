@@ -97,7 +97,8 @@ class ReferenceSequenceAssignmentProvider(object):
     def getRefDataCount(self):
         return len(self.__refD)
 
-    def testCache(self):
+    def testCache(self, minMatchPrimary=None):
+        okC = True
         logger.info("Reference cache lengths: refIdMap %d matchD %d refD %d", len(self.__refIdMapD), len(self.__matchD), len(self.__refD))
         ok = bool(self.__refIdMapD and self.__matchD and self.__refD)
         #
@@ -107,8 +108,14 @@ class ReferenceSequenceAssignmentProvider(object):
             if "matched" in mD:
                 countD[mD["matched"]] += 1
         logger.info("Reference length %d Match length %d coverage %r", len(self.__refD), len(self.__matchD), countD.items())
-
-        return ok
+        if minMatchPrimary:
+            try:
+                okC = countD["primary"] > minMatchPrimary
+            except Exception:
+                okC = False
+            logger.info("Primary reference match count test status %r", okC)
+        #
+        return ok and okC
 
     def __reload(self, databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs):
         assignRefD = self.__getPolymerReferenceSequenceAssignments(databaseName, collectionName, polymerType, fetchLimit)

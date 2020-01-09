@@ -55,13 +55,34 @@ class ExDbWorkflowTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testExDbLoaderWorkflows(self):
-        #
+        """ Run workflow steps hoping for the best ...
+        """
         try:
-            opL = ["etl_tree_node_lists", "etl_chemref", "etl_uniprot", "upd_ref_seq"]
+            opL = ["etl_tree_node_lists", "etl_chemref", "etl_uniprot", "upd_ref_seq", "etl_uniprot"]
             rlWf = ExDbWorkflow(**self.__commonD)
             for op in opL:
                 ok = rlWf.load(op, **self.__loadCommonD)
                 self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
+    def testExDbLoaderWorkflowsWithCacheCheck(self):
+        #
+        try:
+            self.__commonD["rebuildCache"] = False
+            rlWf = ExDbWorkflow(**self.__commonD)
+            #
+            ok = rlWf.load("upd_ref_seq", testMode=True, minMatchPrimary=140, **self.__loadCommonD)
+            logger.info("Test mode status is %r", ok)
+            self.assertTrue(ok)
+            if ok:
+                self.__commonD["rebuildCache"] = False
+                rlWf = ExDbWorkflow(**self.__commonD)
+                ok1 = rlWf.load("upd_ref_seq", **self.__loadCommonD)
+                self.assertTrue(ok1)
+                ok2 = rlWf.load("etl_uniprot", **self.__loadCommonD)
+                self.assertTrue(ok2)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()

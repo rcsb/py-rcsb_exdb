@@ -58,7 +58,10 @@ class ExDbWorkflow(object):
         if op not in ["etl_tree_node_lists", "etl_chemref", "etl_uniprot", "upd_ref_seq"]:
             return False
         try:
+            # test mode and UniProt accession primary match minimum count for doReferenceSequenceUpdate()
             testMode = kwargs.get("testMode", False)
+            minMatchPrimary = kwargs.get("minMatchPrimary", None)
+            #
             readBackCheck = kwargs.get("readBackCheck", False)
             numProc = int(kwargs.get("numPro", 1))
             chunkSize = int(kwargs.get("chunkSize", 10))
@@ -115,7 +118,7 @@ class ExDbWorkflow(object):
                 okS = self.loadStatus(crw.getLoadStatus(), readBackCheck=readBackCheck)
 
             elif op == "upd_ref_seq":
-                ok = self.doReferenceSequenceUpdate(fetchLimit=documentLimit, testMode=testMode)
+                ok = self.doReferenceSequenceUpdate(fetchLimit=documentLimit, testMode=testMode, minMatchPrimary=minMatchPrimary)
                 okS = ok
         #
         logger.info("Operation completed with status %r " % ok and okS)
@@ -141,12 +144,13 @@ class ExDbWorkflow(object):
         try:
             rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
             ret = rp.cacheResources(useCache=not rebuildCache)
+            logger.info("Cache status return is %r", ret)
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def doReferenceSequenceUpdate(self, fetchLimit=None, testMode=False):
+    def doReferenceSequenceUpdate(self, fetchLimit=None, testMode=False, minMatchPrimary=None):
         try:
             databaseName = "pdbx_core"
             collectionName = "pdbx_core_polymer_entity"
@@ -167,7 +171,7 @@ class ExDbWorkflow(object):
                 fetchLimit=fetchLimit,
                 siftsAbbreviated="TEST",
             )
-            ok = rsaP.testCache()
+            ok = rsaP.testCache(minMatchPrimary=minMatchPrimary)
             if not ok:
                 logger.error("Cache construction fails %s", ok)
                 return False
