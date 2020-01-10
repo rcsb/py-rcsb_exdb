@@ -24,3 +24,4 @@
 23-Dec-2019 V0.32 Change protocol for supplementing accessions and EC annotations.
 04-Jan-2020 V0.33 Add support for rcsb_polymer_entity.rcsb_enzyme_class_combined_depth
 09-Jan-2020 V0.34 Add additional cache test criteria for UniProt match cache.
+10-Jan-2020 V0.35 Update dependencies for rcsb.utils.go and rcsb.utils.struct
