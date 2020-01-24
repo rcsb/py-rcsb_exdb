@@ -64,12 +64,12 @@ class ReferenceSequenceAssignmentProvider(object):
         return False
 
     def getGeneOntologyLineage(self, goIdL):
-        # "id" "name" "resource"
+        # "id"     "name"
         gL = []
         try:
             gTupL = self.__goP.getUniqueDescendants(goIdL)
             for gTup in gTupL:
-                gL.append({"id": gTup[0], "name": gTup[1], "resource": "GO"})
+                gL.append({"id": gTup[0], "name": gTup[1]})
         except Exception as e:
             logger.exception("Failing for %r with %s", goIdL, str(e))
         return gL
@@ -157,7 +157,8 @@ class ReferenceSequenceAssignmentProvider(object):
                     "rcsb_polymer_entity_container_identifiers.auth_asym_ids",
                     "rcsb_polymer_entity_align",
                     # "rcsb_entity_source_organism.ncbi_taxonomy_id",
-                    "rcsb_polymer_entity_container_identifiers.related_annotation_identifiers",
+                    # "rcsb_polymer_entity_container_identifiers.related_annotation_identifiers",
+                    "rcsb_polymer_entity_annotation",
                     "rcsb_entity_source_organism",
                 ],
             )

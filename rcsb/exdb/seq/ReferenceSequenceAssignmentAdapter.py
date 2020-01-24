@@ -68,7 +68,8 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             return ok1 and ok2, obj
         else:
             ok1, obj = self.__filterAccessions(obj)
-            ok2, obj = self.__filterFeatures(obj)
+            ok2 = True
+            # ok2, obj = self.__filterFeatures(obj)
             return ok1 and ok2, obj
 
     def __filterFeatures(self, obj):
@@ -78,21 +79,19 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 return False, obj
             entityKey = obj["rcsb_id"]
             eciD = obj["rcsb_polymer_entity_container_identifiers"]
+
             #
             logger.debug(" ------------- Running feature filter on %r --------------", entityKey)
             #
             rsDL = []
             soDL = []
+            peaDL = []
+            peObj = {}
             #
             try:
                 rsDL = eciD["reference_sequence_identifiers"]
             except Exception:
                 pass
-            #
-            # try:
-            #    raDL = eciD["related_annotation_identifiers"]
-            # except Exception:
-            #     pass
 
             try:
                 soDL = obj["rcsb_entity_source_organism"]
@@ -103,6 +102,12 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 peObj = obj["rcsb_polymer_entity"]
             except Exception:
                 pass
+            #
+            try:
+                peaDL = obj["rcsb_polymer_entity_annotation"]
+            except Exception:
+                pass
+            #
             # rsD {'database_name': 'UniProt', 'database_accession': 'P06881', 'provenance_source': 'PDB'}
             unpIdS = set()
             for rsD in rsDL:
@@ -111,7 +116,6 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             #
             unpGeneDL = []
             unpAnnDL = []
-            goIdL = []
 
             for unpId in unpIdS:
                 uD = self.__refD[unpId] if unpId in self.__refD else None
@@ -122,17 +126,26 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     taxId = int(uD["taxonomy_id"])
                     logger.debug("%s : %r gene names %r", entityKey, unpId, uD["gene"])
                     for tD in uD["gene"]:
-                        unpGeneDL.append({"provenance_code": "UniProt", "value": tD["name"], "taxonomy_id": taxId})
+                        unpGeneDL.append({"provenance_source": "UniProt", "value": tD["name"], "taxonomy_id": taxId})
                 if "dbReferences" in uD:
                     logger.debug("%s : %r references %d", entityKey, unpId, len(uD["dbReferences"]))
                     for tD in uD["dbReferences"]:
                         if "resource" in tD and "id_code" in tD and tD["resource"] in ["GO", "Pfam", "InterPro"]:
                             if tD["resource"] in ["GO"]:
                                 if self.__rsaP.goIdExists(tD["id_code"]):
-                                    goIdL.append(tD["id_code"])
-                                else:
-                                    continue
-                            unpAnnDL.append({"provenance_source": "UniProt", "resource_identifier": tD["id_code"], "resource_name": tD["resource"]})
+                                    goLin = self.__rsaP.getGeneOntologyLineage([tD["id_code"]])
+                                    if goLin:
+                                        unpAnnDL.append(
+                                            {
+                                                "provenance_source": "UniProt",
+                                                "annotation_id": tD["id_code"],
+                                                "type": tD["resource"],
+                                                "assignment_version": uD["version"],
+                                                "annotation_lineage": goLin,
+                                            }
+                                        )
+                            else:
+                                unpAnnDL.append({"provenance_source": "UniProt", "annotation_id": tD["id_code"], "type": tD["resource"], "assignment_version": uD["version"]})
 
             #
             # raD {'resource_identifier': 'PF00503', 'provenance_source': 'SIFTS', 'resource_name': 'Pfam'}
@@ -141,22 +154,21 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             # for ii, raD in enumerate(raDL):
             #    logger.info("raD (%d) related annotation %r", ii, raD["resource_name"])
             # ------------
-            # filter existing annotations
-            if "related_annotation_identifiers" in eciD:
+            # Filter existing annotations identifiers
+            if peaDL:
                 qL = []
-                for qD in eciD["related_annotation_identifiers"]:
-                    if qD["provenance_source"] != "UniProt":
-                        qL.append(qD)
-                eciD["related_annotation_identifiers"] = qL
+                for peaD in peaDL:
+                    if peaD["provenance_source"] != "UniProt":
+                        qL.append(peaD)
+                # Put back the base object list -
+                peaDL = qL
 
             for unpAnnD in unpAnnDL:
-                eciD.setdefault("related_annotation_identifiers", []).append(unpAnnD)
+                peaDL.append(unpAnnD)
             #
-            if goIdL:
-                goLin = []
-                goLin = self.__rsaP.getGeneOntologyLineage(goIdL)
-                if goLin:
-                    eciD["related_annotation_lineage"] = goLin
+            if peaDL:
+                obj["rcsb_polymer_entity_annotation"] = peaDL
+                # logger.debug("annotation object is %r", obj["rcsb_polymer_entity_annotation"])
             #
             # --------------  Add gene names -----------------
             #
@@ -170,7 +182,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 if "rcsb_gene_name" in soD:
                     qL = []
                     for qD in soD["rcsb_gene_name"]:
-                        if qD["provenance_code"] != "UniProt":
+                        if qD["provenance_source"] != "UniProt":
                             qL.append(qD)
                     soD["rcsb_gene_name"] = qL
                 taxId = soD["ncbi_taxonomy_id"]
@@ -181,7 +193,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                         if "rcsb_gene_name" in soD and numSource > 1:
                             logger.warning("%s skipping special chimeric case", entityKey)
                             continue
-                        soD.setdefault("rcsb_gene_name", []).append({"provenance_code": unpGeneD["provenance_code"], "value": unpGeneD["value"]})
+                        soD.setdefault("rcsb_gene_name", []).append({"provenance_source": unpGeneD["provenance_source"], "value": unpGeneD["value"]})
                 #
                 # Remapping/extending EC assignments.
                 if peObj:
@@ -280,6 +292,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     del obj["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]
                     logger.info("Incomplete reference sequence mapping update for %s", entityKey)
             #
+            #
             try:
                 alignDL = obj["rcsb_polymer_entity_align"]
             except Exception:
@@ -306,7 +319,6 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                             logger.info("No alternative SIFTS alignment for %s", entityKey)
                     #
                 if retDL:
-                    logger.debug("%s retDL %r", entityKey, retDL)
                     obj["rcsb_polymer_entity_align"] = retDL
                 else:
                     del obj["rcsb_polymer_entity_align"]
@@ -417,7 +429,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         #
         if alignD["reference_database_name"] in excludeReferenceDatabases:
             isMatchedAltDb = False
-        elif alignD["reference_database_name"] == referenceDatabaseName and alignD["provenance_code"] in provSourceL:
+        elif alignD["reference_database_name"] == referenceDatabaseName and alignD["provenance_source"] in provSourceL:
             try:
                 if rId in self.__matchD and self.__matchD[rId]["matched"] in ["primary"]:
                     # no change
@@ -443,12 +455,12 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 #
             except Exception:
                 pass
-        elif alignD["provenance_code"] in provSourceL and alignD["reference_database_name"] in refDbList:
+        elif alignD["provenance_source"] in provSourceL and alignD["reference_database_name"] in refDbList:
             logger.info("%s leaving reference alignment for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], provSourceL)
             isMatchedRefDb = False
             isMatchedAltDb = False
         else:
-            logger.info("%s leaving a reference alignment for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], alignD["provenance_code"])
+            logger.info("%s leaving a reference alignment for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], alignD["provenance_source"])
         #
         logger.debug("%s isMatched %r isExcluded %r for alignment %r", entityKey, isMatchedRefDb, isMatchedAltDb, rId)
         return isMatchedRefDb, isMatchedAltDb, alignD, self.__hashAlignment(alignD)
@@ -457,7 +469,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         """
         Example:
 
-            {'reference_database_name': 'UniProt', 'reference_database_accession': 'P62942', 'provenance_code': 'PDB',
+            {'reference_database_name': 'UniProt', 'reference_database_accession': 'P62942', 'provenance_source': 'PDB',
               'aligned_regions': [{'entity_beg_seq_id': 1, 'ref_beg_seq_id': 1, 'length': 107}]}]
         """
         hsh = None
@@ -484,7 +496,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         retL = []
         saoLD = self.__ssP.getLongestAlignments(entityKey[:4], authAsymIdL)
         for (_, dbAccession), saoL in saoLD.items():
-            dD = {"reference_database_name": "UniProt", "reference_database_accession": dbAccession, "provenance_code": "SIFTS", "aligned_regions": []}
+            dD = {"reference_database_name": "UniProt", "reference_database_accession": dbAccession, "provenance_source": "SIFTS", "aligned_regions": []}
             for sao in saoL:
                 dD["aligned_regions"].append({"ref_beg_seq_id": sao.getDbSeqIdBeg(), "entity_beg_seq_id": sao.getEntitySeqIdBeg(), "length": sao.getEntityAlignLength()})
             retL.append(dD)
