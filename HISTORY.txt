@@ -26,3 +26,4 @@
 09-Jan-2020 V0.34 Add additional cache test criteria for UniProt match cache.
 10-Jan-2020 V0.35 Update dependencies for rcsb.utils.go and rcsb.utils.struct
 23-Jan-2020 V0.36 Changes to support pre-beta-v1 schema reorganization with the addition of rcsb_polymer_entity_annotation
+27-Jan-2020 V0.37 Add annotation extractor modules and adjustments for some missing features.

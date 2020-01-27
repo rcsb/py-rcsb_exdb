@@ -68,8 +68,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             return ok1 and ok2, obj
         else:
             ok1, obj = self.__filterAccessions(obj)
-            ok2 = True
-            # ok2, obj = self.__filterFeatures(obj)
+            ok2, obj = self.__filterFeatures(obj)
             return ok1 and ok2, obj
 
     def __filterFeatures(self, obj):
