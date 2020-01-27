@@ -20,9 +20,11 @@ import os.path
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.exdb.chemref.ChemRefExtractor import ChemRefExtractor
+from rcsb.exdb.seq.AnnotationExtractor import AnnotationExtractor
 from rcsb.exdb.seq.TaxonomyExtractor import TaxonomyExtractor
 from rcsb.utils.chemref.AtcProvider import AtcProvider
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
+from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
 from rcsb.utils.struct.CathClassificationProvider import CathClassificationProvider
 from rcsb.utils.struct.ScopClassificationProvider import ScopClassificationProvider
 from rcsb.utils.taxonomy.TaxonomyProvider import TaxonomyProvider
@@ -116,8 +118,9 @@ class TreeNodeListWorker(object):
             )
             #
             databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
-            collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
-            addValues = {"_schema_version": collectionVersion}
+            # collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
+            # addValues = {"_schema_version": collectionVersion}
+            addValues = None
             #
             ccu = CathClassificationProvider(cathDirPath=os.path.join(self.__cachePath, "domains_struct"), useCache=useCache)
             nL = ccu.getTreeNodeList()
@@ -172,8 +175,21 @@ class TreeNodeListWorker(object):
             collectionName = self.__cfgOb.get("COLLECTION_ATC", sectionName=sectionName)
             logger.debug("ATC node list length %d %r", len(nL), nL[:5])
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
-            #
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            #
+            # ---
+            goP = GeneOntologyProvider(goDirPath=os.path.join(self.__cachePath, "go"), useCache=useCache)
+            ok = goP.testCache()
+            anEx = AnnotationExtractor(self.__cfgOb)
+            goIdL = anEx.getUniqueIdentifiers("GO")
+            logger.info("Unique GO assignments %d", len(goIdL))
+            nL = goP.exportTreeNodeList(goIdL)
+            logger.info("GO tree node list length %d", len(nL))
+            collectionName = self.__cfgOb.get("COLLECTION_GO", sectionName=sectionName)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            # ----
+            #
             logger.info("Tree loading operations completed.")
             return True
         except Exception as e:

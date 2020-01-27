@@ -22,6 +22,7 @@ import unittest
 from rcsb.exdb.seq.AnnotationExtractor import AnnotationExtractor
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
 

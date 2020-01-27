@@ -58,7 +58,7 @@ class ExDbWorkflowTests(unittest.TestCase):
         """ Run workflow steps hoping for the best ...
         """
         try:
-            opL = ["etl_tree_node_lists", "etl_chemref", "etl_uniprot", "upd_ref_seq", "etl_uniprot"]
+            opL = ["etl_chemref", "etl_uniprot", "upd_ref_seq", "etl_tree_node_lists", "etl_uniprot"]
             rlWf = ExDbWorkflow(**self.__commonD)
             for op in opL:
                 ok = rlWf.load(op, **self.__loadCommonD)
