@@ -48,7 +48,7 @@ setup(
         "rcsb.utils.config >= 0.25",
         "rcsb.utils.seq >= 0.32",
         "rcsb.utils.ec >= 0.16",
-        "rcsb.utils.go >= 0.13",
+        "rcsb.utils.go >= 0.14",
         "rcsb.utils.struct >= 0.22",
         "rcsb.utils.taxonomy >= 0.26",
         'statistics; python_version < "3.0"',
