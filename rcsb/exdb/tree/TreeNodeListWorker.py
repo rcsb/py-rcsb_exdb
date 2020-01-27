@@ -121,7 +121,18 @@ class TreeNodeListWorker(object):
             # collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
-            #
+            # ---
+            goP = GeneOntologyProvider(goDirPath=os.path.join(self.__cachePath, "go"), useCache=useCache)
+            ok = goP.testCache()
+            anEx = AnnotationExtractor(self.__cfgOb)
+            goIdL = anEx.getUniqueIdentifiers("GO")
+            logger.info("Unique GO assignments %d", len(goIdL))
+            nL = goP.exportTreeNodeList(goIdL)
+            logger.info("GO tree node list length %d", len(nL))
+            collectionName = self.__cfgOb.get("COLLECTION_GO", sectionName=sectionName)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            # ----
             ccu = CathClassificationProvider(cathDirPath=os.path.join(self.__cachePath, "domains_struct"), useCache=useCache)
             nL = ccu.getTreeNodeList()
             logger.info("Starting load SCOP node tree %d", len(nL))
@@ -178,18 +189,6 @@ class TreeNodeListWorker(object):
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
             # ---
-            goP = GeneOntologyProvider(goDirPath=os.path.join(self.__cachePath, "go"), useCache=useCache)
-            ok = goP.testCache()
-            anEx = AnnotationExtractor(self.__cfgOb)
-            goIdL = anEx.getUniqueIdentifiers("GO")
-            logger.info("Unique GO assignments %d", len(goIdL))
-            nL = goP.exportTreeNodeList(goIdL)
-            logger.info("GO tree node list length %d", len(nL))
-            collectionName = self.__cfgOb.get("COLLECTION_GO", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            # ----
-            #
             logger.info("Tree loading operations completed.")
             return True
         except Exception as e:
