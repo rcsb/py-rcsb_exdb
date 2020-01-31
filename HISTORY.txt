@@ -28,3 +28,4 @@
 23-Jan-2020 V0.36 Changes to support pre-beta-v1 schema reorganization with the addition of rcsb_polymer_entity_annotation
 27-Jan-2020 V0.37 Add annotation extractor modules and adjustments for some missing features.
 29-Jan-2020 V0.38 Update dependencies for GO and Drugbank fixes
+30-Jan-2020 V0.39 Update dependencies structure domain utilities
