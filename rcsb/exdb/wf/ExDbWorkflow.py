@@ -63,7 +63,7 @@ class ExDbWorkflow(object):
             minMatchPrimary = kwargs.get("minMatchPrimary", None)
             #
             readBackCheck = kwargs.get("readBackCheck", False)
-            numProc = int(kwargs.get("numPro", 1))
+            numProc = int(kwargs.get("numProc", 1))
             chunkSize = int(kwargs.get("chunkSize", 10))
             documentLimit = int(kwargs.get("documentLimit")) if "documentLimit" in kwargs else None
             loadType = kwargs.get("loadType", "full")  # or replace
