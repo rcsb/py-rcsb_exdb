@@ -19,7 +19,9 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import resource
 import time
+import tracemalloc
 import unittest
 
 from rcsb.exdb.seq.UniProtEtlWorker import UniProtEtlWorker
@@ -36,6 +38,7 @@ class UniProtEtlWorkerTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super(UniProtEtlWorkerTests, self).__init__(methodName)
         self.__verbose = True
+        self.__traceMemory = True
 
     def setUp(self):
         #
@@ -49,10 +52,18 @@ class UniProtEtlWorkerTests(unittest.TestCase):
         # sample data set
         self.__updateId = "2018_23"
         #
+        #
+        if self.__traceMemory:
+            tracemalloc.start()
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
+        if self.__traceMemory:
+            rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            current, peak = tracemalloc.get_traced_memory()
+            logger.info("Current memory usage is %.2f MB; Peak was %.2f MB Resident size %.2f MB", current / 10 ** 6, peak / 10 ** 6, rusageMax / 10 ** 6)
+            tracemalloc.stop()
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 

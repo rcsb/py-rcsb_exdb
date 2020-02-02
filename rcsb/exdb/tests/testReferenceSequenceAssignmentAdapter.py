@@ -17,7 +17,9 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import resource
 import time
+import tracemalloc
 import unittest
 
 from rcsb.exdb.seq.ReferenceSequenceAssignmentAdapter import ReferenceSequenceAssignmentAdapter
@@ -36,6 +38,7 @@ class ReferenceSequenceAssignmentAdapterTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super(ReferenceSequenceAssignmentAdapterTests, self).__init__(methodName)
         self.__verbose = True
+        self.__traceMemory = True
 
     def setUp(self):
         #
@@ -46,13 +49,21 @@ class ReferenceSequenceAssignmentAdapterTests(unittest.TestCase):
         #
         self.__resourceName = "MONGO_DB"
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
-        self.__testEntityCacheKwargs = {"fmt": "json", "indent": 3}
+        # self.__testEntityCacheKwargs = {"fmt": "json", "indent": 3}
+        self.__testEntityCacheKwargs = {"fmt": "pickle"}
         self.__fetchLimit = None
         #
+        if self.__traceMemory:
+            tracemalloc.start()
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
+        if self.__traceMemory:
+            rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            current, peak = tracemalloc.get_traced_memory()
+            logger.info("Current memory usage is %.2f MB; Peak was %.2f MB Resident size %.2f MB", current / 10 ** 6, peak / 10 ** 6, rusageMax / 10 ** 6)
+            tracemalloc.stop()
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
@@ -74,7 +85,7 @@ class ReferenceSequenceAssignmentAdapterTests(unittest.TestCase):
                 polymerType=polymerType,
                 referenceDatabaseName=referenceDatabaseName,
                 provSource=provSource,
-                useCache=False,
+                useCache=True,
                 cachePath=self.__cachePath,
                 cacheKwargs=self.__testEntityCacheKwargs,
                 fetchLimit=self.__fetchLimit,

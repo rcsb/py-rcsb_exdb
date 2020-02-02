@@ -18,6 +18,7 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+
 import pprint
 import time
 import unittest
@@ -37,7 +38,7 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 class ObjectExtractorTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super(ObjectExtractorTests, self).__init__(methodName)
-        self.__verbose = True
+        self.__verbose = False
 
     def setUp(self):
         #
@@ -99,10 +100,11 @@ class ObjectExtractorTests(unittest.TestCase):
             #
             pL = obEx.getPathList(filterList=True)
             obEx.setPathList(pL)
-            for ky, obj in objD.items():
-                obEx.genValueList(obj, path=None)
-                tD = obEx.getValues()
-                logger.debug("Index object %r %s", ky, pprint.pformat(tD, indent=3, width=120))
+            if self.__verbose:
+                for ky, obj in objD.items():
+                    obEx.genValueList(obj, path=None)
+                    tD = obEx.getValues()
+                    logger.debug("Index object %r %s", ky, pprint.pformat(tD, indent=3, width=120))
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -138,10 +140,11 @@ class ObjectExtractorTests(unittest.TestCase):
             pL = obEx.getPathList()
             logger.debug("Path list %r", pL)
             obEx.setPathList(pL)
-            for ky, obj in objD.items():
-                obEx.genValueList(obj, path=None)
-                tD = obEx.getValues()
-                logger.debug("Index object %r %s", ky, pprint.pformat(tD, indent=3, width=120))
+            if self.__verbose:
+                for ky, obj in objD.items():
+                    obEx.genValueList(obj, path=None)
+                    tD = obEx.getValues()
+                    logger.info("Index object %r %s", ky, pprint.pformat(tD, indent=3, width=120))
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -194,10 +197,11 @@ class ObjectExtractorTests(unittest.TestCase):
                 pL = obEx.getPathList()
                 logger.debug("Path list %r", pL)
                 obEx.setPathList(pL)
-                for ky, obj in objD.items():
-                    obEx.genValueList(obj, path=None)
-                    tD = obEx.getValues()
-                    logger.debug("Index object %r %s", ky, pprint.pformat(tD, indent=3, width=120))
+                if self.__verbose:
+                    for ky, obj in objD.items():
+                        obEx.genValueList(obj, path=None)
+                        tD = obEx.getValues()
+                        logger.info("Index object %r %s", ky, pprint.pformat(tD, indent=3, width=120))
 
             objD = obEx.getObjects()
             # logger.info("objD.keys() %r", list(objD.keys()))

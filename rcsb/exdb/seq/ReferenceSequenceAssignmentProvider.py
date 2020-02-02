@@ -19,6 +19,7 @@ from collections import defaultdict
 
 from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
+from rcsb.utils.io.IoUtil import getObjSize
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
 from rcsb.utils.seq.UniProtUtils import UniProtUtils
@@ -97,7 +98,7 @@ class ReferenceSequenceAssignmentProvider(object):
     def getRefDataCount(self):
         return len(self.__refD)
 
-    def testCache(self, minMatchPrimary=None):
+    def testCache(self, minMatchPrimary=None, logSizes=False):
         okC = True
         logger.info("Reference cache lengths: refIdMap %d matchD %d refD %d", len(self.__refIdMapD), len(self.__matchD), len(self.__refD))
         ok = bool(self.__refIdMapD and self.__matchD and self.__refD)
@@ -107,7 +108,7 @@ class ReferenceSequenceAssignmentProvider(object):
         for _, mD in self.__matchD.items():
             if "matched" in mD:
                 countD[mD["matched"]] += 1
-        logger.info("Reference length %d Match length %d coverage %r", len(self.__refD), len(self.__matchD), countD.items())
+        logger.info("Reference length %d match length %d coverage %r", len(self.__refD), len(self.__matchD), countD.items())
         if minMatchPrimary:
             try:
                 okC = countD["primary"] > minMatchPrimary
@@ -115,6 +116,16 @@ class ReferenceSequenceAssignmentProvider(object):
                 okC = False
             logger.info("Primary reference match count test status %r", okC)
         #
+        if logSizes:
+            logger.info(
+                "SIFTS %.2f GO %.2f EC %.2f RefIdMap %.2f RefMatchD %.2f RefD %.2f",
+                getObjSize(self.__ssP) / 1000000.0,
+                getObjSize(self.__goP) / 1000000.0,
+                getObjSize(self.__ecP) / 1000000.0,
+                getObjSize(self.__refIdMapD) / 1000000.0,
+                getObjSize(self.__matchD) / 1000000.0,
+                getObjSize(self.__refD) / 1000000.0,
+            )
         return ok and okC
 
     def __reload(self, databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs):
@@ -155,11 +166,11 @@ class ReferenceSequenceAssignmentProvider(object):
                     "rcsb_id",
                     "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers",
                     "rcsb_polymer_entity_container_identifiers.auth_asym_ids",
-                    "rcsb_polymer_entity_align",
+                    # "rcsb_polymer_entity_align",
                     # "rcsb_entity_source_organism.ncbi_taxonomy_id",
                     # "rcsb_polymer_entity_container_identifiers.related_annotation_identifiers",
-                    "rcsb_polymer_entity_annotation",
-                    "rcsb_entity_source_organism",
+                    # "rcsb_polymer_entity_annotation",
+                    "rcsb_entity_source_organism.ncbi_taxonomy_id",
                 ],
             )
             eCount = obEx.getCount()
@@ -212,6 +223,7 @@ class ReferenceSequenceAssignmentProvider(object):
     def __rebuildReferenceCache(self, idList, refDbName, **kwargs):
         """
         """
+        fetchLimit = None
         doMissing = True
         dD = {}
         cachePath = kwargs.get("cachePath", ".")
@@ -240,17 +252,17 @@ class ReferenceSequenceAssignmentProvider(object):
             dD = self.__mU.doImport(dataCacheFilePath, **cacheKwargs)
             idD = self.__mU.doImport(accCacheFilePath, fmt="json")
             logger.info("Reading cached reference sequence ID and data cache files - cached match reference length %d", len(idD["matchInfo"]))
-            idD["matchInfo"] = self.__rebuildReferenceMatchIndex(dD["refDbCache"], idList)
+            idD["matchInfo"] = self.__rebuildReferenceMatchIndex(idList, dD["refDbCache"])
             # Check for completeness -
             if doMissing:
                 missingS = set(idList) - set(idD["matchInfo"].keys())
                 if missingS:
                     logger.info("Reference sequence cache missing %d accessions", len(missingS))
-                    extraD, extraIdD = self.__fetchReferenceEntries(refDbName, list(missingS), saveText=saveText, fetchLimit=None)
+                    extraD, extraIdD = self.__fetchReferenceEntries(refDbName, list(missingS), saveText=saveText, fetchLimit=fetchLimit)
                     dD["refDbCache"].update(extraD["refDbCache"])
                     idD["matchInfo"].update(extraIdD["matchInfo"])
                     #
-                    idD["matchInfo"] = self.__rebuildReferenceMatchIndex(dD["refDbCache"], idList)
+                    idD["matchInfo"] = self.__rebuildReferenceMatchIndex(idList, dD["refDbCache"])
                     #
                     if accCacheFilePath and dataCacheFilePath and cacheKwargs:
                         self.__mU.mkdir(dirPath)
@@ -259,8 +271,8 @@ class ReferenceSequenceAssignmentProvider(object):
                         logger.info("Cache updated with missing references with status %r", ok1 and ok2)
             #
         else:
-
-            dD, idD = self.__fetchReferenceEntries(refDbName, idList, saveText=saveText, fetchLimit=None)
+            logger.info("Rebuilding reference cache for %s for %d accessions with limit %r", refDbName, len(idList), fetchLimit)
+            dD, idD = self.__fetchReferenceEntries(refDbName, idList, saveText=saveText, fetchLimit=fetchLimit)
             if accCacheFilePath and dataCacheFilePath and cacheKwargs:
                 self.__mU.mkdir(dirPath)
                 ok1 = self.__mU.doExport(dataCacheFilePath, dD, **cacheKwargs)
@@ -269,9 +281,9 @@ class ReferenceSequenceAssignmentProvider(object):
 
         return idD["matchInfo"], dD["refDbCache"]
 
-    def __rebuildReferenceMatchIndex(self, referenceD, idList):
+    def __rebuildReferenceMatchIndex(self, idList, referenceD):
         fobj = UniProtUtils()
-        logger.info("Rebuilding match index on idList(%d) using reference data (%d)", len(idList), len(referenceD))
+        logger.info("Rebuilding match index on idList (%d) using reference data (%d) %r", len(idList), len(referenceD), type(referenceD))
         matchD = fobj.rebuildMatchResultIndex(idList, referenceD)
         return matchD
 

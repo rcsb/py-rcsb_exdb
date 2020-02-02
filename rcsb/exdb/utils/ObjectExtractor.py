@@ -15,7 +15,6 @@ __license__ = "Apache 2.0"
 
 import copy
 import logging
-import pprint
 import os
 
 from rcsb.db.mongo.Connection import Connection
@@ -130,7 +129,6 @@ class ObjectExtractor(object):
                             continue
                         rObj = mg.fetchOne(databaseName, collectionName, "_id", dD["_id"])
                         rObj["_id"] = str(rObj["_id"])
-                        logger.debug("Return Object %s", pprint.pformat(rObj))
                         #
                         stKey = ".".join([rObj[ky] for ky in uniqueAttributes])
                         objectD[stKey] = copy.copy(rObj)
@@ -169,7 +167,6 @@ class ObjectExtractor(object):
                     #
                     for ii, rObj in enumerate(dL, 1):
                         stKey = ".".join([rObj[ky] for ky in uniqueAttributes])
-                        # logger.debug("Fetched object (%s) %s", stKey, pprint.pformat(rObj))
                         objectD[stKey] = copy.copy(rObj)
                         if objLimit and ii >= objLimit:
                             break

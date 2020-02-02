@@ -13,7 +13,6 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 import logging
-import pprint
 
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
@@ -98,7 +97,6 @@ class ObjectTransformer(object):
                         #
                         if ii % logIncrement == 0 or ii == numDoc:
                             logger.info("Replace status %s object (%d of %d)", ok, ii, numDoc)
-                            logger.debug("Replaced object (%d of %d) %s", ii, numDoc, pprint.pformat(rObj))
                         #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
