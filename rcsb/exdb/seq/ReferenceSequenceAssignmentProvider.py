@@ -325,7 +325,9 @@ class ReferenceSequenceAssignmentProvider(object):
         cacheDirPath = os.path.join(cachePath, cfgOb.get("SIFTS_SUMMARY_CACHE_DIR", sectionName=configName))
         logger.debug("ssP %r %r", srcDirPath, cacheDirPath)
         ssP = SiftsSummaryProvider(srcDirPath=srcDirPath, cacheDirPath=cacheDirPath, useCache=useCache, abbreviated=abbreviated, cacheKwargs=cacheKwargs)
-        logger.info("ssP entry count %d", ssP.getEntryCount())
+        ok = ssP.testCache()
+        logger.debug("SIFTS cache status %r", ok)
+        logger.debug("ssP entry count %d", ssP.getEntryCount())
         return ssP
 
     def __fetchGoProvider(self, cfgOb, configName, **kwargs):
@@ -336,7 +338,7 @@ class ReferenceSequenceAssignmentProvider(object):
         logger.debug("goP %r %r", cacheDirPath, useCache)
         goP = GeneOntologyProvider(goDirPath=cacheDirPath, useCache=useCache)
         ok = goP.testCache()
-        logger.info("Gene Ontology (%r) root node count %r", ok, goP.getRootNodes())
+        logger.debug("Gene Ontology (%r) root node count %r", ok, goP.getRootNodes())
         return goP
 
     def __fetchEcProvider(self, cfgOb, configName, **kwargs):
@@ -347,5 +349,5 @@ class ReferenceSequenceAssignmentProvider(object):
         logger.debug("ecP %r %r", cacheDirPath, useCache)
         ecP = EnzymeDatabaseProvider(enzymeDirPath=cacheDirPath, useCache=useCache)
         ok = ecP.testCache()
-        logger.info("Enzyme cache status %r", ok)
+        logger.debug("Enzyme cache status %r", ok)
         return ecP

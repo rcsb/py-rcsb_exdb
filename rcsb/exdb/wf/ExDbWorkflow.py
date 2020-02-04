@@ -46,16 +46,19 @@ class ExDbWorkflow(object):
         #  Rebuild or check resource cache
         rebuildCache = kwargs.get("rebuildCache", False)
         self.__useCache = not rebuildCache
+        #
         self.__cacheStatus = self.buildResourceCache(rebuildCache=rebuildCache)
-        logger.info("Cache status if %r", self.__cacheStatus)
+        logger.debug("Cache status if %r", self.__cacheStatus)
         #
 
     def load(self, op, **kwargs):
+        logger.info("Starting operation %r\n", op)
         if not self.__cacheStatus:
-            logger.error("Cache update failed")
+            logger.error("Resource cache test or rebuild has failed - exiting")
             return False
         # argument processing
         if op not in ["etl_tree_node_lists", "etl_chemref", "etl_uniprot", "upd_ref_seq"]:
+            logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
             # test mode and UniProt accession primary match minimum count for doReferenceSequenceUpdate()
@@ -71,7 +74,7 @@ class ExDbWorkflow(object):
             tU = TimeUtil()
             dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else tU.getCurrentWeekSignature()
         except Exception as e:
-            logger.exception("Failing with %s", str(e))
+            logger.exception("Argument or configuration processing failing with %s", str(e))
             return False
         #
         if dbType == "mongo":
@@ -121,7 +124,7 @@ class ExDbWorkflow(object):
                 ok = self.doReferenceSequenceUpdate(fetchLimit=documentLimit, testMode=testMode, minMatchPrimary=minMatchPrimary)
                 okS = ok
         #
-        logger.info("Operation completed with status %r " % ok and okS)
+        logger.info("Completed operation %r with status %r\n", op, ok and okS)
         return ok and okS
 
     def loadStatus(self, statusList, readBackCheck=True):
@@ -144,8 +147,6 @@ class ExDbWorkflow(object):
         try:
             rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
             ret = rp.cacheResources(useCache=not rebuildCache)
-            logger.info("Cache status return is %r", ret)
-
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return ret
@@ -173,11 +174,13 @@ class ExDbWorkflow(object):
             )
             ok = rsaP.testCache(minMatchPrimary=minMatchPrimary)
             if not ok:
-                logger.error("Cache construction fails %s", ok)
+                logger.error("Resource cache check or rebuild has failed - exiting")
                 return False
-            logger.info("Cached reference data count is %d", rsaP.getRefDataCount())
+            #
+            logger.info("Cached sequence reference data count is %d", rsaP.getRefDataCount())
             #
             if testMode:
+                logger.info("Returning after cache processing - (TEST MODE)")
                 return ok
             rsa = ReferenceSequenceAssignmentAdapter(refSeqAssignProvider=rsaP)
             obTr = ObjectTransformer(self.__cfgOb, objectAdapter=rsa)

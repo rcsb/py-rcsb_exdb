@@ -82,7 +82,7 @@ class TreeNodeListWorker(object):
             useCache = self.__useCache
             #
             if not useCache:
-                cDL = ["domains_struct", "NCBI", "ec"]
+                cDL = ["domains_struct", "NCBI", "ec", "go", "atc"]
                 for cD in cDL:
                     try:
                         cfp = os.path.join(self.__cachePath, cD)
@@ -100,7 +100,7 @@ class TreeNodeListWorker(object):
                         pass
 
             #
-            logger.info("Using cache files in %s %r", self.__cachePath, useCache)
+            logger.info("Starting with cache path %r (useCache=%r)", self.__cachePath, useCache)
             #
             sectionName = "tree_node_lists_configuration"
             self.__statusList = []
@@ -135,21 +135,21 @@ class TreeNodeListWorker(object):
             # ----
             ccu = CathClassificationProvider(cathDirPath=os.path.join(self.__cachePath, "domains_struct"), useCache=useCache)
             nL = ccu.getTreeNodeList()
-            logger.info("Starting load SCOP node tree %d", len(nL))
+            logger.info("Starting load SCOP node tree length %d", len(nL))
             collectionName = self.__cfgOb.get("COLLECTION_CATH", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
             scu = ScopClassificationProvider(scopDirPath=os.path.join(self.__cachePath, "domains_struct"), useCache=useCache)
             nL = scu.getTreeNodeList()
-            logger.info("Starting load SCOP node tree %d", len(nL))
+            logger.info("Starting load SCOP node tree length %d", len(nL))
             collectionName = self.__cfgOb.get("COLLECTION_SCOP", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
             edbu = EnzymeDatabaseProvider(enzymeDirPath=os.path.join(self.__cachePath, "ec"), useCache=useCache)
             nL = edbu.getTreeNodeList()
-            logger.info("Starting load EC node tree %d", len(nL))
+            logger.info("Starting load of EC node tree length %d", len(nL))
             collectionName = self.__cfgOb.get("COLLECTION_ENZYME", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
@@ -163,14 +163,14 @@ class TreeNodeListWorker(object):
             fD = {1}
             for taxId in tL:
                 fD.update({k: True for k in tU.getLineage(taxId)})
-            logger.info("Filter taxon dictionary length %d", len(fD))
+            logger.info("Taxon filter dictionary length %d", len(fD))
             # logger.info("fD %r" % sorted(fD))
             #
             nL = tU.exportNodeList(filterD=fD)
             self.__checkTaxonNodeList(nL)
-            logger.info("Starting load taxonomy node tree %d", len(nL))
+            logger.info("Starting load of taxonomy node tree length %d", len(nL))
             collectionName = self.__cfgOb.get("COLLECTION_TAXONOMY", sectionName=sectionName)
-            logger.info("Taxonomy nodes (%d) %r", len(nL), nL[:5])
+            logger.debug("Taxonomy nodes (%d) %r", len(nL), nL[:5])
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
             logger.info("Tree loading operations completed.")
             #
@@ -189,7 +189,7 @@ class TreeNodeListWorker(object):
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
             # ---
-            logger.info("Tree loading operations completed.")
+            logger.info("Completed tree node list loading operations.\n")
             return True
         except Exception as e:
             logger.exception("Failing with %s", str(e))

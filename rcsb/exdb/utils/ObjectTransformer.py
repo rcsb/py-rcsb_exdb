@@ -96,7 +96,7 @@ class ObjectTransformer(object):
                             ok = ok and rOk
                         #
                         if ii % logIncrement == 0 or ii == numDoc:
-                            logger.info("Replace status %s object (%d of %d)", ok, ii, numDoc)
+                            logger.info("Replace status %r object (%d of %d)", ok, ii, numDoc)
                         #
         except Exception as e:
             logger.exception("Failing with %s", str(e))

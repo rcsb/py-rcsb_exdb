@@ -58,7 +58,7 @@ class ExDbWorkflowTests(unittest.TestCase):
         """ Run workflow steps hoping for the best ...
         """
         try:
-            opL = ["etl_chemref", "etl_uniprot", "upd_ref_seq", "etl_tree_node_lists", "etl_uniprot"]
+            opL = ["etl_chemref", "upd_ref_seq", "etl_uniprot", "etl_tree_node_lists"]
             rlWf = ExDbWorkflow(**self.__commonD)
             for op in opL:
                 ok = rlWf.load(op, **self.__loadCommonD)
@@ -83,6 +83,8 @@ class ExDbWorkflowTests(unittest.TestCase):
                 self.assertTrue(ok1)
                 ok2 = rlWf.load("etl_uniprot", **self.__loadCommonD)
                 self.assertTrue(ok2)
+                ok3 = rlWf.load("etl_tree_node_lists", **self.__loadCommonD)
+                self.assertTrue(ok3)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
