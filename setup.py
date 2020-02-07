@@ -40,9 +40,10 @@ setup(
     entry_points={"console_scripts": ["exdb_exec_cli=rcsb.exdb.cli.ExDbExec:main"]},
     #
     install_requires=[
+        "jsonschema >= 2.6.0",
         "numpy",
         "rcsb.utils.io >= 0.53",
-        "rcsb.db >= 0.958",
+        "rcsb.db >= 0.960",
         "rcsb.utils.chemref >= 0.33",
         "rcsb.utils.citation >= 0.15",
         "rcsb.utils.config >= 0.33",

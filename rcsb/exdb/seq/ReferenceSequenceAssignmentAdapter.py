@@ -16,6 +16,8 @@ __license__ = "Apache 2.0"
 import copy
 import logging
 
+from collections import defaultdict
+
 from rcsb.exdb.utils.ObjectAdapterBase import ObjectAdapterBase
 
 logger = logging.getLogger(__name__)
@@ -115,21 +117,29 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             #
             unpGeneDL = []
             unpAnnDL = []
-
+            geneFilterD = defaultdict(int)
+            resourceFilterD = defaultdict(int)
             for unpId in unpIdS:
                 uD = self.__refD[unpId] if unpId in self.__refD else None
                 if not uD:
-                    logger.info("%s no data for unexpected UniProt accession %r", entityKey, unpId)
+                    logger.info("%s no reference data for unexpected UniProt accession %r", entityKey, unpId)
                     continue
                 if "gene" in uD and "taxonomy_id" in uD:
                     taxId = int(uD["taxonomy_id"])
                     logger.debug("%s : %r gene names %r", entityKey, unpId, uD["gene"])
                     for tD in uD["gene"]:
+                        geneFilterD[tD["name"]] += 1
+                        if geneFilterD[tD["name"]] > 1:
+                            continue
                         unpGeneDL.append({"provenance_source": "UniProt", "value": tD["name"], "taxonomy_id": taxId})
                 if "dbReferences" in uD:
                     logger.debug("%s : %r references %d", entityKey, unpId, len(uD["dbReferences"]))
                     for tD in uD["dbReferences"]:
                         if "resource" in tD and "id_code" in tD and tD["resource"] in ["GO", "Pfam", "InterPro"]:
+                            resourceFilterD[(tD["resource"], tD["id_code"])] += 1
+                            if resourceFilterD[(tD["resource"], tD["id_code"])] > 1:
+                                logger.debug("Skipping duplicate annotation %r %r", tD["resource"], tD["id_code"])
+                                continue
                             if tD["resource"] in ["GO"]:
                                 if self.__rsaP.goIdExists(tD["id_code"]):
                                     goLin = self.__rsaP.getGeneOntologyLineage([tD["id_code"]])

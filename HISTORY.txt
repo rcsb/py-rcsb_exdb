@@ -31,3 +31,4 @@
 30-Jan-2020 V0.39 Update dependencies structure domain utilities
  2-Feb-2020 V0.40 Add test fixtures to measure memory usage, streamline some extractions, suppress some diagnostic reporting
  4-Feb-2020 V0.41 Update dependencies to support split configuration
+ 6-Feb-2020 V0.42 Address issue with duplicated annotations from multiple reference sequences

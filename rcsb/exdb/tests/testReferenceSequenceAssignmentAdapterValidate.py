@@ -1,5 +1,5 @@
 ##
-# File:    ReferenceSequenceAssignmentAdapterTests.py
+# File:    ReferenceSequenceAssignmentAdapterValidateTests.py
 # Author:  J. Westbrook
 # Date:    25-Apr-2019
 #
@@ -24,7 +24,7 @@ import unittest
 
 from rcsb.exdb.seq.ReferenceSequenceAssignmentAdapter import ReferenceSequenceAssignmentAdapter
 from rcsb.exdb.seq.ReferenceSequenceAssignmentProvider import ReferenceSequenceAssignmentProvider
-from rcsb.exdb.utils.ObjectTransformer import ObjectTransformer
+from rcsb.exdb.utils.ObjectValidator import ObjectValidator
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -67,6 +67,7 @@ class ReferenceSequenceAssignmentAdapterTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
+    @unittest.skip("Disable test - for troubleshooting only")
     def testAssignmentAdapter(self):
         """ Test case - create and read cache reference sequences assignments and related data.
         """
@@ -105,7 +106,7 @@ class ReferenceSequenceAssignmentAdapterTests(unittest.TestCase):
             self.assertEqual(numRef1, numRef2)
             #
             rsa = ReferenceSequenceAssignmentAdapter(refSeqAssignProvider=rsaP)
-            obTr = ObjectTransformer(self.__cfgOb, objectAdapter=rsa)
+            obTr = ObjectValidator(self.__cfgOb, objectAdapter=rsa, cachePath=self.__cachePath, useCache=False)
             ok = obTr.doTransform(
                 databaseName=databaseName, collectionName=collectionName, fetchLimit=self.__fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": polymerType}
             )
