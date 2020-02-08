@@ -128,9 +128,9 @@ class UniProtEtlWorker(object):
             )
             #
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexL, keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            okS = self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            return True
+            return ok and okS
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False

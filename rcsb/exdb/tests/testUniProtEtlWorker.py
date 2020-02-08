@@ -38,7 +38,7 @@ class UniProtEtlWorkerTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super(UniProtEtlWorkerTests, self).__init__(methodName)
         self.__verbose = True
-        self.__traceMemory = True
+        self.__traceMemory = False
 
     def setUp(self):
         #

@@ -68,6 +68,7 @@ class ExDbWorkflow(object):
             readBackCheck = kwargs.get("readBackCheck", False)
             numProc = int(kwargs.get("numProc", 1))
             chunkSize = int(kwargs.get("chunkSize", 10))
+            refChunkSize = int(kwargs.get("refChunkSize", 100))
             documentLimit = int(kwargs.get("documentLimit")) if "documentLimit" in kwargs else None
             loadType = kwargs.get("loadType", "full")  # or replace
             dbType = kwargs.get("dbType", "mongo")
@@ -121,7 +122,7 @@ class ExDbWorkflow(object):
                 okS = self.loadStatus(crw.getLoadStatus(), readBackCheck=readBackCheck)
 
             elif op == "upd_ref_seq":
-                ok = self.doReferenceSequenceUpdate(fetchLimit=documentLimit, testMode=testMode, minMatchPrimary=minMatchPrimary)
+                ok = self.doReferenceSequenceUpdate(fetchLimit=documentLimit, testMode=testMode, minMatchPrimary=minMatchPrimary, refChunkSize=refChunkSize)
                 okS = ok
         #
         logger.info("Completed operation %r with status %r\n", op, ok and okS)
@@ -151,7 +152,7 @@ class ExDbWorkflow(object):
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def doReferenceSequenceUpdate(self, fetchLimit=None, testMode=False, minMatchPrimary=None):
+    def doReferenceSequenceUpdate(self, fetchLimit=None, testMode=False, minMatchPrimary=None, refChunkSize=100):
         try:
             databaseName = "pdbx_core"
             collectionName = "pdbx_core_polymer_entity"
@@ -170,6 +171,7 @@ class ExDbWorkflow(object):
                 useCache=self.__useCache,
                 cachePath=self.__cachePath,
                 fetchLimit=fetchLimit,
+                maxChunkSize=refChunkSize,
                 siftsAbbreviated="TEST",
             )
             ok = rsaP.testCache(minMatchPrimary=minMatchPrimary)

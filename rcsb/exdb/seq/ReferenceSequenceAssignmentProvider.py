@@ -41,7 +41,7 @@ class ReferenceSequenceAssignmentProvider(object):
         polymerType="Protein",
         referenceDatabaseName="UniProt",
         provSource="PDB",
-        maxChunkSize=300,
+        maxChunkSize=100,
         fetchLimit=None,
         **kwargs
     ):
@@ -298,6 +298,7 @@ class ReferenceSequenceAssignmentProvider(object):
             logger.info("Starting fetch for %d %s entries", len(idList), refDbName)
             if refDbName == "UniProt":
                 fobj = UniProtUtils(saveText=saveText)
+                logger.info("Maximum reference chunk size %d", self.__maxChunkSize)
                 refD, matchD = fobj.fetchList(idList, maxChunkSize=self.__maxChunkSize)
                 dD = {"refDbName": refDbName, "refDbCache": refD}
                 idD = {"matchInfo": matchD}
