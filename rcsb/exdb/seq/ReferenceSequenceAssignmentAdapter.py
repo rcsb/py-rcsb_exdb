@@ -202,7 +202,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                             continue
                         soD.setdefault("rcsb_gene_name", []).append({"provenance_source": unpGeneD["provenance_source"], "value": unpGeneD["value"]})
                 #
-                # Remapping/extending EC assignments.
+                # --------------  Remapping/extending EC assignments. --------------
                 if peObj:
                     linL = []
                     enzD = {}
@@ -275,6 +275,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                 retDL = []
                 dupD = {}
                 for ersD in ersDL:
+                    #  Check currency of reference assignments made by entities in provSourceL (e.g. in this case only PDB)
                     isMatchedRefDb, isMatchedAltDb, updErsD = self.__reMapAccessions(entityKey, ersD, referenceDatabaseName, taxIdL, provSourceL)
                     #
                     logger.debug("isMatchedRefDb %r isMatchedAltDb %r updErsD %r", isMatchedRefDb, isMatchedAltDb, updErsD)
@@ -283,6 +284,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                         dupD[updErsD["database_accession"]] = True
                         retDL.append(updErsD)
                     #
+                    # Re-apply the latest SIFTS mapping if available ...
                     if not isMatchedRefDb and entityKey not in dupD:
                         dupD[entityKey] = True
                         siftsAccDL = self.__getSiftsAccessions(entityKey, authAsymIdL)
@@ -299,7 +301,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     del obj["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]
                     logger.info("Incomplete reference sequence mapping update for %s", entityKey)
             #
-            #
+            # ------------- update alignment details -------------
             try:
                 alignDL = obj["rcsb_polymer_entity_align"]
             except Exception:
@@ -409,7 +411,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             logger.debug("%s leaving reference accession for %s %s assigned by %r", entityKey, rId, rsiD["database_name"], provSourceL)
             isMatchedRefDb = True
         else:
-            logger.debug("%s leaving a reference accession for %s %s assigned by %r", entityKey, rId, rsiD["database_name"], rsiD["provenance_source"])
+            logger.debug("%s leaving an unverified reference accession for %s %s assigned by %r", entityKey, rId, rsiD["database_name"], rsiD["provenance_source"])
         #
         logger.debug("%s isMatched %r isExcluded %r for accession %r", entityKey, isMatchedRefDb, isMatchedAltDb, rId)
         #

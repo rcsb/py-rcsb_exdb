@@ -57,4 +57,26 @@ class ObjectUpdater(object):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return numUpdated
-        #
+
+    def createCollection(self, databaseName, collectionName, indexAttributeNames=None, checkExists=False, bsonSchema=None):
+        """Create database and collection and optionally a primary index -
+        """
+        try:
+            logger.debug("Create database %s collection %s", databaseName, collectionName)
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                if checkExists and mg.databaseExists(databaseName) and mg.collectionExists(databaseName, collectionName):
+                    ok1 = True
+                else:
+                    ok1 = mg.createCollection(databaseName, collectionName, bsonSchema=bsonSchema)
+                ok2 = mg.databaseExists(databaseName)
+                ok3 = mg.collectionExists(databaseName, collectionName)
+                okI = True
+                if indexAttributeNames:
+                    okI = mg.createIndex(databaseName, collectionName, indexAttributeNames, indexName="primary", indexType="DESCENDING", uniqueFlag=False)
+
+            return ok1 and ok2 and ok3 and okI
+            #
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return False

@@ -63,7 +63,7 @@ class ExDbWorkflow(object):
         try:
             # test mode and UniProt accession primary match minimum count for doReferenceSequenceUpdate()
             testMode = kwargs.get("testMode", False)
-            minMatchPrimary = kwargs.get("minMatchPrimary", None)
+            minMatchPrimaryPercent = kwargs.get("minMatchPrimaryPercent", None)
             #
             readBackCheck = kwargs.get("readBackCheck", False)
             numProc = int(kwargs.get("numProc", 1))
@@ -74,6 +74,10 @@ class ExDbWorkflow(object):
             dbType = kwargs.get("dbType", "mongo")
             tU = TimeUtil()
             dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else tU.getCurrentWeekSignature()
+            #  Rebuild or reuse reference sequence cache
+            rebuildSequenceCache = kwargs.get("rebuildSequenceCache", False)
+            useSequenceCache = not rebuildSequenceCache
+            #
         except Exception as e:
             logger.exception("Argument or configuration processing failing with %s", str(e))
             return False
@@ -122,7 +126,9 @@ class ExDbWorkflow(object):
                 okS = self.loadStatus(crw.getLoadStatus(), readBackCheck=readBackCheck)
 
             elif op == "upd_ref_seq":
-                ok = self.doReferenceSequenceUpdate(fetchLimit=documentLimit, testMode=testMode, minMatchPrimary=minMatchPrimary, refChunkSize=refChunkSize)
+                ok = self.doReferenceSequenceUpdate(
+                    fetchLimit=documentLimit, useSequenceCache=useSequenceCache, testMode=testMode, minMatchPrimaryPercent=minMatchPrimaryPercent, refChunkSize=refChunkSize
+                )
                 okS = ok
         #
         logger.info("Completed operation %r with status %r\n", op, ok and okS)
@@ -152,43 +158,41 @@ class ExDbWorkflow(object):
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def doReferenceSequenceUpdate(self, fetchLimit=None, testMode=False, minMatchPrimary=None, refChunkSize=100):
+    def doReferenceSequenceUpdate(self, fetchLimit=None, useSequenceCache=False, testMode=False, minMatchPrimaryPercent=None, refChunkSize=100, **kwargs):
         try:
+            _ = kwargs
             databaseName = "pdbx_core"
             collectionName = "pdbx_core_polymer_entity"
             polymerType = "Protein"
-            referenceDatabaseName = "UniProt"
-            provSource = "PDB"
-            #
-            #  -- create cache ---
-            rsaP = ReferenceSequenceAssignmentProvider(
-                self.__cfgOb,
-                databaseName=databaseName,
-                collectionName=collectionName,
-                polymerType=polymerType,
-                referenceDatabaseName=referenceDatabaseName,
-                provSource=provSource,
-                useCache=self.__useCache,
-                cachePath=self.__cachePath,
-                fetchLimit=fetchLimit,
-                maxChunkSize=refChunkSize,
-                siftsAbbreviated="TEST",
-            )
-            ok = rsaP.testCache(minMatchPrimary=minMatchPrimary)
-            if not ok:
-                logger.error("Resource cache check or rebuild has failed - exiting")
-                return False
-            #
-            logger.info("Cached sequence reference data count is %d", rsaP.getRefDataCount())
             #
             if testMode:
-                logger.info("Returning after cache processing - (TEST MODE)")
-                return ok
-            rsa = ReferenceSequenceAssignmentAdapter(refSeqAssignProvider=rsaP)
-            obTr = ObjectTransformer(self.__cfgOb, objectAdapter=rsa)
-            ok = obTr.doTransform(
-                databaseName=databaseName, collectionName=collectionName, fetchLimit=fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": polymerType}
-            )
+                #  -- Test existing reference sequence cache ---
+                rsaP = ReferenceSequenceAssignmentProvider(self.__cfgOb, useCache=True, cachePath=self.__cachePath, maxChunkSize=refChunkSize)
+                ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent)
+                if ok:
+                    return True
+                logger.info("Reference sequence cache TESTMODE CHECK has failed - rebuilding")
+                #
+                #  -- Rebuild and test reference sequence cache ---
+                rsaP = ReferenceSequenceAssignmentProvider(self.__cfgOb, useCache=False, cachePath=self.__cachePath, maxChunkSize=refChunkSize)
+                ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent)
+                if ok:
+                    return ok
+                else:
+                    logger.info("Reference sequence cache TESTMODE REBUILD has failed - exiting")
+                    return False
+            # -------
+            rsaP = ReferenceSequenceAssignmentProvider(self.__cfgOb, useCache=useSequenceCache, cachePath=self.__cachePath, maxChunkSize=refChunkSize)
+            ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent)
+            if ok:
+                rsa = ReferenceSequenceAssignmentAdapter(refSeqAssignProvider=rsaP)
+                obTr = ObjectTransformer(self.__cfgOb, objectAdapter=rsa)
+                ok = obTr.doTransform(
+                    databaseName=databaseName, collectionName=collectionName, fetchLimit=fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": polymerType}
+                )
+            else:
+                logger.info("Reference sequence cache failing minimal content checks")
             return ok
         except Exception as e:
             logger.exception("Failing with %s", str(e))
+        return False

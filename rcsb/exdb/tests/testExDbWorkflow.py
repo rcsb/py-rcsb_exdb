@@ -73,7 +73,7 @@ class ExDbWorkflowTests(unittest.TestCase):
             self.__commonD["rebuildCache"] = False
             rlWf = ExDbWorkflow(**self.__commonD)
             #
-            ok = rlWf.load("upd_ref_seq", testMode=True, minMatchPrimary=140, refChunkSize=50, **self.__loadCommonD)
+            ok = rlWf.load("upd_ref_seq", testMode=True, minMatchPrimaryPercent=50.0, refChunkSize=50, **self.__loadCommonD)
             logger.info("Test mode status is %r", ok)
             self.assertTrue(ok)
             if ok:

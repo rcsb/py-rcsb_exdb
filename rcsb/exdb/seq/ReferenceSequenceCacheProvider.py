@@ -1,8 +1,8 @@
 ##
-# File: ReferenceSequenceAssignmentProvider.py
-# Date: 8-Oct-2019  jdw
+# File: ReferenceSequenceCacheProvider.py
+# Date: 10-Feb-2020  jdw
 #
-# Utilities to cache content required to update referencence sequence assignments.
+# Utilities to cache referencence sequence data and mappings.
 #
 # Updates:
 #
@@ -18,18 +18,71 @@ from collections import defaultdict
 
 
 from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
-from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
+from rcsb.exdb.utils.ObjectUpdater import ObjectUpdater
 from rcsb.utils.io.IoUtil import getObjSize
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+from rcsb.utils.io.TimeUtil import TimeUtil
+from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
 from rcsb.utils.seq.UniProtUtils import UniProtUtils
-from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
 
 logger = logging.getLogger(__name__)
 
 
-class ReferenceSequenceAssignmentProvider(object):
-    """  Utilities to cache content required to update referencence sequence assignments.
+class ReferenceFetchWorker(object):
+    """  A skeleton class that implements the interface expected by the multiprocessing
+         for fetching reference sequences --
+    """
+
+    def __init__(self, **kwargs):
+        pass
+
+    def fetchList(self, dataList, procName, optionsD, workingDir):
+        """  Fetch the input list of reference sequence identifiers and return
+             matching diagnostics and reference feature data.
+        """
+        _ = optionsD
+        _ = workingDir
+        saveText = optionsD.get("saveText", False)
+        fetchLimit = optionsD.get("fetchLimit", None)
+        refDbName = optionsD.get("refDbName", "UniProt")
+        maxChunkSize = optionsD.get("maxChunkSize", 50)
+        successList = []
+        retList1 = []
+        retList2 = []
+        diagList = []
+        #
+        try:
+            tU = TimeUtil()
+            idList = dataList[:fetchLimit] if fetchLimit else dataList
+            logger.info("%s starting fetch for %d %s entries", procName, len(idList), refDbName)
+            if refDbName == "UniProt":
+                fobj = UniProtUtils(saveText=saveText)
+                logger.info("Maximum reference chunk size %d", maxChunkSize)
+                refD, matchD = fobj.fetchList(idList, maxChunkSize=maxChunkSize)
+                if len(matchD) == len(idList):
+                    for uId, tD in matchD.items():
+                        tD["rcsb_id"] = uId.strip()
+                        tD["rcsb_last_update"] = tU.getDateTimeObj(tU.getTimestamp())
+                        retList1.append(tD)
+                    for uId, tD in refD.items():
+                        tD["rcsb_id"] = uId.strip()
+                        tD["rcsb_last_update"] = tU.getDateTimeObj(tU.getTimestamp())
+                        retList2.append(tD)
+                    successList.extend(idList)
+                else:
+                    logger.info("Failing with fetch for %d entries with matchD %r", len(idList), matchD)
+            else:
+                logger.error("Unsupported reference database %r", refDbName)
+        except Exception as e:
+            logger.exception("Failing %s for %d data items %s", procName, len(dataList), str(e))
+        logger.info("%s dataList length %d success length %d rst1 %d rst2 %d", procName, len(dataList), len(successList), len(retList1), len(retList2))
+        #
+        return successList, retList1, retList2, diagList
+
+
+class ReferenceSequenceCacheProvider(object):
+    """  Utilities to cache referencence sequence data and mappings.
 
     """
 
@@ -53,33 +106,7 @@ class ReferenceSequenceAssignmentProvider(object):
         self.__statusList = []
         #
         self.__ssP = self.__fetchSiftsSummaryProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
-        self.__goP = self.__fetchGoProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
-        self.__ecP = self.__fetchEcProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__refIdMapD, self.__matchD, self.__refD = self.__reload(databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs)
-
-    def goIdExists(self, goId):
-        try:
-            return self.__goP.exists(goId)
-        except Exception as e:
-            logger.exception("Failing for %r with %s", goId, str(e))
-        return False
-
-    def getGeneOntologyLineage(self, goIdL):
-        # "id"     "name"
-        gL = []
-        try:
-            gTupL = self.__goP.getUniqueDescendants(goIdL)
-            for gTup in gTupL:
-                gL.append({"id": gTup[0], "name": gTup[1]})
-        except Exception as e:
-            logger.exception("Failing for %r with %s", goIdL, str(e))
-        return gL
-
-    def getEcProvider(self):
-        return self.__ecP
-
-    def getSiftsSummaryProvider(self):
-        return self.__ssP
 
     def getMatchInfo(self):
         return self.__matchD
@@ -100,6 +127,8 @@ class ReferenceSequenceAssignmentProvider(object):
 
     def testCache(self, minMatchPrimaryPercent=None, logSizes=False):
         okC = True
+        if okC:
+            return okC
         logger.info("Reference cache lengths: refIdMap %d matchD %d refD %d", len(self.__refIdMapD), len(self.__matchD), len(self.__refD))
         ok = bool(self.__refIdMapD and self.__matchD and self.__refD)
         #
@@ -115,21 +144,19 @@ class ReferenceSequenceAssignmentProvider(object):
                 okC = 100.0 * float(countD["primary"]) / float(numRef) > minMatchPrimaryPercent
             except Exception:
                 okC = False
-            logger.info("Primary reference match percent test status %r", okC)
+            logger.info("Primary reference match count test status %r", okC)
         #
         if logSizes:
             logger.info(
-                "SIFTS %.2f GO %.2f EC %.2f RefIdMap %.2f RefMatchD %.2f RefD %.2f",
-                getObjSize(self.__ssP) / 1000000.0,
-                getObjSize(self.__goP) / 1000000.0,
-                getObjSize(self.__ecP) / 1000000.0,
-                getObjSize(self.__refIdMapD) / 1000000.0,
-                getObjSize(self.__matchD) / 1000000.0,
-                getObjSize(self.__refD) / 1000000.0,
+                "RefIdMap %.2f RefMatchD %.2f RefD %.2f", getObjSize(self.__refIdMapD) / 1000000.0, getObjSize(self.__matchD) / 1000000.0, getObjSize(self.__refD) / 1000000.0,
             )
         return ok and okC
 
     def __reload(self, databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs):
+        _ = kwargs
+        refIdMapD = {}
+        matchD = {}
+        refD = {}
         assignRefD = self.__getPolymerReferenceSequenceAssignments(databaseName, collectionName, polymerType, fetchLimit)
         refIdMapD, _ = self.__getAssignmentMap(assignRefD, referenceDatabaseName=referenceDatabaseName, provSource=provSource)
         #
@@ -137,18 +164,40 @@ class ReferenceSequenceAssignmentProvider(object):
         siftsUniProtL = self.__ssP.getEntryUniqueIdentifiers(entryIdL, idType="UNPID")
         logger.info("Incorporating %d SIFTS accessions for %d entries", len(siftsUniProtL), len(entryIdL))
         unpIdList = sorted(set(list(refIdMapD.keys()) + siftsUniProtL))
-        #
         logger.info("Rebuild cache for %d UniProt accessions (consolidated)", len(unpIdList))
-        #
-        matchD, refD = self.__rebuildReferenceCache(unpIdList, referenceDatabaseName, **kwargs)
+        ok = self.__fetchReferences(unpIdList)
+        logger.info("Fetch references status is %r", ok)
+        # matchD, refD = self.__rebuildReferenceCache(unpIdList, referenceDatabaseName, **kwargs)
         return refIdMapD, matchD, refD
+
+    def __loadReferences(self, databaseName, collectionName, objDL):
+        updateDL = []
+        for objD in objDL:
+            try:
+                selectD = {"rcsb_id": objD["rcsb_id"]}
+                updateDL.append({"selectD": selectD, "updateD": objD})
+            except Exception as e:
+                logger.exception("Failing with %s", str(e))
+        obUpd = ObjectUpdater(self.__cfgOb)
+        numUpd = obUpd.update(databaseName, collectionName, updateDL)
+        logger.info("Updated reference count is %d", numUpd)
+
+    def __fetchReferences(self, dataList, numProc=2, chunkSize=10):
+        logger.info("Length starting list is %d", len(dataList))
+        optD = {}
+        rWorker = ReferenceFetchWorker()
+        mpu = MultiProcUtil(verbose=True)
+        mpu.setOptions(optD)
+        mpu.set(workerObj=rWorker, workerMethod="fetchList")
+        ok, failList, resultList, _ = mpu.runMulti(dataList=dataList, numProc=numProc, numResults=2, chunkSize=chunkSize)
+        logger.info("Multi-proc %r failures %r result lengths %r %r", ok, len(failList), len(resultList[0]), len(resultList[1]))
+        return ok
 
     def __getPolymerReferenceSequenceAssignments(self, databaseName, collectionName, polymerType, fetchLimit):
         """ Get all accessions assigned to input reference sequence database for the input polymerType.
 
             Returns:
              (dict): {"1abc_1": "rcsb_polymer_entity_container_identifiers": {"reference_sequence_identifiers": []},
-                                "rcsb_polymer_entity_align": [],
                                 "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
         """
         try:
@@ -167,17 +216,13 @@ class ReferenceSequenceAssignmentProvider(object):
                     "rcsb_id",
                     "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers",
                     "rcsb_polymer_entity_container_identifiers.auth_asym_ids",
-                    # "rcsb_polymer_entity_align",
-                    # "rcsb_entity_source_organism.ncbi_taxonomy_id",
-                    # "rcsb_polymer_entity_container_identifiers.related_annotation_identifiers",
-                    # "rcsb_polymer_entity_annotation",
                     "rcsb_entity_source_organism.ncbi_taxonomy_id",
                 ],
             )
             eCount = obEx.getCount()
             logger.info("Polymer entity count type %s is %d", polymerType, eCount)
             objD = obEx.getObjects()
-            logger.info("Reading polymer entity count %d ref accession length %d ", eCount, len(objD))
+            logger.info("Reading polymer entity count %d reference accession length %d ", eCount, len(objD))
             #
         except Exception as e:
             logger.exception("Failing for %s (%s) with %s", databaseName, collectionName, str(e))
@@ -331,25 +376,3 @@ class ReferenceSequenceAssignmentProvider(object):
         logger.debug("SIFTS cache status %r", ok)
         logger.debug("ssP entry count %d", ssP.getEntryCount())
         return ssP
-
-    def __fetchGoProvider(self, cfgOb, configName, **kwargs):
-        cachePath = kwargs.get("cachePath", ".")
-        useCache = kwargs.get("useCache", True)
-        #
-        cacheDirPath = os.path.join(cachePath, cfgOb.get("EXDB_CACHE_DIR", sectionName=configName))
-        logger.debug("goP %r %r", cacheDirPath, useCache)
-        goP = GeneOntologyProvider(goDirPath=cacheDirPath, useCache=useCache)
-        ok = goP.testCache()
-        logger.debug("Gene Ontology (%r) root node count %r", ok, goP.getRootNodes())
-        return goP
-
-    def __fetchEcProvider(self, cfgOb, configName, **kwargs):
-        cachePath = kwargs.get("cachePath", ".")
-        useCache = kwargs.get("useCache", True)
-        #
-        cacheDirPath = os.path.join(cachePath, cfgOb.get("ENZYME_CLASSIFICATION_CACHE_DIR", sectionName=configName))
-        logger.debug("ecP %r %r", cacheDirPath, useCache)
-        ecP = EnzymeDatabaseProvider(enzymeDirPath=cacheDirPath, useCache=useCache)
-        ok = ecP.testCache()
-        logger.debug("Enzyme cache status %r", ok)
-        return ecP
