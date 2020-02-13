@@ -15,6 +15,9 @@ __license__ = "Apache 2.0"
 
 import logging
 
+from jsonschema import Draft4Validator
+from jsonschema import FormatChecker
+
 from rcsb.db.helpers.DocumentDefinitionHelper import DocumentDefinitionHelper
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
@@ -30,7 +33,7 @@ class UniProtEtlWorker(object):
     """ Prepare and load sequence reference data collections.
     """
 
-    def __init__(self, cfgOb, cachePath, useCache=True, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
+    def __init__(self, cfgOb, cachePath, useCache=True, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, doValidate=False, verbose=False):
         self.__cfgOb = cfgOb
         self.__cachePath = cachePath
         self.__useCache = useCache
@@ -44,6 +47,8 @@ class UniProtEtlWorker(object):
         self.__statusList = []
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=self.__useCache)
         self.__docHelper = DocumentDefinitionHelper(cfgOb=self.__cfgOb)
+        self.__valInst = None
+        self.__doValidate = doValidate
         #
 
     def __updateStatus(self, updateId, databaseName, collectionName, status, startTimestamp):
@@ -116,6 +121,11 @@ class UniProtEtlWorker(object):
             else:
                 logger.error("Unsupported external resource %r", extResource)
             #
+            if self.__doValidate:
+                self.__valInst = self.__getValidator(databaseName, collectionName, schemaLevel="full")
+                for dObj in dList:
+                    self.__validateObj(databaseName, collectionName, dObj, label="Original")
+            #
             dl = DocumentLoader(
                 self.__cfgOb,
                 self.__cachePath,
@@ -137,3 +147,33 @@ class UniProtEtlWorker(object):
 
     def getLoadStatus(self):
         return self.__statusList
+
+    def __getValidator(self, databaseName, collectionName, schemaLevel="full"):
+        # _ = self.__schP.makeSchemaDef(databaseName, dataTyping="ANY", saveSchema=True)
+        # cD = self.__schP.makeSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel, saveSchema=True)
+        logger.info("Fetch schema for %r %r validation level %r", databaseName, collectionName, schemaLevel)
+        cD = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel)
+        # Raises exceptions for schema compliance.
+        Draft4Validator.check_schema(cD)
+        valInst = Draft4Validator(cD, format_checker=FormatChecker())
+        return valInst
+
+    def __validateObj(self, databaseName, collectionName, rObj, label=""):
+        try:
+            eCount = 0
+            tId = rObj["rcsb_id"] if rObj and "rcsb_id" in rObj else "anonymous"
+            for error in sorted(self.__valInst.iter_errors(rObj), key=str):
+                logger.info("Database %s collection %s (%s %r) path %s error: %s", databaseName, collectionName, label, tId, error.path, error.message)
+                logger.debug(">>> Failing object is %r", rObj)
+                if "rcsb_uniprot_feature" in rObj:
+                    for dd in rObj["rcsb_uniprot_feature"]:
+                        if "feature_id" in dd:
+                            logger.info("feature_id %r", dd["feature_id"])
+                        else:
+                            logger.info("no feature_id keys %r", sorted(dd.keys()))
+                            logger.info("description %r", dd["description"])
+                eCount += 1
+        except Exception as e:
+            logger.exception("Validation failing %s", str(e))
+
+        return eCount

@@ -35,3 +35,4 @@
  8-Feb-2020 V0.43 Adjust the default chunk size in the workflow interface (set the default to 100)
  8-Feb-2020 V0.44 Expose the reference sequence fetch chunk size in the workflow interface
 11-Feb-2020 V0.45 Simplify workflow api and update dependencies
+13-Feb-2020 V0.45 Added validation tests to troubleshoot UniProt core loading.  Update dependencies.

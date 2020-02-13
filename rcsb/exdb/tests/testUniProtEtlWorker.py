@@ -79,6 +79,18 @@ class UniProtEtlWorkerTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    def testValidateUniProt(self):
+        """ Test case - validate UniProt reference data -
+        """
+        try:
+            uw = UniProtEtlWorker(self.__cfgOb, self.__cachePath, doValidate=True)
+            ok = uw.load(self.__updateId, extResource="UniProt", loadType="full")
+            #
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
 
 def uniProtEtlWorkerSuite():
     suiteSelect = unittest.TestSuite()
