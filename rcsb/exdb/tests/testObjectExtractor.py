@@ -27,6 +27,7 @@ from collections import defaultdict
 from rcsb.db.mongo.Connection import Connection
 from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 from rcsb.utils.config.ConfigUtil import ConfigUtil
+from rcsb.utils.io.TimeUtil import TimeUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -68,6 +69,31 @@ class ObjectExtractorTests(unittest.TestCase):
             for _ in range(5):
                 with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                     self.assertNotEqual(client, None)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
+    def testExtractEntriesBefore(self):
+        """ Test case - extract entries subject to date restriction
+
+        """
+        try:
+            tU = TimeUtil()
+            tS = tU.getTimestamp(useUtc=True, before={"days": 365 * 4})
+            tD = tU.getDateTimeObj(tS)
+            obEx = ObjectExtractor(
+                self.__cfgOb,
+                databaseName="pdbx_core",
+                collectionName="pdbx_core_entry",
+                useCache=False,
+                keyAttribute="entry",
+                uniqueAttributes=["rcsb_id"],
+                selectionQuery={"rcsb_accession_info.initial_release_date": {"$gt": tD}},
+                selectionList=["rcsb_id", "rcsb_accession_info"],
+            )
+            eCount = obEx.getCount()
+            logger.info("Entry count ifs %d", eCount)
+            self.assertGreaterEqual(eCount, 14)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()

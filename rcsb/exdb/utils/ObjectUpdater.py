@@ -34,7 +34,7 @@ class ObjectUpdater(object):
         #
 
     def update(self, databaseName, collectionName, updateDL):
-        """Update documents satisfying the selection details with the content of updateObjD.
+        """Update documents satisfying the selection details with the content of updateDL.
 
         Args:
             databaseName (str): Target database name
@@ -51,7 +51,7 @@ class ObjectUpdater(object):
                 if mg.collectionExists(databaseName, collectionName):
                     logger.info("%s %s document count is %d", databaseName, collectionName, mg.count(databaseName, collectionName))
                     for updateD in updateDL:
-                        num = mg.update(databaseName, collectionName, updateD["updateD"], updateD["selectD"])
+                        num = mg.update(databaseName, collectionName, updateD["updateD"], updateD["selectD"], upsertFlag=True)
                         numUpdated += num
 
         except Exception as e:
@@ -80,3 +80,23 @@ class ObjectUpdater(object):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False
+
+    def delete(self, databaseName, collectionName, selectD):
+        """Remove documents satisfying the input selection details.
+
+        Args:
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            selectD    = {'ky1': 'val1', 'ky2': 'val2',  ...}
+
+        """
+        try:
+            numDeleted = 0
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                if mg.collectionExists(databaseName, collectionName):
+                    logger.info("%s %s document count is %d", databaseName, collectionName, mg.count(databaseName, collectionName))
+                    numDeleted = mg.delete(databaseName, collectionName, selectD)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return numDeleted

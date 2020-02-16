@@ -1,13 +1,13 @@
 ##
-# File:    ReferenceSequenceCacheProviderTests.py
+# File:    ReferenceSequenceAnnotationAdapterTests.py
 # Author:  J. Westbrook
-# Date:    10-Feb-2020
+# Date:    14-Feb-2020
 #
 # Updates:
 #
 ##
 """
-Tests for reference sequence cache maintenance operations
+Tests of reference seequence annotation adapter.
 """
 
 __docformat__ = "restructuredtext en"
@@ -22,9 +22,10 @@ import time
 import tracemalloc
 import unittest
 
-from rcsb.exdb.seq.ReferenceSequenceCacheProvider import ReferenceSequenceCacheProvider
+from rcsb.exdb.seq.ReferenceSequenceAnnotationAdapter import ReferenceSequenceAnnotationAdapter
+from rcsb.exdb.seq.ReferenceSequenceAnnotationProvider import ReferenceSequenceAnnotationProvider
+from rcsb.exdb.utils.ObjectTransformer import ObjectTransformer
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -33,21 +34,23 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
-class ReferenceSequenceCacheProviderTests(unittest.TestCase):
+class ReferenceSequenceAnnotationAdapterTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
-        super(ReferenceSequenceCacheProviderTests, self).__init__(methodName)
+        super(ReferenceSequenceAnnotationAdapterTests, self).__init__(methodName)
         self.__verbose = True
         self.__traceMemory = False
 
     def setUp(self):
         #
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        self.__useCache = True
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
-        self.__fetchLimitTest = None
-        #
+        self.__resourceName = "MONGO_DB"
+        self.__fetchLimit = None
         #
         if self.__traceMemory:
             tracemalloc.start()
@@ -58,39 +61,49 @@ class ReferenceSequenceCacheProviderTests(unittest.TestCase):
         if self.__traceMemory:
             rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
             current, peak = tracemalloc.get_traced_memory()
-            logger.info("Current memory usage is %.4f MB; Peak was %.4f MB Resident size %.4f MB", current / 10 ** 6, peak / 10 ** 6, rusageMax / 10 ** 6)
+            logger.info("Current memory usage is %.2f MB; Peak was %.2f MB Resident size %.2f MB", current / 10 ** 6, peak / 10 ** 6, rusageMax / 10 ** 6)
             tracemalloc.stop()
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def testReferenceCacheProvider(self):
-        """ Test case - create and read cached reference sequences.
+    def testAnnotationAdapter(self):
+        """ Test case - create and read cache reference sequences assignments and related data.
         """
         try:
-            #  -- Update/create cache ---
-            rsaP = ReferenceSequenceCacheProvider(self.__cfgOb, maxChunkSize=50, numProc=2, expireDays=0)
+            databaseName = "pdbx_core"
+            collectionName = "pdbx_core_polymer_entity"
+            polymerType = "Protein"
+            #  -- create cache ---
+            rsaP = ReferenceSequenceAnnotationProvider(self.__cfgOb, fetchLimit=self.__fetchLimit, siftsAbbreviated="TEST", cachePath=self.__cachePath, useCache=True)
             ok = rsaP.testCache()
             self.assertTrue(ok)
-            numRef = rsaP.getRefDataCount()
-            self.assertGreaterEqual(numRef, 90)
+            numRef1 = rsaP.getRefDataCount()
             #
             # ---  Reload from cache ---
-            rsaP = ReferenceSequenceCacheProvider(self.__cfgOb, maxChunkSize=50, numProc=2, expireDays=14)
+            rsaP = ReferenceSequenceAnnotationProvider(self.__cfgOb, cachePath=self.__cachePath, useCache=True)
             ok = rsaP.testCache()
             self.assertTrue(ok)
-            numRef = rsaP.getRefDataCount()
-            self.assertGreaterEqual(numRef, 90)
+            numRef2 = rsaP.getRefDataCount()
+            self.assertEqual(numRef1, numRef2)
+            #
+            rsa = ReferenceSequenceAnnotationAdapter(rsaP)
+            obTr = ObjectTransformer(self.__cfgOb, objectAdapter=rsa)
+            ok = obTr.doTransform(
+                databaseName=databaseName, collectionName=collectionName, fetchLimit=self.__fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": polymerType}
+            )
+            self.assertTrue(ok)
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
 
-def referenceSequenceCacheProviderSuite():
+def referenceSequenceAnnotationAdapterSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(ReferenceSequenceCacheProviderTests("testCacheProvider"))
+    suiteSelect.addTest(ReferenceSequenceAnnotationAdapterTests("testAnnotationAdapter"))
     return suiteSelect
 
 
 if __name__ == "__main__":
-    mySuite = referenceSequenceCacheProviderSuite()
+    mySuite = referenceSequenceAnnotationAdapterSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

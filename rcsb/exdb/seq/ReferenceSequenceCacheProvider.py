@@ -13,32 +13,35 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 import logging
-import os
 from collections import defaultdict
 
 
 from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 from rcsb.exdb.utils.ObjectUpdater import ObjectUpdater
 from rcsb.utils.io.IoUtil import getObjSize
-from rcsb.utils.io.MarshalUtil import MarshalUtil
 from rcsb.utils.io.TimeUtil import TimeUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
-from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
 from rcsb.utils.seq.UniProtUtils import UniProtUtils
 
 logger = logging.getLogger(__name__)
 
 
-class ReferenceFetchWorker(object):
+class ReferenceUpdateWorker(object):
     """  A skeleton class that implements the interface expected by the multiprocessing
          for fetching reference sequences --
     """
 
-    def __init__(self, **kwargs):
-        pass
+    def __init__(self, cfgOb, **kwargs):
+        self.__cfgOb = cfgOb
+        _ = kwargs
+        self.__databaseName = "uniprot_exdb"
+        self.__refDataCollectionName = "reference_entry"
+        self.__matchDataCollectionName = "reference_match"
+        self.__createCollections(self.__databaseName, self.__refDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
+        self.__createCollections(self.__databaseName, self.__matchDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
 
-    def fetchList(self, dataList, procName, optionsD, workingDir):
-        """  Fetch the input list of reference sequence identifiers and return
+    def updateList(self, dataList, procName, optionsD, workingDir):
+        """  Update the input list of reference sequence identifiers and return
              matching diagnostics and reference feature data.
         """
         _ = optionsD
@@ -51,6 +54,7 @@ class ReferenceFetchWorker(object):
         retList1 = []
         retList2 = []
         diagList = []
+        emptyList = []
         #
         try:
             tU = TimeUtil()
@@ -58,7 +62,7 @@ class ReferenceFetchWorker(object):
             logger.info("%s starting fetch for %d %s entries", procName, len(idList), refDbName)
             if refDbName == "UniProt":
                 fobj = UniProtUtils(saveText=saveText)
-                logger.info("Maximum reference chunk size %d", maxChunkSize)
+                logger.debug("Maximum reference chunk size %d", maxChunkSize)
                 refD, matchD = fobj.fetchList(idList, maxChunkSize=maxChunkSize)
                 if len(matchD) == len(idList):
                     for uId, tD in matchD.items():
@@ -70,6 +74,8 @@ class ReferenceFetchWorker(object):
                         tD["rcsb_last_update"] = tU.getDateTimeObj(tU.getTimestamp())
                         retList2.append(tD)
                     successList.extend(idList)
+                    self.__updateReferenceData(self.__databaseName, self.__refDataCollectionName, retList2)
+                    self.__updateReferenceData(self.__databaseName, self.__matchDataCollectionName, retList1)
                 else:
                     logger.info("Failing with fetch for %d entries with matchD %r", len(idList), matchD)
             else:
@@ -78,7 +84,24 @@ class ReferenceFetchWorker(object):
             logger.exception("Failing %s for %d data items %s", procName, len(dataList), str(e))
         logger.info("%s dataList length %d success length %d rst1 %d rst2 %d", procName, len(dataList), len(successList), len(retList1), len(retList2))
         #
-        return successList, retList1, retList2, diagList
+        return successList, emptyList, emptyList, diagList
+
+    def __updateReferenceData(self, databaseName, collectionName, objDL):
+        updateDL = []
+        for objD in objDL:
+            try:
+                selectD = {"rcsb_id": objD["rcsb_id"]}
+                updateDL.append({"selectD": selectD, "updateD": objD})
+            except Exception as e:
+                logger.exception("Failing with %s", str(e))
+        obUpd = ObjectUpdater(self.__cfgOb)
+        numUpd = obUpd.update(databaseName, collectionName, updateDL)
+        logger.info("Updated reference count is %d", numUpd)
+
+    def __createCollections(self, databaseName, collectionName, indexAttributeNames=None):
+        obUpd = ObjectUpdater(self.__cfgOb)
+        ok = obUpd.createCollection(databaseName, collectionName, indexAttributeNames=indexAttributeNames, checkExists=True, bsonSchema=None)
+        return ok
 
 
 class ReferenceSequenceCacheProvider(object):
@@ -86,27 +109,18 @@ class ReferenceSequenceCacheProvider(object):
 
     """
 
-    def __init__(
-        self,
-        cfgOb,
-        databaseName="pdbx_core",
-        collectionName="pdbx_core_polymer_entity",
-        polymerType="Protein",
-        referenceDatabaseName="UniProt",
-        provSource="PDB",
-        maxChunkSize=100,
-        fetchLimit=None,
-        **kwargs
-    ):
+    def __init__(self, cfgOb, siftsProvider=None, maxChunkSize=100, fetchLimit=None, expireDays=14, numProc=1, **kwargs):
         self.__cfgOb = cfgOb
-        self.__polymerType = polymerType
-        self.__mU = MarshalUtil()
         #
         self.__maxChunkSize = maxChunkSize
-        self.__statusList = []
+        self.__numProc = numProc
         #
-        self.__ssP = self.__fetchSiftsSummaryProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
-        self.__refIdMapD, self.__matchD, self.__refD = self.__reload(databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs)
+        self.__databaseName = "uniprot_exdb"
+        self.__refDataCollectionName = "reference_entry"
+        self.__matchDataCollectionName = "reference_match"
+
+        self.__ssP = siftsProvider
+        self.__matchD, self.__refD = self.__reload(fetchLimit, expireDays, **kwargs)
 
     def getMatchInfo(self):
         return self.__matchD
@@ -119,9 +133,6 @@ class ReferenceSequenceCacheProvider(object):
         exObjD = fobj.reformat(self.__refD, formatType=formatType)
         return list(exObjD.values())
 
-    def getRefIdMap(self):
-        return self.__refIdMapD
-
     def getRefDataCount(self):
         return len(self.__refD)
 
@@ -129,10 +140,10 @@ class ReferenceSequenceCacheProvider(object):
         okC = True
         if okC:
             return okC
-        logger.info("Reference cache lengths: refIdMap %d matchD %d refD %d", len(self.__refIdMapD), len(self.__matchD), len(self.__refD))
-        ok = bool(self.__refIdMapD and self.__matchD and self.__refD)
+        logger.info("Reference cache lengths: matchD %d refD %d", len(self.__matchD), len(self.__refD))
+        ok = bool(self.__matchD and self.__refD)
         #
-        numRef = len(self.__refIdMapD)
+        numRef = len(self.__matchD)
         countD = defaultdict(int)
         logger.info("Match dictionary length %d", len(self.__matchD))
         for _, mD in self.__matchD.items():
@@ -148,52 +159,117 @@ class ReferenceSequenceCacheProvider(object):
         #
         if logSizes:
             logger.info(
-                "RefIdMap %.2f RefMatchD %.2f RefD %.2f", getObjSize(self.__refIdMapD) / 1000000.0, getObjSize(self.__matchD) / 1000000.0, getObjSize(self.__refD) / 1000000.0,
+                "RefMatchD %.2f RefD %.2f", getObjSize(self.__matchD) / 1000000.0, getObjSize(self.__refD) / 1000000.0,
             )
         return ok and okC
 
-    def __reload(self, databaseName, collectionName, polymerType, referenceDatabaseName, provSource, fetchLimit, **kwargs):
+    def __reload(self, fetchLimit, expireDays, **kwargs):
         _ = kwargs
+        logger.info("Reloading sequence reference data fetchLimit %r expireDays %r", fetchLimit, expireDays)
+        numMissing = self.__refreshReferenceData(expireDays=expireDays, failureFraction=0.75)
+        logger.info("Reference identifiers expired/missing %d", numMissing)
+        #
         refIdMapD = {}
         matchD = {}
         refD = {}
-        assignRefD = self.__getPolymerReferenceSequenceAssignments(databaseName, collectionName, polymerType, fetchLimit)
-        refIdMapD, _ = self.__getAssignmentMap(assignRefD, referenceDatabaseName=referenceDatabaseName, provSource=provSource)
-        #
+        assignRefD = self.__getPolymerReferenceSequenceAssignments(fetchLimit)
+        refIdMapD, _ = self.__getAssignmentMap(assignRefD)
+        # refIdD[<database_accession>] = [entity_key1, entity_key2,...]
         entryIdL = [rcsbId[:4] for rcsbId in assignRefD]
-        siftsUniProtL = self.__ssP.getEntryUniqueIdentifiers(entryIdL, idType="UNPID")
-        logger.info("Incorporating %d SIFTS accessions for %d entries", len(siftsUniProtL), len(entryIdL))
+        siftsUniProtL = self.__ssP.getEntryUniqueIdentifiers(entryIdL, idType="UNPID") if self.__ssP else []
+        logger.info("Incorporating all %d SIFTS accessions for %d entries", len(siftsUniProtL), len(entryIdL))
         unpIdList = sorted(set(list(refIdMapD.keys()) + siftsUniProtL))
-        logger.info("Rebuild cache for %d UniProt accessions (consolidated)", len(unpIdList))
-        ok = self.__fetchReferences(unpIdList)
-        logger.info("Fetch references status is %r", ok)
-        # matchD, refD = self.__rebuildReferenceCache(unpIdList, referenceDatabaseName, **kwargs)
-        return refIdMapD, matchD, refD
+        #
+        cacheUnpIdList = self.__getReferenceDataIds(expireDays=0)
+        logger.info("Using %d cached reference sequences", len(cacheUnpIdList))
+        #
+        updateUnpIdList = sorted(set(unpIdList) - set(cacheUnpIdList))
+        #
+        if updateUnpIdList:
+            logger.info("Update cache for %d UniProt accessions (consolidated)", len(updateUnpIdList))
+            ok, failList = self.__updateReferenceData(updateUnpIdList)
+            logger.info("Fetch references status is %r missing count %d", ok, len(failList))
+        else:
+            logger.info("No reference sequence updates required")
+        #
+        matchD = self.__getReferenceData(self.__databaseName, self.__matchDataCollectionName)
+        refD = self.__getReferenceData(self.__databaseName, self.__refDataCollectionName)
+        logger.info("Completed - returning match length %d and reference data length %d", len(matchD), len(refD))
+        return matchD, refD
 
-    def __loadReferences(self, databaseName, collectionName, objDL):
-        updateDL = []
-        for objD in objDL:
-            try:
-                selectD = {"rcsb_id": objD["rcsb_id"]}
-                updateDL.append({"selectD": selectD, "updateD": objD})
-            except Exception as e:
-                logger.exception("Failing with %s", str(e))
-        obUpd = ObjectUpdater(self.__cfgOb)
-        numUpd = obUpd.update(databaseName, collectionName, updateDL)
-        logger.info("Updated reference count is %d", numUpd)
+    def __refreshReferenceData(self, expireDays=14, failureFraction=0.75):
+        """Update expired reference data and purge any obsolete data not to exceeding the
+        the input failureFraction.
 
-    def __fetchReferences(self, dataList, numProc=2, chunkSize=10):
-        logger.info("Length starting list is %d", len(dataList))
-        optD = {}
-        rWorker = ReferenceFetchWorker()
+        Args:
+            expireDays (int, optional): expiration interval in days. Defaults to 14.
+            failureFraction (float, optional): fractional limit of obsolete entries purged. Defaults to 0.75.
+
+        Returns:
+            (int): number of obsolete entries purged
+
+        """
+        idList = self.__getReferenceDataIds(expireDays=expireDays)
+        logger.info("Expired (days=%d) reference identifiers %d", expireDays, len(idList))
+        if not idList:
+            return 0
+        #
+        ok, failList = self.__updateReferenceData(idList)
+        logger.debug("After update (status=%r) Missing expired reference identifiers %d", ok, len(failList))
+        tFrac = float(len(failList)) / float(len(idList))
+        if tFrac < failureFraction:
+            obUpd = ObjectUpdater(self.__cfgOb)
+            selectD = {"rcsb_id": failList}
+            numPurge = obUpd.delete(self.__databaseName, self.__matchDataCollectionName, selectD)
+            if len(failList) != numPurge:
+                logger.debug("Update match failures %d purge count %d", len(failList), numPurge)
+            numPurge = obUpd.delete(self.__databaseName, self.__refDataCollectionName, selectD)
+            if len(failList) != numPurge:
+                logger.debug("Update reference data failures %d purge count %d", len(failList), numPurge)
+        return len(failList)
+
+    def __getReferenceDataIds(self, expireDays=14):
+        """Get reference data identifiers subject to an expiration interval
+         (i.e. not updated in/older than deltaDays)
+
+        Args:
+            expireDays (int, optional): expiration interval in days. Defaults to 14.
+
+        Returns:
+            (list): reference identifier list
+        """
+        selectD = None
+        if expireDays > 0:
+            tU = TimeUtil()
+            tS = tU.getTimestamp(useUtc=True, before={"days": expireDays})
+            selectD = {"rcsb_latest_update": {"$lt": tU.getDateTimeObj(tS)}}
+        matchD = self.__getReferenceData(self.__databaseName, self.__matchDataCollectionName, selectD=selectD)
+        return sorted(matchD.keys())
+
+    def __updateReferenceData(self, idList):
+        numProc = self.__numProc
+        chunkSize = self.__maxChunkSize
+        logger.info("Length starting list is %d", len(idList))
+        optD = {"maxChunkSize": chunkSize}
+        rWorker = ReferenceUpdateWorker(self.__cfgOb)
         mpu = MultiProcUtil(verbose=True)
         mpu.setOptions(optD)
-        mpu.set(workerObj=rWorker, workerMethod="fetchList")
-        ok, failList, resultList, _ = mpu.runMulti(dataList=dataList, numProc=numProc, numResults=2, chunkSize=chunkSize)
+        mpu.set(workerObj=rWorker, workerMethod="updateList")
+        ok, failList, resultList, _ = mpu.runMulti(dataList=idList, numProc=numProc, numResults=2, chunkSize=chunkSize)
         logger.info("Multi-proc %r failures %r result lengths %r %r", ok, len(failList), len(resultList[0]), len(resultList[1]))
-        return ok
+        return ok, failList
 
-    def __getPolymerReferenceSequenceAssignments(self, databaseName, collectionName, polymerType, fetchLimit):
+    def __getReferenceData(self, databaseName, collectionName, selectD=None):
+        logger.info("Searching %s %s with selection query %r", databaseName, collectionName, selectD)
+        obEx = ObjectExtractor(
+            self.__cfgOb, databaseName=databaseName, collectionName=collectionName, keyAttribute="rcsb_id", uniqueAttributes=["rcsb_id"], selectionQuery=selectD,
+        )
+        docCount = obEx.getCount()
+        logger.debug("Reference data match count %d", docCount)
+        objD = obEx.getObjects()
+        return objD
+
+    def __getPolymerReferenceSequenceAssignments(self, fetchLimit):
         """ Get all accessions assigned to input reference sequence database for the input polymerType.
 
             Returns:
@@ -201,6 +277,9 @@ class ReferenceSequenceCacheProvider(object):
                                 "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
         """
         try:
+            databaseName = "pdbx_core"
+            collectionName = "pdbx_core_polymer_entity"
+            polymerType = "Protein"
             obEx = ObjectExtractor(
                 self.__cfgOb,
                 databaseName=databaseName,
@@ -228,12 +307,14 @@ class ReferenceSequenceCacheProvider(object):
             logger.exception("Failing for %s (%s) with %s", databaseName, collectionName, str(e))
         return objD
 
-    def __getAssignmentMap(self, objD, referenceDatabaseName="UniProt", provSource="PDB"):
+    def __getAssignmentMap(self, polymerEntityObjD):
+        referenceDatabaseName = "UniProt"
+        provSource = "PDB"
         refIdD = defaultdict(list)
         taxIdD = defaultdict(list)
         numMissing = 0
         numMissingTaxons = 0
-        for entityKey, eD in objD.items():
+        for entityKey, eD in polymerEntityObjD.items():
             try:
                 accS = set()
                 for ii, tD in enumerate(eD["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]):
@@ -264,115 +345,3 @@ class ReferenceSequenceCacheProvider(object):
         logger.info("Reference sequences with multiple taxonomies %d", numMultipleTaxons)
         logger.info("Unique %s accession assignments by %s %d (entities missing archive accession assignments %d) ", referenceDatabaseName, provSource, len(refIdD), numMissing)
         return refIdD, taxIdD
-
-    #
-    def __rebuildReferenceCache(self, idList, refDbName, **kwargs):
-        """
-        """
-        fetchLimit = None
-        doMissing = True
-        dD = {}
-        cachePath = kwargs.get("cachePath", ".")
-        dirPath = os.path.join(cachePath, "exdb")
-        # cacheKwargs = kwargs.get("cacheKwargs", {"fmt": "json", "indent": 3})
-        cacheKwargs = kwargs.get("cacheKwargs", {"fmt": "pickle"})
-        useCache = kwargs.get("useCache", True)
-        saveText = kwargs.get("saveText", False)
-        #
-        ext = "pic" if cacheKwargs["fmt"] == "pickle" else "json"
-        fn = refDbName + "-ref-sequence-data-cache" + "." + ext
-        dataCacheFilePath = os.path.join(dirPath, fn)
-        #
-        fn = refDbName + "-ref-sequence-id-cache" + ".json"
-        accCacheFilePath = os.path.join(dirPath, fn)
-        #
-        self.__mU.mkdir(dirPath)
-        if not useCache:
-            for fp in [dataCacheFilePath, accCacheFilePath]:
-                try:
-                    os.remove(fp)
-                except Exception:
-                    pass
-        #
-        if useCache and accCacheFilePath and self.__mU.exists(accCacheFilePath) and dataCacheFilePath and self.__mU.exists(dataCacheFilePath):
-            dD = self.__mU.doImport(dataCacheFilePath, **cacheKwargs)
-            idD = self.__mU.doImport(accCacheFilePath, fmt="json")
-            logger.info("Reading cached reference sequence ID and data cache files - cached match reference length %d", len(idD["matchInfo"]))
-            idD["matchInfo"] = self.__rebuildReferenceMatchIndex(idList, dD["refDbCache"])
-            # Check for completeness -
-            if doMissing:
-                missingS = set(idList) - set(idD["matchInfo"].keys())
-                if missingS:
-                    logger.info("Reference sequence cache missing %d accessions", len(missingS))
-                    extraD, extraIdD = self.__fetchReferenceEntries(refDbName, list(missingS), saveText=saveText, fetchLimit=fetchLimit)
-                    dD["refDbCache"].update(extraD["refDbCache"])
-                    idD["matchInfo"].update(extraIdD["matchInfo"])
-                    #
-                    idD["matchInfo"] = self.__rebuildReferenceMatchIndex(idList, dD["refDbCache"])
-                    #
-                    if accCacheFilePath and dataCacheFilePath and cacheKwargs:
-                        self.__mU.mkdir(dirPath)
-                        ok1 = self.__mU.doExport(dataCacheFilePath, dD, **cacheKwargs)
-                        ok2 = self.__mU.doExport(accCacheFilePath, idD, fmt="json", indent=3)
-                        logger.info("Cache updated with missing references with status %r", ok1 and ok2)
-            #
-        else:
-            logger.info("Rebuilding reference cache for %s for %d accessions with limit %r", refDbName, len(idList), fetchLimit)
-            dD, idD = self.__fetchReferenceEntries(refDbName, idList, saveText=saveText, fetchLimit=fetchLimit)
-            if accCacheFilePath and dataCacheFilePath and cacheKwargs:
-                self.__mU.mkdir(dirPath)
-                ok1 = self.__mU.doExport(dataCacheFilePath, dD, **cacheKwargs)
-                ok2 = self.__mU.doExport(accCacheFilePath, idD, fmt="json", indent=3)
-                logger.info("Cache save status %r", ok1 and ok2)
-
-        return idD["matchInfo"], dD["refDbCache"]
-
-    def __rebuildReferenceMatchIndex(self, idList, referenceD):
-        fobj = UniProtUtils()
-        logger.info("Rebuilding match index on idList (%d) using reference data (%d) %r", len(idList), len(referenceD), type(referenceD))
-        matchD = fobj.rebuildMatchResultIndex(idList, referenceD)
-        return matchD
-
-    def __fetchReferenceEntries(self, refDbName, idList, saveText=False, fetchLimit=None):
-        """ Fetch database entries from the input reference sequence database name.
-        """
-        dD = {"refDbName": refDbName, "refDbCache": {}}
-        idD = {"matchInfo": {}, "refIdMap": {}}
-
-        try:
-            idList = idList[:fetchLimit] if fetchLimit else idList
-            logger.info("Starting fetch for %d %s entries", len(idList), refDbName)
-            if refDbName == "UniProt":
-                fobj = UniProtUtils(saveText=saveText)
-                logger.info("Maximum reference chunk size %d", self.__maxChunkSize)
-                refD, matchD = fobj.fetchList(idList, maxChunkSize=self.__maxChunkSize)
-                dD = {"refDbName": refDbName, "refDbCache": refD}
-                idD = {"matchInfo": matchD}
-            #
-            # Check the coverage -
-            #
-            countD = defaultdict(int)
-            logger.info("Match dictionary length %d", len(matchD))
-            for _, mD in matchD.items():
-                if "matched" in mD:
-                    countD[mD["matched"]] += 1
-            logger.info("Reference length %d match length %d coverage %r", len(refD), len(matchD), countD.items())
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-
-        return dD, idD
-
-    def __fetchSiftsSummaryProvider(self, cfgOb, configName, **kwargs):
-        abbreviated = kwargs.get("siftsAbbreviated", "TEST")
-        cachePath = kwargs.get("cachePath", ".")
-        cacheKwargs = kwargs.get("cacheKwargs", {"fmt": "pickle"})
-        useCache = kwargs.get("useCache", True)
-        #
-        srcDirPath = os.path.join(cachePath, cfgOb.getPath("SIFTS_SUMMARY_DATA_PATH", sectionName=configName))
-        cacheDirPath = os.path.join(cachePath, cfgOb.get("SIFTS_SUMMARY_CACHE_DIR", sectionName=configName))
-        logger.debug("ssP %r %r", srcDirPath, cacheDirPath)
-        ssP = SiftsSummaryProvider(srcDirPath=srcDirPath, cacheDirPath=cacheDirPath, useCache=useCache, abbreviated=abbreviated, cacheKwargs=cacheKwargs)
-        ok = ssP.testCache()
-        logger.debug("SIFTS cache status %r", ok)
-        logger.debug("ssP entry count %d", ssP.getEntryCount())
-        return ssP

@@ -19,8 +19,8 @@ from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvide
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.exdb.chemref.ChemRefEtlWorker import ChemRefEtlWorker
-from rcsb.exdb.seq.ReferenceSequenceAssignmentAdapter import ReferenceSequenceAssignmentAdapter
-from rcsb.exdb.seq.ReferenceSequenceAssignmentProvider import ReferenceSequenceAssignmentProvider
+from rcsb.exdb.seq.ReferenceSequenceAnnotationAdapter import ReferenceSequenceAnnotationAdapter
+from rcsb.exdb.seq.ReferenceSequenceAnnotationProvider import ReferenceSequenceAnnotationProvider
 from rcsb.exdb.seq.UniProtEtlWorker import UniProtEtlWorker
 from rcsb.exdb.tree.TreeNodeListWorker import TreeNodeListWorker
 from rcsb.exdb.utils.ObjectTransformer import ObjectTransformer
@@ -164,28 +164,13 @@ class ExDbWorkflow(object):
             databaseName = "pdbx_core"
             collectionName = "pdbx_core_polymer_entity"
             polymerType = "Protein"
+            _ = testMode
             #
-            if testMode:
-                #  -- Test existing reference sequence cache ---
-                rsaP = ReferenceSequenceAssignmentProvider(self.__cfgOb, useCache=True, cachePath=self.__cachePath, maxChunkSize=refChunkSize)
-                ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent)
-                if ok:
-                    return True
-                logger.info("Reference sequence cache TESTMODE CHECK has failed - rebuilding")
-                #
-                #  -- Rebuild and test reference sequence cache ---
-                rsaP = ReferenceSequenceAssignmentProvider(self.__cfgOb, useCache=False, cachePath=self.__cachePath, maxChunkSize=refChunkSize)
-                ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent)
-                if ok:
-                    return ok
-                else:
-                    logger.info("Reference sequence cache TESTMODE REBUILD has failed - exiting")
-                    return False
             # -------
-            rsaP = ReferenceSequenceAssignmentProvider(self.__cfgOb, useCache=useSequenceCache, cachePath=self.__cachePath, maxChunkSize=refChunkSize)
+            rsaP = ReferenceSequenceAnnotationProvider(self.__cfgOb, useCache=useSequenceCache, cachePath=self.__cachePath, maxChunkSize=refChunkSize)
             ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent)
             if ok:
-                rsa = ReferenceSequenceAssignmentAdapter(refSeqAssignProvider=rsaP)
+                rsa = ReferenceSequenceAnnotationAdapter(rsaP)
                 obTr = ObjectTransformer(self.__cfgOb, objectAdapter=rsa)
                 ok = obTr.doTransform(
                     databaseName=databaseName, collectionName=collectionName, fetchLimit=fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": polymerType}

@@ -106,7 +106,8 @@ class ObjectExtractor(object):
         databaseName = kwargs.get("databaseName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_entry")
         selectionQueryD = kwargs.get("selectionQuery", {})
-        uniqueAttributes = kwargs.get("uniqueAttributes", [])
+        #
+        uniqueAttributes = kwargs.get("uniqueAttributes", ["rcsb_id"])
         #
         tV = kwargs.get("objectLimit", None)
         objLimit = int(tV) if tV is not None else None
@@ -122,7 +123,7 @@ class ObjectExtractor(object):
                         qD.update(selectionQueryD)
                     selectL = ["_id"]
                     dL = mg.fetch(databaseName, collectionName, selectL, queryD=qD)
-                    logger.info("Selection %r fetch result count %d", selectL, len(dL))
+                    logger.debug("Selection %r fetch result count %d", selectL, len(dL))
                     #
                     for ii, dD in enumerate(dL, 1):
                         if "_id" not in dD:
@@ -147,7 +148,7 @@ class ObjectExtractor(object):
         databaseName = kwargs.get("databaseName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_entry")
         selectionQueryD = kwargs.get("selectionQuery", {})
-        uniqueAttributes = kwargs.get("uniqueAttributes", [])
+        uniqueAttributes = kwargs.get("uniqueAttributes", ["rcsb_id"])
         selectL = kwargs.get("selectionList", [])
         #
         tV = kwargs.get("objectLimit", None)
