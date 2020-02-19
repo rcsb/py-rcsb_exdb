@@ -119,16 +119,50 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                             if tD["resource"] in ["GO"]:
                                 if self.__rsaP.goIdExists(tD["id_code"]):
                                     goLin = self.__rsaP.getGeneOntologyLineage([tD["id_code"]])
-                                    if goLin:
+                                    goName = self.__rsaP.getGeneOntologyName(tD["id_code"])
+                                    if goLin and goName:
                                         unpAnnDL.append(
                                             {
                                                 "provenance_source": "UniProt",
                                                 "annotation_id": tD["id_code"],
                                                 "type": tD["resource"],
+                                                "name": goName,
                                                 "assignment_version": uD["version"],
                                                 "annotation_lineage": goLin,
                                             }
                                         )
+                            elif tD["resource"] in ["Pfam"]:
+                                pfamName = self.__rsaP.getPfamName(tD["id_code"])
+                                if pfamName:
+                                    unpAnnDL.append(
+                                        {
+                                            "provenance_source": "UniProt",
+                                            "annotation_id": tD["id_code"],
+                                            "name": pfamName,
+                                            "type": tD["resource"],
+                                            "assignment_version": uD["version"],
+                                        }
+                                    )
+                                else:
+                                    unpAnnDL.append({"provenance_source": "UniProt", "annotation_id": tD["id_code"], "type": tD["resource"], "assignment_version": uD["version"]})
+
+                            elif tD["resource"] in ["InterPro"]:
+                                interProName = self.__rsaP.getInterProName(tD["id_code"])
+                                interProLinL = self.__rsaP.getInterProLineage(tD["id_code"])
+                                if interProName and interProLinL:
+                                    unpAnnDL.append(
+                                        {
+                                            "provenance_source": "UniProt",
+                                            "annotation_id": tD["id_code"],
+                                            "name": interProName,
+                                            "type": tD["resource"],
+                                            "assignment_version": uD["version"],
+                                            "annotation_lineage": interProLinL,
+                                        }
+                                    )
+                                else:
+                                    unpAnnDL.append({"provenance_source": "UniProt", "annotation_id": tD["id_code"], "type": tD["resource"], "assignment_version": uD["version"]})
+
                             else:
                                 unpAnnDL.append({"provenance_source": "UniProt", "annotation_id": tD["id_code"], "type": tD["resource"], "assignment_version": uD["version"]})
 

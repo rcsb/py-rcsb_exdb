@@ -16,14 +16,15 @@ import logging
 import os
 from collections import defaultdict
 
-
 from rcsb.exdb.seq.ReferenceSequenceCacheProvider import ReferenceSequenceCacheProvider
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
+from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
 from rcsb.utils.io.IoUtil import getObjSize
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+from rcsb.utils.seq.InterProProvider import InterProProvider
+from rcsb.utils.seq.PfamProvider import PfamProvider
 from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
 from rcsb.utils.seq.UniProtUtils import UniProtUtils
-from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,8 @@ class ReferenceSequenceAnnotationProvider(object):
         self.__maxChunkSize = maxChunkSize
         self.__statusList = []
         #
+        self.__pfP = self.__fetchPfamProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
+        self.__ipP = self.__fetchInterProProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__ssP = self.__fetchSiftsSummaryProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__goP = self.__fetchGoProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__ecP = self.__fetchEcProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
@@ -56,6 +59,13 @@ class ReferenceSequenceAnnotationProvider(object):
             logger.exception("Failing for %r with %s", goId, str(e))
         return False
 
+    def getGeneOntologyName(self, goId):
+        try:
+            return self.__goP.getName(goId)
+        except Exception as e:
+            logger.exception("Failing for %r with %s", goId, str(e))
+        return None
+
     def getGeneOntologyLineage(self, goIdL):
         # "id"     "name"
         gL = []
@@ -66,6 +76,28 @@ class ReferenceSequenceAnnotationProvider(object):
         except Exception as e:
             logger.exception("Failing for %r with %s", goIdL, str(e))
         return gL
+
+    def getPfamProvider(self):
+        return self.__pfP
+
+    def getPfamName(self, idCode):
+        return self.__pfP.getDescription(idCode)
+
+    def getInterProProvider(self):
+        return self.__ipP
+
+    def getInterProName(self, idCode):
+        return self.__ipP.getDescription(idCode)
+
+    def getInterProLineage(self, idCode):
+        linL = []
+        try:
+            tupL = self.__ipP.getLineageWithNames(idCode)
+            for tup in tupL:
+                linL.append({"id": tup[0], "name": tup[1], "depth": tup[2]})
+        except Exception as e:
+            logger.exception("Failing for %r with %s", idCode, str(e))
+        return linL
 
     def getEcProvider(self):
         return self.__ecP
@@ -153,3 +185,21 @@ class ReferenceSequenceAnnotationProvider(object):
         ok = ecP.testCache()
         logger.debug("Enzyme cache status %r", ok)
         return ecP
+
+    def __fetchPfamProvider(self, cfgOb, configName, **kwargs):
+        _ = cfgOb
+        _ = configName
+        cachePath = kwargs.get("cachePath", ".")
+        useCache = kwargs.get("useCache", True)
+        pfP = PfamProvider(cachePath=cachePath, useCache=useCache)
+        ok = pfP.testCache()
+        return pfP if ok else None
+
+    def __fetchInterProProvider(self, cfgOb, configName, **kwargs):
+        _ = cfgOb
+        _ = configName
+        cachePath = kwargs.get("cachePath", ".")
+        useCache = kwargs.get("useCache", True)
+        ipP = InterProProvider(cachePath=cachePath, useCache=useCache)
+        ok = ipP.testCache()
+        return ipP if ok else None

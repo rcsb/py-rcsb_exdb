@@ -21,6 +21,8 @@ from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
 from rcsb.utils.io.IoUtil import getObjSize
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+from rcsb.utils.seq.InterProProvider import InterProProvider
+from rcsb.utils.seq.PfamProvider import PfamProvider
 from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
 from rcsb.utils.seq.UniProtUtils import UniProtUtils
 from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
@@ -52,6 +54,8 @@ class ReferenceSequenceAssignmentProvider(object):
         self.__maxChunkSize = maxChunkSize
         self.__statusList = []
         #
+        self.__pfP = self.__fetchPfamProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
+        self.__ipP = self.__fetchInterProProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__ssP = self.__fetchSiftsSummaryProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__goP = self.__fetchGoProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__ecP = self.__fetchEcProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
@@ -74,6 +78,12 @@ class ReferenceSequenceAssignmentProvider(object):
         except Exception as e:
             logger.exception("Failing for %r with %s", goIdL, str(e))
         return gL
+
+    def getPfamProvider(self):
+        return self.__pfP
+
+    def getInterProProvider(self):
+        return self.__ipP
 
     def getEcProvider(self):
         return self.__ecP
@@ -119,7 +129,9 @@ class ReferenceSequenceAssignmentProvider(object):
         #
         if logSizes:
             logger.info(
-                "SIFTS %.2f GO %.2f EC %.2f RefIdMap %.2f RefMatchD %.2f RefD %.2f",
+                "Pfam %.2f InterPro %.2f SIFTS %.2f GO %.2f EC %.2f RefIdMap %.2f RefMatchD %.2f RefD %.2f",
+                getObjSize(self.__pfP) / 1000000.0,
+                getObjSize(self.__ipP) / 1000000.0,
                 getObjSize(self.__ssP) / 1000000.0,
                 getObjSize(self.__goP) / 1000000.0,
                 getObjSize(self.__ecP) / 1000000.0,
@@ -353,3 +365,21 @@ class ReferenceSequenceAssignmentProvider(object):
         ok = ecP.testCache()
         logger.debug("Enzyme cache status %r", ok)
         return ecP
+
+    def __fetchPfamProvider(self, cfgOb, configName, **kwargs):
+        _ = cfgOb
+        _ = configName
+        cachePath = kwargs.get("cachePath", ".")
+        useCache = kwargs.get("useCache", True)
+        pfP = PfamProvider(cachePath=cachePath, useCache=useCache)
+        ok = pfP.testCache()
+        return pfP if ok else None
+
+    def __fetchInterProProvider(self, cfgOb, configName, **kwargs):
+        _ = cfgOb
+        _ = configName
+        cachePath = kwargs.get("cachePath", ".")
+        useCache = kwargs.get("useCache", True)
+        ipP = InterProProvider(cachePath=cachePath, useCache=useCache)
+        ok = ipP.testCache()
+        return ipP if ok else None
