@@ -38,3 +38,4 @@
 13-Feb-2020 V0.46 Added validation tests to troubleshoot UniProt core loading.  Update dependencies.
 16-Feb-2020 V0.47 Add alternative cache strategy for reference sequences.
 19-Feb-2020 V0.48 Add Pfam and InterPro Providers and associated annotation
+20-Feb-2020 V0.49 Combine missing UniProt accessions if available with other reference sequence data.

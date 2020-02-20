@@ -288,13 +288,13 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                     #  Check currency of reference assignments made by entities in provSourceL (e.g. in this case only PDB)
                     isMatchedRefDb, isMatchedAltDb, updErsD = self.__reMapAccessions(entityKey, ersD, referenceDatabaseName, taxIdL, provSourceL)
                     #
-                    logger.debug("isMatchedRefDb %r isMatchedAltDb %r updErsD %r", isMatchedRefDb, isMatchedAltDb, updErsD)
+                    logger.debug("%r isMatchedRefDb %r isMatchedAltDb %r updErsD %r", entityKey, isMatchedRefDb, isMatchedAltDb, updErsD)
 
                     if (isMatchedRefDb or isMatchedAltDb) and updErsD["database_accession"] not in dupD:
                         dupD[updErsD["database_accession"]] = True
                         retDL.append(updErsD)
                     #
-                    # Re-apply the latest SIFTS mapping if available ...
+                    # Re-apply the latest SIFTS mapping if available and we did not match the target reference database ...
                     if not isMatchedRefDb and entityKey not in dupD:
                         dupD[entityKey] = True
                         siftsAccDL = self.__getSiftsAccessions(entityKey, authAsymIdL)
@@ -419,7 +419,8 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
 
         elif rsiD["provenance_source"] in provSourceL and rsiD["database_name"] in refDbList:
             logger.debug("%s leaving reference accession for %s %s assigned by %r", entityKey, rId, rsiD["database_name"], provSourceL)
-            isMatchedRefDb = True
+            isMatchedRefDb = False
+            isMatchedAltDb = True
         else:
             logger.debug("%s leaving an unverified reference accession for %s %s assigned by %r", entityKey, rId, rsiD["database_name"], rsiD["provenance_source"])
         #
@@ -477,7 +478,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
         elif alignD["provenance_source"] in provSourceL and alignD["reference_database_name"] in refDbList:
             logger.debug("%s leaving reference alignment for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], provSourceL)
             isMatchedRefDb = False
-            isMatchedAltDb = False
+            isMatchedAltDb = True
         else:
             logger.debug("%s leaving a reference alignment for %s %s assigned by %r", entityKey, rId, alignD["reference_database_name"], alignD["provenance_source"])
         #
