@@ -117,6 +117,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
             #
             unpGeneDL = []
             unpAnnDL = []
+            geneLookupD = {}
             geneFilterD = defaultdict(int)
             resourceFilterD = defaultdict(int)
             for unpId in unpIdS:
@@ -131,6 +132,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                         geneFilterD[tD["name"]] += 1
                         if geneFilterD[tD["name"]] > 1:
                             continue
+                        geneLookupD[tD["name"].upper()] = tD["name"]
                         unpGeneDL.append({"provenance_source": "UniProt", "value": tD["name"], "taxonomy_id": taxId})
                 if "dbReferences" in uD:
                     logger.debug("%s : %r references %d", entityKey, unpId, len(uD["dbReferences"]))
@@ -190,6 +192,11 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     qL = []
                     for qD in soD["rcsb_gene_name"]:
                         if qD["provenance_source"] != "UniProt":
+                            # standardize case consistent with UniProt
+                            if qD["value"].upper() in geneLookupD:
+                                qD["value"] = geneLookupD[qD["value"].upper()]
+                            else:
+                                geneLookupD[qD["value"].upper()] = qD["value"]
                             qL.append(qD)
                     soD["rcsb_gene_name"] = qL
                 taxId = soD["ncbi_taxonomy_id"]
