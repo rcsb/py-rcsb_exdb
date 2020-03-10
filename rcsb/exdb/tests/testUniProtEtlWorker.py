@@ -67,6 +67,7 @@ class UniProtEtlWorkerTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
+    @unittest.skip("Disable test - deprecated")
     def testLoadUniProt(self):
         """ Test case - load UniProt reference data -
         """
@@ -79,6 +80,7 @@ class UniProtEtlWorkerTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    @unittest.skip("Disable test - deprecated")
     def testValidateUniProt(self):
         """ Test case - validate UniProt reference data -
         """
