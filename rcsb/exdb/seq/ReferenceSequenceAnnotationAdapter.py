@@ -201,6 +201,8 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                 if "rcsb_gene_name" in soD:
                     qL = []
                     for qD in soD["rcsb_gene_name"]:
+                        if "value" not in qD:
+                            continue
                         if qD["provenance_source"] != "UniProt":
                             # standardize case consistent with UniProt
                             if qD["value"].upper() in geneLookupD:
