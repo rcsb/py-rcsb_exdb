@@ -42,8 +42,8 @@ setup(
     install_requires=[
         "jsonschema >= 2.6.0",
         "numpy",
-        "rcsb.utils.io >= 0.56",
-        "rcsb.db >= 0.966",
+        "rcsb.utils.io >= 0.57",
+        "rcsb.db >= 0.973",
         "rcsb.utils.chemref >= 0.33",
         "rcsb.utils.citation >= 0.15",
         "rcsb.utils.config >= 0.33",
