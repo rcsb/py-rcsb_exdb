@@ -49,7 +49,7 @@ class ObjectUpdater(object):
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 if mg.collectionExists(databaseName, collectionName):
-                    logger.info("%s %s document count is %d", databaseName, collectionName, mg.count(databaseName, collectionName))
+                    logger.debug("%s %s document count is %d", databaseName, collectionName, mg.count(databaseName, collectionName))
                     for updateD in updateDL:
                         num = mg.update(databaseName, collectionName, updateD["updateD"], updateD["selectD"], upsertFlag=True)
                         numUpdated += num

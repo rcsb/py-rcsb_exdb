@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class UniProtEtlWorker(object):
-    """ Prepare and load sequence reference data collections.
+    """ Prepare and load UniProt 'core' sequence reference data collections.
     """
 
     def __init__(self, cfgOb, cachePath, useCache=True, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, doValidate=False, verbose=False):

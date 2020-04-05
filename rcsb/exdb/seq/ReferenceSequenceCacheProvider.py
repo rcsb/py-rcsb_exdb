@@ -96,7 +96,7 @@ class ReferenceUpdateWorker(object):
                 logger.exception("Failing with %s", str(e))
         obUpd = ObjectUpdater(self.__cfgOb)
         numUpd = obUpd.update(databaseName, collectionName, updateDL)
-        logger.info("Updated reference count is %d", numUpd)
+        logger.debug("Updated reference count is %d", numUpd)
 
     def __createCollections(self, databaseName, collectionName, indexAttributeNames=None):
         obUpd = ObjectUpdater(self.__cfgOb)
