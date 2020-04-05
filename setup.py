@@ -47,7 +47,7 @@ setup(
         "rcsb.utils.chemref >= 0.33",
         "rcsb.utils.citation >= 0.15",
         "rcsb.utils.config >= 0.33",
-        "rcsb.utils.seq >= 0.40",
+        "rcsb.utils.seq >= 0.41",
         "rcsb.utils.ec >= 0.21",
         "rcsb.utils.go >= 0.17",
         "rcsb.utils.struct >= 0.24",
