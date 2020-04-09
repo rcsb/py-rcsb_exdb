@@ -318,7 +318,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                     obj["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"] = retDL
                 else:
                     del obj["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]
-                    logger.info("Incomplete reference sequence mapping update for %s", entityKey)
+                    logger.debug("Incomplete reference sequence mapping for %s", entityKey)
             #
             # ------------- update alignment details -------------
             try:

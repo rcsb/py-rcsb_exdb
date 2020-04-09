@@ -64,6 +64,7 @@ class ExDbWorkflow(object):
             # test mode and UniProt accession primary match minimum count for doReferenceSequenceUpdate()
             testMode = kwargs.get("testMode", False)
             minMatchPrimaryPercent = kwargs.get("minMatchPrimaryPercent", None)
+            minMissing = kwargs.get("minMissing", 0)
             #
             readBackCheck = kwargs.get("readBackCheck", False)
             numProc = int(kwargs.get("numProc", 1))
@@ -127,7 +128,12 @@ class ExDbWorkflow(object):
 
             elif op == "upd_ref_seq":
                 ok = self.doReferenceSequenceUpdate(
-                    fetchLimit=documentLimit, useSequenceCache=useSequenceCache, testMode=testMode, minMatchPrimaryPercent=minMatchPrimaryPercent, refChunkSize=refChunkSize
+                    fetchLimit=documentLimit,
+                    useSequenceCache=useSequenceCache,
+                    testMode=testMode,
+                    minMatchPrimaryPercent=minMatchPrimaryPercent,
+                    minMissing=minMissing,
+                    refChunkSize=refChunkSize,
                 )
                 okS = ok
         #
@@ -158,17 +164,16 @@ class ExDbWorkflow(object):
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def doReferenceSequenceUpdate(self, fetchLimit=None, useSequenceCache=False, testMode=False, minMatchPrimaryPercent=None, refChunkSize=100, **kwargs):
+    def doReferenceSequenceUpdate(self, fetchLimit=None, useSequenceCache=False, testMode=False, minMatchPrimaryPercent=None, minMissing=0, refChunkSize=50, **kwargs):
         try:
             _ = kwargs
             databaseName = "pdbx_core"
             collectionName = "pdbx_core_polymer_entity"
             polymerType = "Protein"
             _ = testMode
-            #
             # -------
             rsaP = ReferenceSequenceAnnotationProvider(self.__cfgOb, useCache=useSequenceCache, cachePath=self.__cachePath, maxChunkSize=refChunkSize)
-            ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent)
+            ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent, minMissing=minMissing)
             if ok:
                 rsa = ReferenceSequenceAnnotationAdapter(rsaP)
                 obTr = ObjectTransformer(self.__cfgOb, objectAdapter=rsa)
@@ -176,7 +181,7 @@ class ExDbWorkflow(object):
                     databaseName=databaseName, collectionName=collectionName, fetchLimit=fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": polymerType}
                 )
             else:
-                logger.info("Reference sequence cache failing minimal content checks")
+                logger.error("Reference sequence data cache build failing")
             return ok
         except Exception as e:
             logger.exception("Failing with %s", str(e))

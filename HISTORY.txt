@@ -42,3 +42,4 @@
 26-Feb-2020 V0.50 Standardize case for gene names.
  1-Apr-2020 V0.51 Better handling of incomplete primary gene annotations
  5-Apr-2020 V0.52 Suppress diagnostic logging in ReferenceSequenceCacheProvider()
+ 8-Apr-2020 V0.53 Adjust error handling in ReferenceSequenceCacheProvider()

@@ -1,13 +1,13 @@
 numpy
 jsonschema >= 2.6.0
 rcsb.utils.io >= 0.57
-rcsb.db >= 0.973
-rcsb.utils.chemref >= 0.33
+rcsb.db >= 0.977
+rcsb.utils.chemref >= 0.39
 rcsb.utils.citation >= 0.15
 rcsb.utils.config >= 0.33
 rcsb.utils.ec >= 0.21
 rcsb.utils.go >= 0.17
 rcsb.utils.seq >= 0.41
 rcsb.utils.struct >= 0.24
-rcsb.utils.taxonomy >= 0.27
+rcsb.utils.taxonomy >= 0.28
 statistics; python_version < "3.0"

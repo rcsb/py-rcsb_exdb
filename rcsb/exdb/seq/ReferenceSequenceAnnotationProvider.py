@@ -51,6 +51,7 @@ class ReferenceSequenceAnnotationProvider(object):
         )
         self.__matchD = self.__rsaP.getMatchInfo()
         self.__refD = self.__rsaP.getRefData()
+        self.__missingMatchedIdCodes = self.__rsaP.getMissingMatchedIdCodes()
 
     def goIdExists(self, goId):
         try:
@@ -119,10 +120,10 @@ class ReferenceSequenceAnnotationProvider(object):
     def getRefDataCount(self):
         return len(self.__refD)
 
-    def testCache(self, minMatchPrimaryPercent=None, logSizes=False):
+    def testCache(self, minMatchPrimaryPercent=None, logSizes=False, minMissing=0):
         okC = True
         logger.info("Reference sequence cache lengths: matchD %d refD %d", len(self.__matchD), len(self.__refD))
-        ok = bool(self.__matchD and self.__refD)
+        ok = bool(self.__matchD and self.__refD and self.__missingMatchedIdCodes <= minMissing)
         #
         numRef = len(self.__matchD)
         countD = defaultdict(int)

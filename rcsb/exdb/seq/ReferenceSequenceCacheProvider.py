@@ -5,6 +5,7 @@
 # Utilities to cache referencence sequence data and mappings.
 #
 # Updates:
+# 8-Apr-2020 jdw change testCache() conditions to specifically track missing matched reference Id codes.
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -105,11 +106,11 @@ class ReferenceUpdateWorker(object):
 
 
 class ReferenceSequenceCacheProvider(object):
-    """  Utilities to cache referencence sequence data and mappings.
+    """  Utilities to cache referencence sequence data and correspondence mappings.
 
     """
 
-    def __init__(self, cfgOb, siftsProvider=None, maxChunkSize=100, fetchLimit=None, expireDays=14, numProc=1, **kwargs):
+    def __init__(self, cfgOb, siftsProvider=None, maxChunkSize=50, fetchLimit=None, expireDays=7, numProc=1, **kwargs):
         self.__cfgOb = cfgOb
         #
         self.__maxChunkSize = maxChunkSize
@@ -120,13 +121,16 @@ class ReferenceSequenceCacheProvider(object):
         self.__matchDataCollectionName = "reference_match"
 
         self.__ssP = siftsProvider
-        self.__matchD, self.__refD = self.__reload(fetchLimit, expireDays, **kwargs)
+        self.__matchD, self.__refD, self.__missingMatchIds = self.__reload(fetchLimit, expireDays, **kwargs)
 
     def getMatchInfo(self):
         return self.__matchD
 
     def getRefData(self):
         return self.__refD
+
+    def getMissingMatchedIdCodes(self):
+        return self.__missingMatchIds
 
     def getDocuments(self, formatType="exchange"):
         fobj = UniProtUtils(saveText=False)
@@ -136,12 +140,28 @@ class ReferenceSequenceCacheProvider(object):
     def getRefDataCount(self):
         return len(self.__refD)
 
-    def testCache(self, minMatchPrimaryPercent=None, logSizes=False):
-        okC = True
-        if okC:
-            return okC
-        logger.info("Reference cache lengths: matchD %d refD %d", len(self.__matchD), len(self.__refD))
-        ok = bool(self.__matchD and self.__refD)
+    def testCache(self, minMatchPrimaryPercent=None, logSizes=False, minMissing=0):
+        """Test the state of reference sequence data relative to proportion of matched primary sequence
+        in the primary data set.
+
+        Args:
+            minMatchPrimaryPercent (float, optional): minimal acceptable of matching primary accessions. Defaults to None.
+            logSizes (bool, optional): flag to log resource sizes. Defaults to False.
+            minMissing (int, optional):  minimum acceptable missing matched reference Ids. Defaults to 0.
+
+        Returns:
+            bool: True for success or False otherwise
+        """
+        try:
+            ok = bool(self.__matchD and self.__refD and self.__missingMatchIds <= minMissing)
+            logger.info("Reference cache lengths: matchD %d refD %d missing matches %d", len(self.__matchD), len(self.__refD), self.__missingMatchIds)
+            if ok:
+                return ok
+        except Exception as e:
+            logger.error("Failing with unexpected cache state %s", str(e))
+            return False
+        #
+        # -- The remaining check on the portion is not currently --
         #
         numRef = len(self.__matchD)
         countD = defaultdict(int)
@@ -165,19 +185,22 @@ class ReferenceSequenceCacheProvider(object):
 
     def __reload(self, fetchLimit, expireDays, **kwargs):
         _ = kwargs
+
+        # --  This
         logger.info("Reloading sequence reference data fetchLimit %r expireDays %r", fetchLimit, expireDays)
         numMissing = self.__refreshReferenceData(expireDays=expireDays, failureFraction=0.75)
         logger.info("Reference identifiers expired/missing %d", numMissing)
-        #
+        # --
         refIdMapD = {}
         matchD = {}
         refD = {}
+        failList = []
         assignRefD = self.__getPolymerReferenceSequenceAssignments(fetchLimit)
         refIdMapD, _ = self.__getAssignmentMap(assignRefD)
         # refIdD[<database_accession>] = [entity_key1, entity_key2,...]
         entryIdL = [rcsbId[:4] for rcsbId in assignRefD]
         siftsUniProtL = self.__ssP.getEntryUniqueIdentifiers(entryIdL, idType="UNPID") if self.__ssP else []
-        logger.info("Incorporating all %d SIFTS accessions for %d entries", len(siftsUniProtL), len(entryIdL))
+        logger.info("Incorporating all %d SIFTS accessions for %d entities", len(siftsUniProtL), len(entryIdL))
         unpIdList = sorted(set(list(refIdMapD.keys()) + siftsUniProtL))
         #
         cacheUnpIdList = self.__getReferenceDataIds(expireDays=0)
@@ -186,16 +209,16 @@ class ReferenceSequenceCacheProvider(object):
         updateUnpIdList = sorted(set(unpIdList) - set(cacheUnpIdList))
         #
         if updateUnpIdList:
-            logger.info("Update cache for %d UniProt accessions (consolidated)", len(updateUnpIdList))
+            logger.info("Updating cache for %d UniProt accessions (consolidated PDB + SIFTS)", len(updateUnpIdList))
             ok, failList = self.__updateReferenceData(updateUnpIdList)
-            logger.info("Fetch references status is %r missing count %d", ok, len(failList))
+            logger.info("Fetch references update status is %r missing count %d", ok, len(failList))
         else:
             logger.info("No reference sequence updates required")
         #
         matchD = self.__getReferenceData(self.__databaseName, self.__matchDataCollectionName)
         refD = self.__getReferenceData(self.__databaseName, self.__refDataCollectionName)
-        logger.info("Completed - returning match length %d and reference data length %d", len(matchD), len(refD))
-        return matchD, refD
+        logger.info("Completed - returning match length %d and reference data length %d num missing %d", len(matchD), len(refD), len(failList))
+        return matchD, refD, len(failList)
 
     def __refreshReferenceData(self, expireDays=14, failureFraction=0.75):
         """Update expired reference data and purge any obsolete data not to exceeding the
@@ -215,17 +238,17 @@ class ReferenceSequenceCacheProvider(object):
             return 0
         #
         ok, failList = self.__updateReferenceData(idList)
-        logger.debug("After update (status=%r) Missing expired reference identifiers %d", ok, len(failList))
+        logger.info("After reference update (status=%r) missing expired match identifiers %d", ok, len(failList))
         tFrac = float(len(failList)) / float(len(idList))
         if tFrac < failureFraction:
             obUpd = ObjectUpdater(self.__cfgOb)
             selectD = {"rcsb_id": failList}
             numPurge = obUpd.delete(self.__databaseName, self.__matchDataCollectionName, selectD)
             if len(failList) != numPurge:
-                logger.debug("Update match failures %d purge count %d", len(failList), numPurge)
+                logger.info("Update match failures %d purge count %d", len(failList), numPurge)
             numPurge = obUpd.delete(self.__databaseName, self.__refDataCollectionName, selectD)
             if len(failList) != numPurge:
-                logger.debug("Update reference data failures %d purge count %d", len(failList), numPurge)
+                logger.info("Update reference data failures %d purge count %d", len(failList), numPurge)
         return len(failList)
 
     def __getReferenceDataIds(self, expireDays=14):
