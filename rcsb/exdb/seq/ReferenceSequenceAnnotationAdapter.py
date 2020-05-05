@@ -336,7 +336,8 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                             dupD[alignHash] = True
                         retDL.append(updAlignD)
                     #
-
+                    # logger.debug("%s retDL %r", entityKey, retDL)
+                    #
                     if not isMatchedRefDb and entityKey not in dupD:
                         dupD[entityKey] = True
                         siftsAlignDL = self.__getSiftsAlignments(entityKey, authAsymIdL)
@@ -438,7 +439,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
         return isMatchedRefDb, isMatchedAltDb, rsiD
 
     def __reMapAlignments(self, entityKey, alignD, referenceDatabaseName, taxIdL, provSourceL, excludeReferenceDatabases=None):
-        """Internal method to re-map alignments for the input databae and assignment source
+        """Internal method to re-map alignments for the input database and assignment source
 
         Args:
             alignD (dict): alignment object including accession and aligned regions

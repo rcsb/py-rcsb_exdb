@@ -57,7 +57,7 @@ class ExDbWorkflow(object):
             logger.error("Resource cache test or rebuild has failed - exiting")
             return False
         # argument processing
-        if op not in ["etl_tree_node_lists", "etl_chemref", "etl_uniprot", "upd_ref_seq"]:
+        if op not in ["etl_tree_node_lists", "etl_chemref", "etl_uniprot", "upd_ref_seq", "refresh_pubchem"]:
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
@@ -135,6 +135,10 @@ class ExDbWorkflow(object):
                     minMissing=minMissing,
                     refChunkSize=refChunkSize,
                 )
+                okS = ok
+            elif op in ["refresh_pubchem"]:
+                crw = ChemRefEtlWorker(self.__cfgOb, self.__cachePath, numProc=1, chunkSize=chunkSize, useCache=self.__useCache)
+                ok = crw.refresh(extResource="PubChem", **kwargs)
                 okS = ok
         #
         logger.info("Completed operation %r with status %r\n", op, ok and okS)

@@ -43,9 +43,24 @@ class ExDbWorkflowTests(unittest.TestCase):
         configPath = os.path.join(mockTopPath, "config", "dbload-setup-example.yml")
         configName = "site_info_configuration"
         cachePath = os.path.join(TOPDIR, "CACHE")
+        self.__dataPath = os.path.join(HERE, "test-data")
         #
         self.__commonD = {"configPath": configPath, "mockTopPath": mockTopPath, "configName": configName, "cachePath": cachePath, "rebuildCache": False}
         self.__loadCommonD = {"readBackCheck": True, "numProc": 2, "chunkSize": 10, "loadType": "full"}
+        #
+        # These are test source files for chemical component/BIRD indices
+        ccUrlTarget = os.path.join(self.__dataPath, "components-abbrev.cif")
+        birdUrlTarget = os.path.join(self.__dataPath, "prdcc-abbrev.cif")
+        ccFileNamePrefix = "cc-abbrev"
+        self.__chemEtlD = {
+            "fetchLimit": 4,
+            "numProc": 1,
+            "chunkSize": 20,
+            "loadType": "full",
+            "ccUrlTarget": ccUrlTarget,
+            "birdUrlTarget": birdUrlTarget,
+            "ccFileNamePrefix": ccFileNamePrefix,
+        }
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -55,7 +70,7 @@ class ExDbWorkflowTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testExDbLoaderWorkflows(self):
-        """ Run workflow steps hoping for the best ...
+        """ Test run workflow steps ...
         """
         try:
             opL = ["etl_chemref", "upd_ref_seq", "etl_tree_node_lists"]
@@ -67,7 +82,34 @@ class ExDbWorkflowTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    def testChemRefRefreshWorkflows(self):
+        """ Test run chemical reference data ETL workflow step ...
+        """
+        try:
+            #
+            doFull = False
+            kwargs = {}
+            opL = ["refresh_pubchem"]
+            if doFull:
+                argL = ["loadType", "expireDays", "cachePath", "fetchLimit"]
+            else:
+                argL = ["loadType", "expireDays", "cachePath", "ccUrlTarget", "birdUrlTarget", "ccFileNamePrefix", "exportPath", "fetchLimit"]
+
+            for arg in argL:
+                if arg in self.__chemEtlD:
+                    kwargs[arg] = self.__chemEtlD[arg]
+            #
+            rlWf = ExDbWorkflow(**self.__commonD)
+            for op in opL:
+                ok = rlWf.load(op, **kwargs)
+                self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
     def testExDbLoaderWorkflowsWithCacheCheck(self):
+        """ Test run sequence reference data update workflow step ...
+        """
         #
         try:
             self.__commonD["rebuildCache"] = False
@@ -91,6 +133,7 @@ class ExDbWorkflowTests(unittest.TestCase):
 def workflowLoadSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(ExDbWorkflowTests("testExDbLoaderWorkflows"))
+    suiteSelect.addTest(ExDbWorkflowTests("testExDbLoaderWorkflowsWithCacheCheck"))
     return suiteSelect
 
 

@@ -15,13 +15,14 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 import logging
-import os
 
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.exdb.chemref.ChemRefExtractor import ChemRefExtractor
+from rcsb.exdb.chemref.PubChemCacheProvider import PubChemCacheProvider
 from rcsb.utils.chemref.DrugBankProvider import DrugBankProvider
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class ChemRefEtlWorker(object):
         self.__numProc = numProc
         self.__chunkSize = chunkSize
         self.__documentLimit = documentLimit
+        self.__useCache = useCache
         #
         self.__resourceName = "MONGO_DB"
         self.__verbose = verbose
@@ -73,8 +75,8 @@ class ChemRefEtlWorker(object):
                 configName = self.__cfgOb.getDefaultSectionName()
                 user = self.__cfgOb.get("_DRUGBANK_AUTH_USERNAME", sectionName=configName)
                 pw = self.__cfgOb.get("_DRUGBANK_AUTH_PASSWORD", sectionName=configName)
-                dirPath = os.path.join(self.__cachePath, self.__cfgOb.get("DRUGBANK_CACHE_DIR", self.__cfgOb.getDefaultSectionName()))
-                dbP = DrugBankProvider(dirPath=dirPath, useCache=self.__useCache, username=user, password=pw)
+                #
+                dbP = DrugBankProvider(cachePath=self.__cachePath, useCache=self.__useCache, username=user, password=pw)
                 #
                 crExt = ChemRefExtractor(self.__cfgOb)
                 idD = crExt.getChemCompAccessionMapping(extResource)
@@ -113,3 +115,43 @@ class ChemRefEtlWorker(object):
 
     def getLoadStatus(self):
         return self.__statusList
+
+    def refresh(self, extResource, loadType="replace", **kwargs):
+        """ Refresh cached data from external chemical reference resource.
+
+        """
+        ok = False
+        try:
+            # self.__statusList = []
+            # desp = DataExchangeStatus()
+            # statusStartTimestamp = desp.setStartTime()
+            #
+            if extResource == "PubChem":
+                useCache = loadType == "replace"
+                ccUrlTarget = kwargs.get("ccUrlTarget", None)
+                birdUrlTarget = kwargs.get("ccUrlTarget", None)
+                ccFileNamePrefix = kwargs.get("ccFileNamePrefix", None)
+                fetchLimit = kwargs.get("fetchLimit", None)
+                exportPath = kwargs.get("exportPath", None)
+                expireDays = kwargs.get("expireDays", 0)
+                #  -- Update/create cache ---
+                rsaP = PubChemCacheProvider(
+                    self.__cfgOb,
+                    maxChunkSize=self.__chunkSize,
+                    # numProc=self.__numProc,
+                    expireDays=expireDays,
+                    cachePath=self.__cachePath,
+                    useCache=useCache,
+                    ccUrlTarget=ccUrlTarget,
+                    birdUrlTarget=birdUrlTarget,
+                    ccFileNamePrefix=ccFileNamePrefix,
+                    exportPath=exportPath,
+                    fetchLimit=fetchLimit,
+                )
+                ok = rsaP.testCache()
+            else:
+                pass
+            return ok
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return ok
