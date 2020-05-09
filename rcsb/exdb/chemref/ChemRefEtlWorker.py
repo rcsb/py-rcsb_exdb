@@ -39,7 +39,6 @@ class ChemRefEtlWorker(object):
         self.__numProc = numProc
         self.__chunkSize = chunkSize
         self.__documentLimit = documentLimit
-        self.__useCache = useCache
         #
         self.__resourceName = "MONGO_DB"
         self.__verbose = verbose
@@ -128,6 +127,7 @@ class ChemRefEtlWorker(object):
             #
             if extResource == "PubChem":
                 useCache = loadType == "replace"
+                rebuildChemIdices = kwargs.get("rebuildChemIndices", False)
                 ccUrlTarget = kwargs.get("ccUrlTarget", None)
                 birdUrlTarget = kwargs.get("ccUrlTarget", None)
                 ccFileNamePrefix = kwargs.get("ccFileNamePrefix", None)
@@ -147,6 +147,7 @@ class ChemRefEtlWorker(object):
                     ccFileNamePrefix=ccFileNamePrefix,
                     exportPath=exportPath,
                     fetchLimit=fetchLimit,
+                    rebuildChemIndices=rebuildChemIdices,
                 )
                 ok = rsaP.testCache()
             else:

@@ -5,6 +5,7 @@
 # Utilities to cache chemical referencence data and mappings for PubChem
 #
 # Updates:
+# 9-May-2020 jdw separate cache behavior with separate option rebuildChemIndices=True/False
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class ReferenceUpdateWorker(object):
-    """  A skeleton class that implements the interface expected by the multiprocessing
+    """  A skeleton worker class that implements the interface expected by the multiprocessing
          for fetching chemical reference data --
     """
 
@@ -296,7 +297,7 @@ class PubChemCacheProvider(object):
             # --
             logger.info("With useCache %r matched reference identifier count (%d) ", self.__useCache, len(matchedIdList))
             updateIdList = sorted(set(sourceIdList) - set(matchedIdList))
-            logger.info("Missing chemical definition correspondences %d", len(updateIdList))
+            logger.info("Missing chemical definition correspondences %d fetchLimit %d", len(updateIdList), fetchLimit)
             #
             updateIdList = updateIdList[:fetchLimit] if fetchLimit else updateIdList
             #
@@ -353,7 +354,7 @@ class PubChemCacheProvider(object):
         """
         try:
             molLimit = kwargs.get("molLimit", None)
-            useCache = kwargs.get("useCache", True)
+            useCache = not kwargs.get("rebuildChemIndices", False)
             logSizes = kwargs.get("logSizes", False)
             ccFileNamePrefix = kwargs.get("ccFileNamePrefix", "cc-full")
             ccUrlTarget = kwargs.get("ccUrlTarget", None)
@@ -376,7 +377,7 @@ class PubChemCacheProvider(object):
         try:
             cachePath = kwargs.get("cachePath", ".")
             molLimit = kwargs.get("molLimit", None)
-            useCache = kwargs.get("useCache", True)
+            useCache = not kwargs.get("rebuildChemIndices", False)
             logSizes = kwargs.get("logSizes", False)
             limitPerceptions = kwargs.get("limitPerceptions", False)
             numProc = kwargs.get("numProc", 1)
