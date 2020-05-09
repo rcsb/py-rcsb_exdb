@@ -297,7 +297,7 @@ class PubChemCacheProvider(object):
             # --
             logger.info("With useCache %r matched reference identifier count (%d) ", self.__useCache, len(matchedIdList))
             updateIdList = sorted(set(sourceIdList) - set(matchedIdList))
-            logger.info("Missing chemical definition correspondences %d fetchLimit %d", len(updateIdList), fetchLimit)
+            logger.info("Missing chemical definition correspondences %d fetchLimit %r", len(updateIdList), fetchLimit)
             #
             updateIdList = updateIdList[:fetchLimit] if fetchLimit else updateIdList
             #
