@@ -82,7 +82,7 @@ class PubChemCacheProviderTests(unittest.TestCase):
                 ccFileNamePrefix="cc-abbrev",
                 exportPath=os.path.join(self.__cachePath, "PubChem"),
                 rebuildChemIndices=True,
-                fetchLimit=4,
+                fetchLimit=2,
             )
             ok = rsaP.testCache()
             self.assertTrue(ok)

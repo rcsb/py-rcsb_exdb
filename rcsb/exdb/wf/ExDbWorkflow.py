@@ -137,7 +137,10 @@ class ExDbWorkflow(object):
                 )
                 okS = ok
             elif op in ["refresh_pubchem"]:
-                crw = ChemRefEtlWorker(self.__cfgOb, self.__cachePath, numProc=1, chunkSize=chunkSize, useCache=self.__useCache)
+                # Note kwargs  - 'loadType='replace' to replace to add to existing object store or 'full' to ignore current data.
+                #                'rebuildChemIndices=True' to recreated chem comp and search source indices.
+                #                Caution with numProc as the Pubchem API is throttled
+                crw = ChemRefEtlWorker(self.__cfgOb, self.__cachePath, numProc=numProc, chunkSize=chunkSize, useCache=self.__useCache)
                 ok = crw.refresh(extResource="PubChem", **kwargs)
                 okS = ok
         #
