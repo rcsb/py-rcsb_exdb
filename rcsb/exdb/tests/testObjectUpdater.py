@@ -82,7 +82,11 @@ class ObjectUpdaterTests(unittest.TestCase):
             for entityKey, eD in objD.items():
                 try:
                     selectD = {"rcsb_id": entityKey}
-                    tL = eD["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]
+                    tL = (
+                        eD["rcsb_polymer_entity_container_identifiers"]["reference_sequence_identifiers"]
+                        if "reference_sequence_identifiers" in eD["rcsb_polymer_entity_container_identifiers"]
+                        else []
+                    )
                     tL.append({"database_accession": "1111111", "database_name": "PDB", "provenance_source": "RCSB"})
                     #
                     updateD = {"rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers": tL}

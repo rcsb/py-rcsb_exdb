@@ -50,7 +50,7 @@ class CitationAdapter(ObjectAdapterBase):
                     issn = citObj["journal_id_ISSN"] if "journal_id_ISSN" in citObj else None
                     curAbbrev = citObj["journal_abbrev"] if "journal_abbrev" in citObj else None
                     revAbbrev = self.__updateJournalAbbreviation(rcsbId, issn, curAbbrev)
-                    logger.info("%s: revised: %r current: %r", rcsbId, revAbbrev, curAbbrev)
+                    logger.debug("%s: revised: %r current: %r", rcsbId, revAbbrev, curAbbrev)
 
         except Exception as e:
             ok = False

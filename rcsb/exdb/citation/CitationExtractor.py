@@ -185,8 +185,8 @@ class CitationExtractor(object):
             eCount = obEx.getCount()
             logger.info("Entry count is %d", eCount)
             objD = obEx.getObjects()
-            for ky, eD in objD.items():
-                logger.info("%s: %r", ky, eD)
+            # for ky, eD in objD.items():
+            #    logger.info("%s: %r", ky, eD)
             return objD
         except Exception as e:
             logger.exception("Failing with %s", str(e))
