@@ -81,6 +81,7 @@ class PubChemCacheProviderTests(unittest.TestCase):
                 birdUrlTarget=self.__birdUrlTarget,
                 ccFileNamePrefix="cc-abbrev",
                 exportPath=os.path.join(self.__cachePath, "PubChem"),
+                rebuildChemIndices=True,
                 fetchLimit=4,
             )
             ok = rsaP.testCache()

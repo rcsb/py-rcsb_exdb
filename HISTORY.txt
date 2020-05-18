@@ -46,3 +46,4 @@
  5-May-2020 V0.54 Add PubChem loader and workflow extensions
  9-May-2020 V0.55 Adjust cache management for PubChem refresh
  9-May-2020 V0.56 Log formatting adjustments
+17-May-2020 V0.57 Revise the index for PubChem search
