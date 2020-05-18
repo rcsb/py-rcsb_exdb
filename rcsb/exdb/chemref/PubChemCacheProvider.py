@@ -404,7 +404,7 @@ class PubChemCacheProvider(object):
             # Get current the indices of source chemical reference data -
             ok, ccidxP, ccsidxP = self.__rebuildChemCompSourceIndices(**kwargs)
             if not ok:
-                return matchD, refD
+                return matchD, refD, ccidxP, ccsidxP
             if updateOnReload:
                 ccIdxD = ccidxP.getIndex()
                 # Index of target of local chemical component and BIRD identifiers
@@ -434,7 +434,7 @@ class PubChemCacheProvider(object):
             return matchD, refD, ccidxP, ccsidxP
         except Exception as e:
             logger.exception("Failing with %s", str(e))
-        return None, None
+        return None, None, None, None
 
     def __updateReferenceData(self, idList, searchIdxD, **kwargs):
         """Launch worker methods to update chemical reference data correspondences.
