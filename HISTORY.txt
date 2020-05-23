@@ -48,3 +48,4 @@
  9-May-2020 V0.56 Log formatting adjustments
 17-May-2020 V0.57 Revise the index for PubChem search
 18-May-2020 V0.58 Cleanup some pipeline and logging issues.
+23-May-2020 V0.59 Add PubChem tracking diagnostics

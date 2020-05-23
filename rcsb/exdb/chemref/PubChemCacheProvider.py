@@ -16,6 +16,7 @@ __license__ = "Apache 2.0"
 import hashlib
 import logging
 import os
+import time
 
 from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 from rcsb.exdb.utils.ObjectUpdater import ObjectUpdater
@@ -50,6 +51,7 @@ class ReferenceUpdateWorker(object):
         self.__matchIndexCollectionName = "reference_match_index"
         self.__createCollections(self.__databaseName, self.__refDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
         self.__createCollections(self.__databaseName, self.__matchIndexCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
+        self.__pcU = PubChemUtils()
 
     def __genChemIdList(self, ccId):
         chemIdList = []
@@ -96,12 +98,13 @@ class ReferenceUpdateWorker(object):
         diagList = []
         emptyList = []
         #
-        pcU = PubChemUtils()
         try:
             tU = TimeUtil()
             ccIdList = dataList
-            logger.info("%s starting update for %d (%d) reference definitions", procName, len(ccIdList), chunkSize)
-            for ccIdChunk in self.__chunker(ccIdList, chunkSize):
+            numChunks = len(list(self.__chunker(ccIdList, chunkSize)))
+            logger.info("%s search starting for %d reference definitions (in chunks of length %d)", procName, len(ccIdList), chunkSize)
+            for ii, ccIdChunk in enumerate(self.__chunker(ccIdList, chunkSize), 1):
+                logger.info("%s starting chunk for %d of %d", procName, ii, numChunks)
                 tDL = []
                 tIdxDL = []
                 timeS = tU.getDateTimeObj(tU.getTimestamp())
@@ -112,7 +115,13 @@ class ReferenceUpdateWorker(object):
                     #
                     mL = []
                     for chemId in chemIdList:
-                        ok, refDL = pcU.assemble(chemId, exportPath=exportPath)
+                        stA = time.time()
+                        ok, refDL = self.__pcU.assemble(chemId, exportPath=exportPath)
+                        #
+                        if not ok:
+                            etA = time.time()
+                            logger.info("Failing %s search source %s for %s (%.4f secs)", chemId.identifierType, chemId.identifierSource, chemId.idCode, etA - stA)
+
                         #
                         if ok and refDL:
                             for tD in refDL:
@@ -144,12 +153,16 @@ class ReferenceUpdateWorker(object):
                         tIdxD["matched_ids"] = mL
                         successList.append(ccId)
                     else:
-                        logger.info("No match result %s", ccId)
+                        logger.info("No match result for any form of %s", ccId)
                     #
                     tIdxDL.append(tIdxD)
                 # --
+                startTimeL = time.time()
+                logger.info("Saving chunk %d (len=%d)", ii, len(ccIdChunk))
                 self.__updateObjectStore(self.__databaseName, self.__matchIndexCollectionName, tIdxDL)
                 self.__updateObjectStore(self.__databaseName, self.__refDataCollectionName, tDL)
+                endTimeL = time.time()
+                logger.info("Saved chunk %d (len=%d) in %.3f secs", ii, len(ccIdChunk), endTimeL - startTimeL)
         except Exception as e:
             logger.exception("Failing %s for %d data items %s", procName, len(dataList), str(e))
         logger.info("%s dataList length %d success length %d rst1 %d rst2 %d", procName, len(dataList), len(successList), len(retList1), len(retList2))
@@ -424,7 +437,7 @@ class PubChemCacheProvider(object):
                     searchIdxD = ccsidxP.getIndex()
                     logger.info("Update reference data cache for %d chemical identifers", len(updateIdList))
                     ok, failList = self.__updateReferenceData(updateIdList, searchIdxD, **kwargs)
-                    logger.info("Update reference data status is %r missing count %d", ok, len(failList))
+                    logger.info("Update reference data return status is %r missing count %d", ok, len(failList))
                 else:
                     logger.info("No reference data updates required")
             #
@@ -451,11 +464,19 @@ class PubChemCacheProvider(object):
         logger.info("Length starting list is %d", len(idList))
         optD = {"chunkSize": chunkSize, "exportPath": exportPath}
         rWorker = ReferenceUpdateWorker(self.__cfgOb, searchIdxD)
-        mpu = MultiProcUtil(verbose=True)
-        mpu.setOptions(optD)
-        mpu.set(workerObj=rWorker, workerMethod="updateList")
-        ok, failList, resultList, _ = mpu.runMulti(dataList=idList, numProc=numProc, numResults=2, chunkSize=chunkSize)
-        logger.info("Multi-proc %r failures %r result lengths %r %r", ok, len(failList), len(resultList[0]), len(resultList[1]))
+        if numProc > 1:
+            mpu = MultiProcUtil(verbose=True)
+            mpu.setOptions(optD)
+            mpu.set(workerObj=rWorker, workerMethod="updateList")
+            ok, failList, resultList, _ = mpu.runMulti(dataList=idList, numProc=numProc, numResults=2, chunkSize=chunkSize)
+            logger.info("Multi-proc %r failures %r result lengths %r %r", ok, len(failList), len(resultList[0]), len(resultList[1]))
+        else:
+            cachePath = kwargs.get("cachePath", ".")
+            successList, _, _, _ = rWorker.updateList(idList, "SingleProc", optD, cachePath)
+            failList = list(set(idList) - set(successList))
+            ok = len(failList) > 0
+            logger.info("Single-proc status %r failures %r", ok, len(failList))
+        #
         return ok, failList
 
     # -- --- ---

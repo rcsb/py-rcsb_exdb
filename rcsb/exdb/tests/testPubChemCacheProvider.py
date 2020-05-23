@@ -72,7 +72,7 @@ class PubChemCacheProviderTests(unittest.TestCase):
             #  -- Update/create cache ---
             rsaP = PubChemCacheProvider(
                 self.__cfgOb,
-                maxChunkSize=20,
+                chunkSize=2,
                 numProc=1,
                 expireDays=0,
                 cachePath=self.__cachePath,
@@ -81,8 +81,8 @@ class PubChemCacheProviderTests(unittest.TestCase):
                 birdUrlTarget=self.__birdUrlTarget,
                 ccFileNamePrefix="cc-abbrev",
                 exportPath=os.path.join(self.__cachePath, "PubChem"),
-                rebuildChemIndices=True,
-                fetchLimit=2,
+                rebuildChemIndices=False,
+                fetchLimit=3,
             )
             ok = rsaP.testCache()
             self.assertTrue(ok)

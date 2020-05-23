@@ -44,7 +44,7 @@ setup(
         "numpy",
         "rcsb.utils.io >= 0.63",
         "rcsb.db >= 0.985",
-        "rcsb.utils.chemref >= 0.42",
+        "rcsb.utils.chemref >= 0.44",
         "rcsb.utils.chem >= 0.29",
         "rcsb.utils.citation >= 0.15",
         "rcsb.utils.config >= 0.33",
