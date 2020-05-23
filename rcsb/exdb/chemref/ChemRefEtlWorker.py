@@ -137,7 +137,7 @@ class ChemRefEtlWorker(object):
                 #  -- Update/create cache ---
                 rsaP = PubChemCacheProvider(
                     self.__cfgOb,
-                    maxChunkSize=self.__chunkSize,
+                    chunkSize=self.__chunkSize,
                     numProc=self.__numProc,
                     expireDays=expireDays,
                     cachePath=self.__cachePath,

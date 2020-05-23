@@ -521,7 +521,9 @@ class PubChemCacheProvider(object):
             useCache = not kwargs.get("rebuildChemIndices", False)
             logSizes = kwargs.get("logSizes", False)
             limitPerceptions = kwargs.get("limitPerceptions", False)
-            numProc = kwargs.get("numProc", 1)
+            #
+            # numProc = kwargs.get("numProc", 1)
+            numProc = 12
             chunkSize = kwargs.get("chunkSize", 5)
             molLimit = kwargs.get("molLimit", None)
             ccFileNamePrefix = kwargs.get("ccFileNamePrefix", "cc-full")
