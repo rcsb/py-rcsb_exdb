@@ -20,7 +20,6 @@ from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.exdb.chemref.ChemRefExtractor import ChemRefExtractor
-from rcsb.exdb.chemref.PubChemCacheProvider import PubChemCacheProvider
 from rcsb.utils.chemref.DrugBankProvider import DrugBankProvider
 
 
@@ -114,45 +113,3 @@ class ChemRefEtlWorker(object):
 
     def getLoadStatus(self):
         return self.__statusList
-
-    def refresh(self, extResource, loadType="replace", **kwargs):
-        """ Refresh cached data from external chemical reference resource.
-
-        """
-        ok = False
-        try:
-            # self.__statusList = []
-            # desp = DataExchangeStatus()
-            # statusStartTimestamp = desp.setStartTime()
-            #
-            if extResource == "PubChem":
-                useCache = loadType == "replace"
-                rebuildChemIdices = kwargs.get("rebuildChemIndices", False)
-                ccUrlTarget = kwargs.get("ccUrlTarget", None)
-                birdUrlTarget = kwargs.get("ccUrlTarget", None)
-                ccFileNamePrefix = kwargs.get("ccFileNamePrefix", None)
-                fetchLimit = kwargs.get("fetchLimit", None)
-                exportPath = kwargs.get("exportPath", None)
-                expireDays = kwargs.get("expireDays", 0)
-                #  -- Update/create cache ---
-                rsaP = PubChemCacheProvider(
-                    self.__cfgOb,
-                    chunkSize=self.__chunkSize,
-                    numProc=self.__numProc,
-                    expireDays=expireDays,
-                    cachePath=self.__cachePath,
-                    useCache=useCache,
-                    ccUrlTarget=ccUrlTarget,
-                    birdUrlTarget=birdUrlTarget,
-                    ccFileNamePrefix=ccFileNamePrefix,
-                    exportPath=exportPath,
-                    fetchLimit=fetchLimit,
-                    rebuildChemIndices=rebuildChemIdices,
-                )
-                ok = rsaP.testCache()
-            else:
-                pass
-            return ok
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-        return ok

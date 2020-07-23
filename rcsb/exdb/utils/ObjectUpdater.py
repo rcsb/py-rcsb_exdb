@@ -58,8 +58,29 @@ class ObjectUpdater(object):
             logger.exception("Failing with %s", str(e))
         return numUpdated
 
-    def createCollection(self, databaseName, collectionName, indexAttributeNames=None, checkExists=False, bsonSchema=None):
-        """Create database and collection and optionally a primary index -
+    def count(self, databaseName, collectionName):
+        try:
+            numTotal = 0
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                if mg.collectionExists(databaseName, collectionName):
+                    numTotal = mg.count(databaseName, collectionName)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return numTotal
+
+    def createCollection(self, databaseName, collectionName, indexAttributeNames=None, indexName="primary", checkExists=False, bsonSchema=None):
+        """ Create collection and optionally set index attributes for the named index and validation schema for a new collection.
+
+        Args:
+            databaseName (str): target database name
+            collectionName (str): target collection name
+            indexAttributeNames (list, optional): list of attribute names for the 'primary' index. Defaults to None.
+            checkExists (bool, optional): reuse an existing collection if True. Defaults to False.
+            bsonSchema (object, optional): BSON compatable validation schema. Defaults to None.
+
+        Returns:
+            (bool): True for success or False otherwise
         """
         try:
             logger.debug("Create database %s collection %s", databaseName, collectionName)
@@ -73,7 +94,7 @@ class ObjectUpdater(object):
                 ok3 = mg.collectionExists(databaseName, collectionName)
                 okI = True
                 if indexAttributeNames:
-                    okI = mg.createIndex(databaseName, collectionName, indexAttributeNames, indexName="primary", indexType="DESCENDING", uniqueFlag=False)
+                    okI = mg.createIndex(databaseName, collectionName, indexAttributeNames, indexName=indexName, indexType="DESCENDING", uniqueFlag=False)
 
             return ok1 and ok2 and ok3 and okI
             #

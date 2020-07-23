@@ -1,13 +1,13 @@
 ##
-# File:    PubChemCacheProviderTests.py
+# File:    PubChemIndexCacheProviderTests.py
 # Author:  J. Westbrook
-# Date:    10-Feb-2020
+# Date:    16-Jul-2020
 #
 # Updates:
 #
 ##
 """
-Tests for reference data cache maintenance operations
+Tests for PubChem index cache maintenance operations
 """
 
 __docformat__ = "restructuredtext en"
@@ -22,10 +22,9 @@ import resource
 import time
 import unittest
 
-from rcsb.exdb.chemref.PubChemCacheProvider import PubChemCacheProvider
+from rcsb.exdb.chemref.PubChemIndexCacheProvider import PubChemIndexCacheProvider
 
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -34,17 +33,15 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
-class PubChemCacheProviderTests(unittest.TestCase):
+class PubChemIndexCacheProviderTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
-        super(PubChemCacheProviderTests, self).__init__(methodName)
+        super(PubChemIndexCacheProviderTests, self).__init__(methodName)
         self.__verbose = True
 
     def setUp(self):
         #
-        self.__workPath = os.path.join(HERE, "test-output")
         self.__dataPath = os.path.join(HERE, "test-data")
         self.__cachePath = os.path.join(HERE, "test-output", "CACHE")
-        self.__mU = MarshalUtil(workPath=self.__cachePath)
         #
         # Site configuration used for database resource access -
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
@@ -65,38 +62,71 @@ class PubChemCacheProviderTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def testPubChemCacheProvider(self):
-        """ Test case - create and read cached reference chemical definitions.
+    def testAPubChemIndexCacheProvider(self):
+        """ Test case - search, backup, restore and select PubChem correspondences for reference chemical definitions.
         """
         try:
-            #  -- Update/create cache ---
-            rsaP = PubChemCacheProvider(
-                self.__cfgOb,
-                chunkSize=2,
-                numProc=1,
+            #  -- Update/create mapping index cache ---
+            numObj = 30
+            pcicP = PubChemIndexCacheProvider(self.__cfgOb, self.__cachePath)
+            pcicP.updateMissing(
                 expireDays=0,
                 cachePath=self.__cachePath,
-                useCache=True,
                 ccUrlTarget=self.__ccUrlTarget,
                 birdUrlTarget=self.__birdUrlTarget,
                 ccFileNamePrefix="cc-abbrev",
                 exportPath=os.path.join(self.__cachePath, "PubChem"),
                 rebuildChemIndices=False,
-                fetchLimit=3,
+                fetchLimit=None,
             )
-            ok = rsaP.testCache()
+            matchD = pcicP.getMatchData(expireDays=0)
+            logger.info("matchD (%d)", len(matchD))
+            self.assertGreaterEqual(len(matchD), numObj)
+            ok = pcicP.testCache()
+            self.assertTrue(ok)
+            #
+            ok = pcicP.dump()
+            self.assertTrue(ok)
+            #
+            numTotal = pcicP.restore()
+            logger.info("Restored %d correspondence records", numTotal)
+            self.assertGreaterEqual(numTotal, numObj)
+            mapD, extraMapD = pcicP.getSelectedMatches(exportPath=os.path.join(self.__cachePath, "mapping"))
+            self.assertGreaterEqual(len(mapD), 20)
+            logger.info("mapD (%d) extraMapD (%d) %r", len(mapD), len(extraMapD), extraMapD)
+            self.assertGreaterEqual(len(extraMapD), 2)
+            cidList = pcicP.getMatches()
+            logger.info("cidList (%d)", len(cidList))
+            self.assertGreaterEqual(len(cidList), 49)
+            #
+            stashDirPath = os.path.join(self.__cachePath, "PubChem", "stash-remote")
+            pcicP.toStash(None, stashDirPath)
+            pcicP.fromStash(None, stashDirPath)
+            #
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
+    def testBPubChemIndexCacheProvider(self):
+        """ Test case -  verify the PubChem index cache
+        """
+        try:
+            #  -- check cache
+            pcicP = PubChemIndexCacheProvider(self.__cfgOb, self.__cachePath)
+            ok = pcicP.testCache()
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
 
-def pubChemCacheProviderSuite():
+def pubChemIndexCacheProviderSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PubChemCacheProviderTests("testPubChemCacheProvider"))
+    suiteSelect.addTest(PubChemIndexCacheProviderTests("testAPubChemIndexCacheProvider"))
+    suiteSelect.addTest(PubChemIndexCacheProviderTests("testBPubChemIndexCacheProviderCache"))
     return suiteSelect
 
 
 if __name__ == "__main__":
-    mySuite = pubChemCacheProviderSuite()
+    mySuite = pubChemIndexCacheProviderSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

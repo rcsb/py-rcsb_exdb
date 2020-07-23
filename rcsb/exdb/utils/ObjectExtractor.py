@@ -111,6 +111,8 @@ class ObjectExtractor(object):
         #
         tV = kwargs.get("objectLimit", None)
         objLimit = int(tV) if tV is not None else None
+        stripObjectId = kwargs.get("stripObjectId", False)
+        logIncrement = kwargs.get("logIncrement", 1000)
         #
         objectD = {}
         try:
@@ -123,19 +125,25 @@ class ObjectExtractor(object):
                         qD.update(selectionQueryD)
                     selectL = ["_id"]
                     dL = mg.fetch(databaseName, collectionName, selectL, queryD=qD)
-                    logger.debug("Selection %r fetch result count %d", selectL, len(dL))
+                    numDoc = len(dL) if dL else 0
+                    logger.info("Selection %r fetch result count %d", selectL, numDoc)
                     #
                     for ii, dD in enumerate(dL, 1):
                         if "_id" not in dD:
                             continue
                         rObj = mg.fetchOne(databaseName, collectionName, "_id", dD["_id"])
-                        rObj["_id"] = str(rObj["_id"])
+                        if stripObjectId and rObj and "_id" in rObj:
+                            rObj.pop("_id")
+                        else:
+                            rObj["_id"] = str(rObj["_id"])
                         #
                         stKey = ".".join([rObj[ky] for ky in uniqueAttributes])
                         objectD[stKey] = copy.copy(rObj)
                         if objLimit and ii >= objLimit:
                             break
                         logger.debug("Saving %d %s", ii, stKey)
+                        if ii % logIncrement == 0 or ii == numDoc:
+                            logger.info("Extracting object (%d of %d)", ii, numDoc)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return objectD
@@ -150,6 +158,7 @@ class ObjectExtractor(object):
         selectionQueryD = kwargs.get("selectionQuery", {})
         uniqueAttributes = kwargs.get("uniqueAttributes", ["rcsb_id"])
         selectL = kwargs.get("selectionList", [])
+        stripObjectId = kwargs.get("stripObjectId", False)
         #
         tV = kwargs.get("objectLimit", None)
         objLimit = int(tV) if tV is not None else None
@@ -168,6 +177,8 @@ class ObjectExtractor(object):
                     #
                     for ii, rObj in enumerate(dL, 1):
                         stKey = ".".join([rObj[ky] for ky in uniqueAttributes])
+                        if stripObjectId and rObj and "_id" in rObj:
+                            rObj.pop("_id")
                         objectD[stKey] = copy.copy(rObj)
                         if objLimit and ii >= objLimit:
                             break
@@ -184,7 +195,7 @@ class ObjectExtractor(object):
 
         Args:
             dct (dict): source dictionary object (nested)
-            keyNames (list): list of dictionary keys in dot notatoin
+            keyNames (list): list of dictionary keys in dot notation
 
         Returns:
             tuple: tuple of values corresponding to the input key names
