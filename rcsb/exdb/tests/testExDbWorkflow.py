@@ -82,31 +82,6 @@ class ExDbWorkflowTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
-    def testChemRefRefreshWorkflows(self):
-        """ Test run chemical reference data ETL workflow step ...
-        """
-        try:
-            #
-            doFull = False
-            kwargs = {}
-            opL = ["refresh_pubchem"]
-            if doFull:
-                argL = ["loadType", "expireDays", "cachePath", "fetchLimit"]
-            else:
-                argL = ["loadType", "expireDays", "cachePath", "ccUrlTarget", "birdUrlTarget", "ccFileNamePrefix", "exportPath", "fetchLimit"]
-
-            for arg in argL:
-                if arg in self.__chemEtlD:
-                    kwargs[arg] = self.__chemEtlD[arg]
-            #
-            rlWf = ExDbWorkflow(**self.__commonD)
-            for op in opL:
-                ok = rlWf.load(op, **kwargs)
-                self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
     def testExDbLoaderWorkflowsWithCacheCheck(self):
         """ Test run sequence reference data update workflow step ...
         """

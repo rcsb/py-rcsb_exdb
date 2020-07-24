@@ -83,6 +83,7 @@ class ExDbWorkflow(object):
             logger.exception("Argument or configuration processing failing with %s", str(e))
             return False
         #
+        okS = ok = False
         if dbType == "mongo":
             if op == "etl_tree_node_lists":
                 rhw = TreeNodeListWorker(
@@ -136,6 +137,7 @@ class ExDbWorkflow(object):
                     refChunkSize=refChunkSize,
                 )
                 okS = ok
+
         #
         logger.info("Completed operation %r with status %r\n", op, ok and okS)
         return ok and okS
