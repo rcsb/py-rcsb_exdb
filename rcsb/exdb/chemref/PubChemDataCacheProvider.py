@@ -315,20 +315,20 @@ class PubChemDataCacheProvider(object):
         """
         #
         retD = {}
-        logger.info("PubChem compound ID list (%d)", len(pcidList))
+        logger.info("Get XREFs for PubChem compound ID list (%d)", len(pcidList))
         #
         try:
+            xrefD = self.__getReferenceData(self.__databaseName, self.__refDataCollectionName, selectD=None, selectionList=["rcsb_id", "cid", "data.xrefs"])
             for pcid in pcidList:
-                tD = self.__getReferenceData(self.__databaseName, self.__refDataCollectionName, selectD={"rcsb_id": pcid}, selectionList=["rcsb_id", "cid", "data.xrefs"])
                 try:
-                    xD = tD[pcid]["data"]["xrefs"]
+                    xD = xrefD[pcid]["data"]["xrefs"]
                     if isinstance(xD, list):
                         xD = {}
                 except Exception:
                     xD = {}
                 #
                 mD = {}
-                logger.info("%s (%s) xrefs %r", pcid, tD[pcid]["cid"], xD)
+                logger.debug("%s (%s) xrefs %r", pcid, xrefD[pcid]["cid"], xD)
                 for rNm, rIdL in xD.items():
                     mD[rNm] = rIdL
                 retD[pcid] = mD
@@ -369,6 +369,7 @@ class PubChemDataCacheProvider(object):
         """
         try:
             numUpd = 0
+            numTotal = 0
             updateDL = []
             for entityKey, obj in objD.items():
                 # if "_id" in obj:
@@ -383,7 +384,8 @@ class PubChemDataCacheProvider(object):
                 logger.debug("Updated object count is %d", numUpd)
             else:
                 logger.error("Create %s %s failed", databaseName, collectionName)
+            numTotal = obUpd.count(databaseName, collectionName)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         #
-        return numUpd
+        return numTotal
