@@ -294,23 +294,47 @@ class PubChemIndexCacheProvider(object):
         # --
         return numUpd
 
-    def toStash(self, url, stashDirPath, userName=None, password=None, remoteStashPrefix=None):
+    def toStash(self, url, stashRemoteDirPath, userName=None, password=None, remoteStashPrefix=None):
+        """Copy tar and gzipped bundled cache data to remote server/location.
+
+        Args:
+            url (str): server URL (e.g. sftp://hostname.domain) None for local host
+            stashRemoteDirPath (str): path to target directory on remote server
+            userName (str, optional): server username. Defaults to None.
+            password (str, optional): server password. Defaults to None.
+            remoteStashPrefix (str, optional): channel prefix. Defaults to None.
+
+        Returns:
+            (bool): True for success or False otherwise
+        """
         ok = False
         try:
             stU = StashUtil(os.path.join(self.__dirPath, "stash"), "pubchem-match-index")
             ok = stU.makeBundle(self.__dirPath, [self.__stashDir])
             if ok:
-                ok = stU.storeBundle(url, stashDirPath, remoteStashPrefix=remoteStashPrefix, userName=userName, password=password)
+                ok = stU.storeBundle(url, stashRemoteDirPath, remoteStashPrefix=remoteStashPrefix, userName=userName, password=password)
         except Exception as e:
-            logger.exception("Failing with url %r stashDirPath %r: %s", url, stashDirPath, str(e))
+            logger.exception("Failing with url %r stashRemoteDirPath %r: %s", url, stashRemoteDirPath, str(e))
         return ok
 
-    def fromStash(self, url, stashDirPath, userName=None, password=None, remoteStashPrefix=None):
+    def fromStash(self, url, stashRemoteDirPath, userName=None, password=None, remoteStashPrefix=None):
+        """Restore local cache from a tar and gzipped bundle to fetched from a remote server/location.
+
+        Args:
+            url (str): server URL (e.g. sftp://hostname.domain) None for local host
+            stashRemoteDirPath (str): path to target directory on remote server
+            userName (str, optional): server username. Defaults to None.
+            password (str, optional): server password. Defaults to None.
+            remoteStashPrefix (str, optional): channel prefix. Defaults to None.
+
+        Returns:
+            (bool): True for success or False otherwise
+        """
         try:
             stU = StashUtil(os.path.join(self.__dirPath, "stash"), "pubchem-match-index")
-            ok = stU.fetchBundle(self.__dirPath, url, stashDirPath, remoteStashPrefix=remoteStashPrefix, userName=userName, password=password)
+            ok = stU.fetchBundle(self.__dirPath, url, stashRemoteDirPath, remoteStashPrefix=remoteStashPrefix, userName=userName, password=password)
         except Exception as e:
-            logger.exception("Failing with url %r stashDirPath %r: %s", url, stashDirPath, str(e))
+            logger.exception("Failing with url %r stashRemoteDirPath %r: %s", url, stashRemoteDirPath, str(e))
         return ok
 
     def updateMissing(self, expireDays=0, fetchLimit=None, updateUnmatched=True, numProc=12, **kwargs):

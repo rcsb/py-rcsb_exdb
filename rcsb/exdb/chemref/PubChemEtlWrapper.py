@@ -17,6 +17,7 @@ import os
 
 from rcsb.exdb.chemref.PubChemDataCacheProvider import PubChemDataCacheProvider
 from rcsb.exdb.chemref.PubChemIndexCacheProvider import PubChemIndexCacheProvider
+from rcsb.utils.chemref.PubChemProvider import PubChemProvider
 
 logger = logging.getLogger(__name__)
 
@@ -40,43 +41,90 @@ class PubChemEtlWrapper(object):
         self.__dirPath = os.path.join(self.__cachePath, "PubChem")
         self.__pcicP = PubChemIndexCacheProvider(self.__cfgOb, self.__cachePath)
         self.__pcdcP = PubChemDataCacheProvider(self.__cfgOb, self.__cachePath)
+        self.__pcP = PubChemProvider(cachePath=self.__cachePath)
+        #
+        self.__identifierD = None
         #
 
-    def restoreIndex(self):
-        """Restore PubChem mapping index data store from saved backup.
+    def restore(self, contentType="index"):
+        """Restore the input content type in the data store from saved backup.
+
+        Args:
+            contentType (str): target content to restore (data|index)
 
         Returns:
             (int): number of records in restored collection.
         """
-        numRecords = self.__pcicP.restore()
+        numRecords = 0
+        if contentType.lower() == "index":
+            numRecords = self.__pcicP.restore()
+        elif contentType.lower() == "data":
+            numRecords = self.__pcdcP.restore()
         return numRecords
 
-    def dumpIndex(self):
-        """Dump PubChem mapping index reference data from the object store.
+    def dump(self, contentType):
+        """Dump PubChem content from the object store.
+
+        Args:
+            contentType (str): target content to restore (data|index)
 
         Returns:
             (bool): True for success or False otherwise
         """
-        ok = self.__pcicP.dump()
+        ok = False
+        if contentType.lower() == "index":
+            ok = self.__pcicP.dump()
+        elif contentType.lower() == "data":
+            ok = self.__pcdcP.dump()
+        elif contentType.lower() == "identifiers":
+            ok = self.__dumpIdentifiers()
+
         return ok
 
-    def toStashIndex(self):
-        """Store PubChem mapping index reference data on the remote stash storage resource.
+    def toStash(self, contentType):
+        """Store PubChem extracted content () on the remote stash storage resource.
 
+        Args:
+            contentType (str): target content to stash (data|index|identifiers)
         Returns:
             (bool): True for success or False otherwise
         """
-        return self.__pcicP.toStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
 
-    def fromStashIndex(self):
-        """Recover PubChem mapping index reference data from the remote stash storage resource.
+        if contentType.lower() == "index":
+            return self.__pcicP.toStash(
+                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
+            )
+        elif contentType.lower() == "data":
+            return self.__pcdcP.toStash(
+                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
+            )
+        elif contentType.lower() == "identifiers":
+            return self.__pcP.toStash(
+                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
+            )
+        return False
 
+    def fromStash(self, contentType):
+        """Fetch PubChem extracted content () on the remote stash storage resource.
+
+        Args:
+            contentType (str): target content to fetch (data|index)
         Returns:
             (bool): True for success or False otherwise
         """
-        return self.__pcicP.fromStash(
-            self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
-        )
+        if contentType.lower() == "index":
+            return self.__pcicP.fromStash(
+                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix,
+            )
+        elif contentType.lower() == "data":
+            return self.__pcdcP.fromStash(
+                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
+            )
+        elif contentType.lower() == "identifiers":
+            return self.__pcdcP.fromStash(
+                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
+            )
+        return False
 
     def updateIndex(self, **kwargs):
         """ Search and store PubChem correspondences for CCD and BIRD reference chemical definitions.
@@ -164,8 +212,8 @@ class PubChemEtlWrapper(object):
             logger.exception("Failing with %s", str(e))
         return ok
 
-    def updateMatchedData(self, doExport=False):
-        """ Update PubChem reference data for any matched compound identifiers in the current index.
+    def updateMatchedData(self, exportRaw=False):
+        """ Update PubChem reference data using matched compound identifiers in the current index.
 
         Returns:
             (bool): True for success or False otherwise
@@ -173,7 +221,7 @@ class PubChemEtlWrapper(object):
         ok = False
         try:
             pcidList = self.getMatches()
-            exportPath = self.__dirPath if doExport else None
+            exportPath = self.__dirPath if exportRaw else None
             ok, failList = self.__pcdcP.updateMissing(pcidList, exportPath=exportPath)
             if failList:
                 logger.info("No data updated for %r", failList)
@@ -181,43 +229,7 @@ class PubChemEtlWrapper(object):
             logger.exception("Failing with %s", str(e))
         return ok
 
-    def restoreData(self):
-        """Restore PubChem reference data store from saved backup.
-
-        Returns:
-            (int): number of objects restored.
-        """
-        numRecords = self.__pcdcP.restore()
-        return numRecords
-
-    def dumpData(self):
-        """Backup PubChem reference data from the object store.
-
-        Returns:
-            (bool): True for success or False otherwise
-        """
-        ok = self.__pcdcP.dump()
-        return ok
-
-    def toStashData(self):
-        """Store PubChem reference data on the remote stash storage resource.
-
-        Returns:
-            (bool): True for success or False otherwise
-        """
-        return self.__pcdcP.toStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
-
-    def fromStashData(self):
-        """Recover PubChem reference data from the remote stash storage resource.
-
-        Returns:
-            (bool): True for success or False otherwise
-        """
-        return self.__pcdcP.fromStash(
-            self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
-        )
-
-    def getPubChemRelatedIdentifiers(self, pcidList):
+    def __getPubChemIdentifiers(self, pcidList):
         """Return related identifiers (xrefs) for the input PubChem compound identifier list.
 
         Args:
@@ -231,31 +243,52 @@ class PubChemEtlWrapper(object):
         logger.info("Related identifier map length (%d)", len(rD))
         return rD
 
-    def getRelatedIdentifiers(self, **kwargs):
-        """Return PubChem assigned related identifiers for matching compounds for the input chemical component sourceTypes.
+    def updateIdentifiers(self, **kwargs):
+        """Update PubChem assigned related identifiers for matching compounds for the input chemical component sourceTypes.
 
         Args:
             sourceTypes (list, optional):  list of source chemical component build types (default: ["model-xyz"])
 
         Returns:
+            (bool): True for success or False otherwise
+        """
+        ok = False
+        try:
+            sourceTypes = kwargs.get("sourceTypes", ["model-xyz"])
+            mapD, _ = self.getSelectedMatches(sourceTypes=sourceTypes)
+            pcIdList = []
+            # mapD { ccId1: [{'pcId': ... , 'inchiKey': ... }],
+            for mDL in mapD.values():
+                pcIdList.extend([mD["pcId"] for mD in mDL])
+            logger.info("pcIdList (%d)", len(pcIdList))
+            rD = self.__getPubChemIdentifiers(pcIdList)
+            #
+            #  Update the identifier mappings
+            for _, mDL in mapD.items():
+                for mD in mDL:
+                    pcId = mD["pcId"]
+                    if pcId in rD:
+                        for rIdName, rIdValue in rD[pcId].items():
+                            mD[rIdName] = rIdValue
+            #
+            self.__identifierD = mapD
+            ok = self.__identifierD is not None
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return ok
+
+    def getIdentifiers(self, **kwargs):
+        """Get PubChem assigned related identifiers for matching compounds for the input chemical component sourceTypes.
+
+        Returns:
             dict: riD { ccId1: [{'pcId': ... , 'inchiKey': ... 'ChEBI': ... 'ChEMBL': ... 'CAS': ... }], ccId2: ...},
 
         """
-        sourceTypes = kwargs.get("sourceTypes", ["model-xyz"])
-        mapD, _ = self.getSelectedMatches(sourceTypes=sourceTypes)
-        pcIdList = []
-        # mapD { ccId1: [{'pcId': ... , 'inchiKey': ... }],
-        for mDL in mapD.values():
-            pcIdList.extend([mD["pcId"] for mD in mDL])
-        logger.info("pcIdList (%d)", len(pcIdList))
-        rD = self.getPubChemRelatedIdentifiers(pcIdList)
-        #
-        #  Update the identifier mappings
-        for _, mDL in mapD.items():
-            for mD in mDL:
-                pcId = mD["pcId"]
-                if pcId in rD:
-                    for rIdName, rIdValue in rD[pcId].items():
-                        mD[rIdName] = rIdValue
-        #
-        return mapD
+        if not self.__identifierD:
+            self.updateIdentifiers(**kwargs)
+        return self.__identifierD
+
+    def __dumpIdentifiers(self):
+        rD = self.getIdentifiers()
+        ok = self.__pcP.load(rD, "identifiers", fmt="json")
+        return ok

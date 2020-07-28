@@ -92,23 +92,23 @@ class PubChemEtlWrapperTests(unittest.TestCase):
             self.assertGreaterEqual(len(selectMatchD), self.__numSelectMatches)
             self.assertGreaterEqual(len(altMatchD), self.__numAltMatches)
             #
-            ok = pcewP.dumpIndex()
+            ok = pcewP.dump(contentType="index")
             self.assertTrue(ok)
-            ok = pcewP.toStashIndex()
+            ok = pcewP.toStash(contentType="index")
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
     def testBFromRestore(self):
-        """ Test case - operations from restore .
+        """ Test case - operations from a restored starting point
         """
         try:
             #  --
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, self.__stashDirPath)
-            ok = pcewP.fromStashIndex()
+            ok = pcewP.fromStash(contentType="index")
             self.assertTrue(ok)
-            numObjects = pcewP.restoreIndex()
+            numObjects = pcewP.restore(contentType="index")
             logger.info("Restored %d correspondence records", numObjects)
             self.assertGreaterEqual(numObjects, self.__numComponents)
             mapD, extraMapD = pcewP.getSelectedMatches(exportPath=os.path.join(self.__cachePath, "mapping"))
@@ -120,13 +120,16 @@ class PubChemEtlWrapperTests(unittest.TestCase):
             self.assertGreaterEqual(len(cidList), self.__numTotalMatches)
             ok = pcewP.updateMatchedData()
             self.assertTrue(ok)
-            ok = pcewP.dumpData()
+            ok = pcewP.dump(contentType="data")
             self.assertTrue(ok)
-            ok = pcewP.toStashData()
+            ok = pcewP.toStash(contentType="data")
             self.assertTrue(ok)
-            rIdD = pcewP.getRelatedIdentifiers()
-            logger.info("rIdD (%d)", len(rIdD))
-            self.assertGreaterEqual(len(rIdD), 20)
+            ok = pcewP.updateIdentifiers()
+            self.assertTrue(ok)
+            ok = pcewP.dump(contentType="identifiers")
+            self.assertTrue(ok)
+            ok = pcewP.toStash(contentType="identifiers")
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
