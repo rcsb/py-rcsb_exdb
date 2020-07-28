@@ -50,4 +50,5 @@
 18-May-2020 V0.58 Cleanup some pipeline and logging issues.
 23-May-2020 V0.59 Add PubChem tracking diagnostics
 23-May-2020 V0.60 Adjust multiprocessing configuration
-28-May-2020 V0.61 Added modules PubChemDataCacheProvider() PubChemIndexCacheProvider() PubChemEtlWrapper() and associated tests
+28-Jul-2020 V0.61 Added modules PubChemDataCacheProvider() PubChemIndexCacheProvider() PubChemEtlWrapper() and associated tests
+28-Jul-2020 V0.62 Relax testing constraints for PubChem lookups and upversion
