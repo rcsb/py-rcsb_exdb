@@ -26,19 +26,29 @@ class PubChemEtlWrapper(object):
     """ Workflow wrapper for updating chemical component/BIRD to PubChem mapping and related PubChem reference data.
     """
 
-    def __init__(self, cfgOb, cachePath, stashDirPath, **kwargs):
+    def __init__(self, cfgOb, cachePath, **kwargs):
         self.__cfgOb = cfgOb
+        configName = self.__cfgOb.getDefaultSectionName()
         self.__cachePath = cachePath
-        # remote path
-        self.__stashDirPath = stashDirPath
+        self.__dirPath = os.path.join(self.__cachePath, "PubChem")
         #
-        # Optional configuration for stash services -
-        self.__stashUrl = kwargs.get("stashUrl", None)
-        self.__stashUserName = kwargs.get("stashUserName", None)
-        self.__stashPassword = kwargs.get("stashPassword", None)
         self.__stashRemotePrefix = kwargs.get("stashRemotePrefix", None)
         #
-        self.__dirPath = os.path.join(self.__cachePath, "PubChem")
+        stashMode = cfgOb.get("STASH_MODE", sectionName=configName)
+        logger.info("Using stash mode %r", stashMode)
+        if stashMode == "local":
+            bp = self.__cfgOb.get("STASH_LOCAL_BASE_PATH", sectionName=configName)
+            self.__stashDirPath = os.path.join(self.__cachePath, bp)
+            self.__stashUserName = self.__stashPassword = self.__stashUrl = self.__stashUrlFallBack = None
+        else:
+            # Optional configuration for remote stash server -
+            self.__stashUserName = cfgOb.get("_STASH_AUTH_USERNAME", sectionName=configName)
+            self.__stashPassword = cfgOb.get("_STASH_AUTH_PASSWORD", sectionName=configName)
+            self.__stashDirPath = cfgOb.get("_STASH_SERVER_BASE_PATH", sectionName=configName)
+            self.__stashUrlPrimary = cfgOb.get("STASH_SERVER_URL", sectionName=configName)
+            self.__stashUrlFallBack = cfgOb.get("STASH_SERVER_FALLBACK_URL", sectionName=configName)
+            self.__stashUrl = self.__stashUrlPrimary
+        #
         self.__pcicP = PubChemIndexCacheProvider(self.__cfgOb, self.__cachePath)
         self.__pcdcP = PubChemDataCacheProvider(self.__cfgOb, self.__cachePath)
         self.__pcP = PubChemProvider(cachePath=self.__cachePath)
@@ -81,7 +91,7 @@ class PubChemEtlWrapper(object):
 
         return ok
 
-    def toStash(self, contentType):
+    def toStash(self, contentType, fallBack=False):
         """Store PubChem extracted content () on the remote stash storage resource.
 
         Args:
@@ -89,7 +99,8 @@ class PubChemEtlWrapper(object):
         Returns:
             (bool): True for success or False otherwise
         """
-
+        if fallBack:
+            self.__stashUrl = self.__stashUrlFallBack
         if contentType.lower() == "index":
             return self.__pcicP.toStash(
                 self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
@@ -104,7 +115,7 @@ class PubChemEtlWrapper(object):
             )
         return False
 
-    def fromStash(self, contentType):
+    def fromStash(self, contentType, fallBack=False):
         """Fetch PubChem extracted content () on the remote stash storage resource.
 
         Args:
@@ -112,6 +123,8 @@ class PubChemEtlWrapper(object):
         Returns:
             (bool): True for success or False otherwise
         """
+        if fallBack:
+            self.__stashUrl = self.__stashUrlFallBack
         if contentType.lower() == "index":
             return self.__pcicP.fromStash(
                 self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix,
@@ -185,7 +198,7 @@ class PubChemEtlWrapper(object):
             sourceTypes (list, optional):  list of source chemical component build types (default: ["model-xyz"])
 
         Returns:
-            dict, dict : mapD { ccId1: [{'pcId': ... , 'inchiKey': ... }], ccId2: ...},
+            (dict, dict): mapD { ccId1: [{'pcId': ... , 'inchiKey': ... }], ccId2: ...},
                          altD { ccId1: [{'pcId': ... , 'inchiKey': ... 'sourceType': ... }], ccId2: ...}
         """
         sourceTypes = kwargs.get("sourceTypes", ["model-xyz"])
@@ -236,7 +249,7 @@ class PubChemEtlWrapper(object):
             pcidList (list): PubChem compound identifier list
 
         Returns:
-            dict :{<pcid>: {'relatedId1': ... 'relatedId2': ... }, ...}
+            (dict) :{<pcid>: {'relatedId1': ... 'relatedId2': ... }, ...}
 
         """
         rD = self.__pcdcP.getRelatedMapping(pcidList)

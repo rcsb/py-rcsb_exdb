@@ -52,3 +52,4 @@
 23-May-2020 V0.60 Adjust multiprocessing configuration
 28-Jul-2020 V0.61 Added modules PubChemDataCacheProvider() PubChemIndexCacheProvider() PubChemEtlWrapper() and associated tests
 28-Jul-2020 V0.62 Relax testing constraints for PubChem lookups and upversion
+29-Jul-2020 V0.63 Add module PubChemEtlWorkflow() and associated tests

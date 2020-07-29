@@ -45,7 +45,6 @@ class PubChemEtlWrapperTests(unittest.TestCase):
         self.__dataPath = os.path.join(HERE, "test-data")
         self.__cachePath = os.path.join(HERE, "test-output", "CACHE")
         self.__dirPath = os.path.join(self.__cachePath, "PubChem")
-        self.__stashDirPath = os.path.join(self.__workPath, "stash-storage")
         self.__mU = MarshalUtil(workPath=self.__cachePath)
         #
         # Site configuration used for database resource access -
@@ -78,7 +77,7 @@ class PubChemEtlWrapperTests(unittest.TestCase):
         try:
             #  -- Update local chemical indices and  create PubChem mapping index ---
 
-            pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, self.__stashDirPath)
+            pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath)
             ok = pcewP.updateIndex(
                 ccUrlTarget=self.__ccUrlTarget, birdUrlTarget=self.__birdUrlTarget, ccFileNamePrefix="cc-abbrev", exportPath=self.__dirPath, rebuildChemIndices=True, numProc=4,
             )
@@ -105,7 +104,7 @@ class PubChemEtlWrapperTests(unittest.TestCase):
         """
         try:
             #  --
-            pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, self.__stashDirPath)
+            pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath)
             ok = pcewP.fromStash(contentType="index")
             self.assertTrue(ok)
             numObjects = pcewP.restore(contentType="index")
