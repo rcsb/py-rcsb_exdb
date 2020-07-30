@@ -54,3 +54,4 @@
 28-Jul-2020 V0.62 Relax testing constraints for PubChem lookups and upversion
 29-Jul-2020 V0.63 Add module PubChemEtlWorkflow() and associated tests
 29-Jul-2020 V0.64 Add an automatic fallback support for stashed data sets.
+29-Jul-2020 V0.65 Add stash() method to module PubChemEtlWorkflow()

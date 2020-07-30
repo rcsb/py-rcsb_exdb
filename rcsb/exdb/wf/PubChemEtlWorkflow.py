@@ -84,14 +84,14 @@ class PubChemEtlWorkflow(object):
             ok1 = pcewP.toStash(contentType="index")
             _ = pcewP.toStash(contentType="index", fallBack=True)
             eTime = time.time()
-            logger.info("Dumping index data done in (%.4f seconds)", eTime - sTime)
+            logger.info("Stashing index data done in (%.4f seconds)", eTime - sTime)
 
             sTime = time.time()
-            logger.info("Dumping reference data")
+            logger.info("Stashing reference data")
             ok2 = pcewP.toStash(contentType="data")
             _ = pcewP.toStash(contentType="data", fallBack=True)
             eTime = time.time()
-            logger.info("Dumping data done in (%.4f seconds)", eTime - sTime)
+            logger.info("Stashing data done in (%.4f seconds)", eTime - sTime)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return ok1 and ok2
