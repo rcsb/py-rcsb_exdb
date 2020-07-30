@@ -73,6 +73,29 @@ class PubChemEtlWorkflow(object):
             logger.exception("Failing with %s", str(e))
         return ok1 and ok2 and ok3 and ok4
 
+    def stash(self):
+        """ Stash the current cache files containing PubChem correspondences and data.
+        """
+        ok1 = ok2 = False
+        try:
+            #  -- Update local chemical indices and  create PubChem mapping index ---
+            pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
+            sTime = time.time()
+            ok1 = pcewP.toStash(contentType="index")
+            _ = pcewP.toStash(contentType="index", fallBack=True)
+            eTime = time.time()
+            logger.info("Dumping index data done in (%.4f seconds)", eTime - sTime)
+
+            sTime = time.time()
+            logger.info("Dumping reference data")
+            ok2 = pcewP.toStash(contentType="data")
+            _ = pcewP.toStash(contentType="data", fallBack=True)
+            eTime = time.time()
+            logger.info("Dumping data done in (%.4f seconds)", eTime - sTime)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return ok1 and ok2
+
     def restore(self):
         """ Restore the current object store of PubChem correspondences and data from stashed data sets.
         """
