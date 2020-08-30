@@ -305,3 +305,9 @@ class PubChemEtlWrapper(object):
         rD = self.getIdentifiers()
         ok = self.__pcP.load(rD, "identifiers", fmt="json")
         return ok
+
+    def __countIdentifiers(self):
+        #
+        logger.info("Chemical components/BIRD with a PubChem match %d", len(self.__identifierD))
+        for ccId, idDL in self.__identifierD.items():
+
