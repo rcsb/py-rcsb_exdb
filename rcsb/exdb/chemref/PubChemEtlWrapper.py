@@ -203,7 +203,7 @@ class PubChemEtlWrapper(object):
         """
         sourceTypes = kwargs.get("sourceTypes", ["model-xyz"])
         mapD, extraMapD = self.__pcicP.getSelectedMatches(exportPath=self.__dirPath, sourceTypes=sourceTypes)
-        logger.info("mapD (%d) extraMapD (%d) %r", len(mapD), len(extraMapD), extraMapD)
+        logger.debug("mapD (%d) extraMapD (%d) %r", len(mapD), len(extraMapD), extraMapD)
         return mapD, extraMapD
 
     def updateData(self, pcidList, doExport=False):
@@ -305,3 +305,9 @@ class PubChemEtlWrapper(object):
         rD = self.getIdentifiers()
         ok = self.__pcP.load(rD, "identifiers", fmt="json")
         return ok
+
+    def __countIdentifiers(self):
+        #
+        logger.info("Chemical components/BIRD with a PubChem match %d", len(self.__identifierD))
+        for ccId, idDL in self.__identifierD.items():
+
