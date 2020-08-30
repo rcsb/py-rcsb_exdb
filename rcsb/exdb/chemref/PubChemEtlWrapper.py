@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class PubChemEtlWrapper(object):
     """ Workflow wrapper for updating chemical component/BIRD to PubChem mapping and related PubChem reference data.
+
     """
 
     def __init__(self, cfgOb, cachePath, **kwargs):
