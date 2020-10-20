@@ -60,8 +60,7 @@ class PubChemDataCacheProviderTests(unittest.TestCase):
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testALoadAndUpdate(self):
-        """ Test case - load and reload/update data store.
-        """
+        """Test case - load and reload/update data store."""
         try:
             #  -- Update/create cache ---
             exportPath = os.path.join(self.__cachePath, "PubChem")
@@ -73,7 +72,7 @@ class PubChemDataCacheProviderTests(unittest.TestCase):
             #
             idL = pcdcP.getRefIdCodes()
             logger.info("idL %r", idL)
-            self.assertEqual(len(idL), len(self.__cidList))
+            self.assertGreaterEqual(len(idL), len(self.__cidList))
             #
             ok, failList = pcdcP.updateMissing(self.__cidList, exportPath=exportPath)
             self.assertTrue(ok)
@@ -83,8 +82,7 @@ class PubChemDataCacheProviderTests(unittest.TestCase):
             self.fail()
 
     def testBackupAndRestore(self):
-        """ Test case - backup and restore operations.
-        """
+        """Test case - backup and restore operations."""
         try:
             #  -- Backup/Restore cache ---
             pcdcP = PubChemDataCacheProvider(self.__cfgOb, self.__cachePath)
@@ -107,8 +105,7 @@ class PubChemDataCacheProviderTests(unittest.TestCase):
             self.fail()
 
     def testGetRelatedIdentifiers(self):
-        """ Test case - get PubChem xrefs.
-        """
+        """Test case - get PubChem xrefs."""
         try:
             #  --- Get related identifiers ---
             pcdcP = PubChemDataCacheProvider(self.__cfgOb, self.__cachePath)
