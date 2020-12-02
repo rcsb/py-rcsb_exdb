@@ -7,7 +7,7 @@
 #
 ##
 """
-Tests for loading repository holdings information.
+Tests for loading UniProt core collection
 
 """
 
@@ -69,8 +69,7 @@ class UniProtEtlWorkerTests(unittest.TestCase):
 
     @unittest.skip("Disable test - deprecated")
     def testLoadUniProt(self):
-        """ Test case - load UniProt reference data -
-        """
+        """Test case - load UniProt reference data -"""
         try:
             uw = UniProtEtlWorker(self.__cfgOb, self.__cachePath)
             ok = uw.load(self.__updateId, extResource="UniProt", loadType="full")
@@ -82,8 +81,7 @@ class UniProtEtlWorkerTests(unittest.TestCase):
 
     @unittest.skip("Disable test - deprecated")
     def testValidateUniProt(self):
-        """ Test case - validate UniProt reference data -
-        """
+        """Test case - validate UniProt reference data -"""
         try:
             uw = UniProtEtlWorker(self.__cfgOb, self.__cachePath, doValidate=True)
             ok = uw.load(self.__updateId, extResource="UniProt", loadType="full")
