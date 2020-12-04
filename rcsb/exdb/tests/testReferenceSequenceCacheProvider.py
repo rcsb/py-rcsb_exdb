@@ -17,9 +17,9 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
 import resource
 import time
-import tracemalloc
 import unittest
 
 from rcsb.exdb.seq.ReferenceSequenceCacheProvider import ReferenceSequenceCacheProvider
@@ -48,24 +48,18 @@ class ReferenceSequenceCacheProviderTests(unittest.TestCase):
         #
         self.__fetchLimitTest = None
         #
-        #
-        if self.__traceMemory:
-            tracemalloc.start()
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
-        if self.__traceMemory:
-            rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            current, peak = tracemalloc.get_traced_memory()
-            logger.info("Current memory usage is %.4f MB; Peak was %.4f MB Resident size %.4f MB", current / 10 ** 6, peak / 10 ** 6, rusageMax / 10 ** 6)
-            tracemalloc.stop()
+        unitS = "MB" if platform.system() == "Darwin" else "GB"
+        rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        logger.info("Maximum resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
         endTime = time.time()
-        logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testReferenceCacheProvider(self):
-        """ Test case - create and read cached reference sequences.
-        """
+        """Test case - create and read cached reference sequences."""
         try:
             #  -- Update/create cache ---
             rsaP = ReferenceSequenceCacheProvider(self.__cfgOb, maxChunkSize=50, numProc=2, expireDays=0)

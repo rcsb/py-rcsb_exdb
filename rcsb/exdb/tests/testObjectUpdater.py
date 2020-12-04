@@ -17,6 +17,8 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
+import resource
 import time
 import unittest
 
@@ -52,12 +54,14 @@ class ObjectUpdaterTests(unittest.TestCase):
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
+        unitS = "MB" if platform.system() == "Darwin" else "GB"
+        rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        logger.info("Maximum resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
         endTime = time.time()
-        logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testUpdateSelectedEntityContent(self):
-        """ Test case - update of selected entity reference sequence content
-        """
+        """Test case - update of selected entity reference sequence content"""
         try:
             databaseName = "pdbx_core"
             collectionName = "pdbx_core_polymer_entity"

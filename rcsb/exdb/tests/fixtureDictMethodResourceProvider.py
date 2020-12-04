@@ -18,6 +18,7 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import resource
 import time
 import unittest
 
@@ -46,11 +47,11 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
 
     def tearDown(self):
         endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        logger.info("Completed %s at %s (%.4f seconds) (%.2f MB)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime, rusageMax)
 
     def testBuildResourceCache(self):
-        """Fixture - generate and check resource caches
-        """
+        """Fixture - generate and check resource caches"""
         try:
             rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
             ret = rp.cacheResources(useCache=False)
@@ -60,8 +61,7 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
             self.fail()
 
     def testRecoverResourceCache(self):
-        """Fixture - generate and check resource caches
-        """
+        """Fixture - generate and check resource caches"""
         try:
             rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
             ret = rp.cacheResources(useCache=True)

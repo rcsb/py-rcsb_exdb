@@ -19,9 +19,9 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
 import resource
 import time
-import tracemalloc
 import unittest
 
 from rcsb.db.utils.TimeUtil import TimeUtil
@@ -40,7 +40,6 @@ class TreeNodeListWorkerTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super(TreeNodeListWorkerTests, self).__init__(methodName)
         self.__verbose = True
-        self.__traceMemory = True
 
     def setUp(self):
         #
@@ -63,24 +62,18 @@ class TreeNodeListWorkerTests(unittest.TestCase):
         self.__loadType = "full"
         self.__useCache = True
         #
-        if self.__traceMemory:
-            tracemalloc.start()
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
-        if self.__traceMemory:
-            rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            current, peak = tracemalloc.get_traced_memory()
-            logger.info("Current memory usage is %.2f MB; Peak was %.2f MB Resident size %.2f MB", current / 10 ** 6, peak / 10 ** 6, rusageMax / 10 ** 6)
-            tracemalloc.stop()
+        unitS = "MB" if platform.system() == "Darwin" else "GB"
+        rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        logger.info("Maximum resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
         endTime = time.time()
-        logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testTreeLoader(self):
-        """ Test case - extract entity polymer info
-
-        """
+        """Test case - extract entity polymer info"""
         try:
             tU = TimeUtil()
             updateId = tU.getCurrentWeekSignature()

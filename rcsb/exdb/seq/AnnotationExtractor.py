@@ -2,7 +2,9 @@
 # File: AnnotationExtractor.py
 # Date: 15-Oct-2019  jdw
 #
-# Utilities to extract GO identifiers from the core polymer entity collection.
+# Utilities to extract identifiers from the core polymer entity collection.
+# Currently, used to established covered annotations for scoping tree brower displays
+# for expansive annotation hierarchies.
 #
 # Updates:
 #
@@ -20,8 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class AnnotationExtractor(object):
-    """  Utilities to extract GO details from the core entity collection.
-    """
+    """Utilities to extract selected annotation details from the core entity collection."""
 
     def __init__(self, cfgOb):
         self.__cfgOb = cfgOb
@@ -33,8 +34,7 @@ class AnnotationExtractor(object):
         return idL
 
     def __extractEntityAnnotationIdentifiers(self, annotationType):
-        """ Test case - extract unique entity source and host taxonomies
-        """
+        """Extract unique rcsb_polymer_entity_annotation ids for the input annotation type."""
         try:
             obEx = ObjectExtractor(
                 self.__cfgOb,

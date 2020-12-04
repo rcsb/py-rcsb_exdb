@@ -21,7 +21,7 @@ from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.exdb.chemref.ChemRefEtlWorker import ChemRefEtlWorker
 from rcsb.exdb.seq.ReferenceSequenceAnnotationAdapter import ReferenceSequenceAnnotationAdapter
 from rcsb.exdb.seq.ReferenceSequenceAnnotationProvider import ReferenceSequenceAnnotationProvider
-from rcsb.exdb.seq.UniProtEtlWorker import UniProtEtlWorker
+from rcsb.exdb.seq.UniProtCoreEtlWorker import UniProtCoreEtlWorker
 from rcsb.exdb.tree.TreeNodeListWorker import TreeNodeListWorker
 from rcsb.exdb.utils.ObjectTransformer import ObjectTransformer
 from rcsb.utils.config.ConfigUtil import ConfigUtil
@@ -57,7 +57,7 @@ class ExDbWorkflow(object):
             logger.error("Resource cache test or rebuild has failed - exiting")
             return False
         # argument processing
-        if op not in ["etl_tree_node_lists", "etl_chemref", "etl_uniprot", "upd_ref_seq", "refresh_pubchem"]:
+        if op not in ["etl_tree_node_lists", "etl_chemref", "etl_uniprot_core", "upd_ref_seq", "refresh_pubchem"]:
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
@@ -113,8 +113,8 @@ class ExDbWorkflow(object):
                 ok = crw.load(dataSetId, extResource="DrugBank", loadType=loadType)
                 okS = self.loadStatus(crw.getLoadStatus(), readBackCheck=readBackCheck)
 
-            elif op == "etl_uniprot":
-                crw = UniProtEtlWorker(
+            elif op == "etl_uniprot_core":
+                crw = UniProtCoreEtlWorker(
                     self.__cfgOb,
                     self.__cachePath,
                     numProc=numProc,
@@ -156,8 +156,7 @@ class ExDbWorkflow(object):
         return ret
 
     def buildResourceCache(self, rebuildCache=False):
-        """Generate and cache resource dependencies.
-        """
+        """Generate and cache resource dependencies."""
         ret = False
         try:
             rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)

@@ -17,9 +17,9 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
 import resource
 import time
-import tracemalloc
 import unittest
 
 from rcsb.exdb.seq.ReferenceSequenceAssignmentProvider import ReferenceSequenceAssignmentProvider
@@ -52,30 +52,26 @@ class ReferenceSequenceAssignmentProviderTests(unittest.TestCase):
         self.__fetchLimitTest = None
         self.__useCache = False
         #
-        if self.__traceMemory:
-            tracemalloc.start()
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
-        if self.__traceMemory:
-            rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            current, peak = tracemalloc.get_traced_memory()
-            logger.info("Current memory usage is %.4f MB; Peak was %.4f MB Resident size %.4f MB", current / 10 ** 6, peak / 10 ** 6, rusageMax / 10 ** 6)
-            tracemalloc.stop()
+        unitS = "MB" if platform.system() == "Darwin" else "GB"
+        rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        logger.info("Maximum resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
         endTime = time.time()
-        logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testAssignmentProvider(self):
-        """ Test case - create and read cache reference sequences assignments and related data.
+        """Test case - create and read cache reference sequences assignments and related data.
 
-           Some profiling statistics -
-            Current memory usage is 0.711864MB; Peak was 4646.476926MB (full cache no limit)
-            Current memory usage is 1.080839MB; Peak was 1258.231275MB (163)
-            Current memory usage is 0.874476MB; Peak was 1920.689116MB (918)
-            Current memory usage is 0.937091MB; Peak was 2086.910197MB (2739)
-            Current memory usage is 1.3539 MB; Peak was 2300.5170 MB (10000)
-            Current memory usage is 1.3517 MB; Peak was 2714.5467 MB (20K entries)
+        Some profiling statistics -
+         Current memory usage is 0.711864MB; Peak was 4646.476926MB (full cache no limit)
+         Current memory usage is 1.080839MB; Peak was 1258.231275MB (163)
+         Current memory usage is 0.874476MB; Peak was 1920.689116MB (918)
+         Current memory usage is 0.937091MB; Peak was 2086.910197MB (2739)
+         Current memory usage is 1.3539 MB; Peak was 2300.5170 MB (10000)
+         Current memory usage is 1.3517 MB; Peak was 2714.5467 MB (20K entries)
         """
         try:
             #  -- create cache ---

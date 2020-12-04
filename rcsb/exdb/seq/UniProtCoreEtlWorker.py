@@ -1,8 +1,8 @@
 ##
-# File: UniProtEtlWorker.py
+# File: UniProtCoreEtlWorker.py
 # Date: 9-Dec-2019  jdw
 #
-# ETL utilities for processing and loading UniProt reference data.
+# ETL utilities for processing and loading UniProt core collection reference data.
 #
 # Updates:
 #
@@ -29,9 +29,8 @@ from rcsb.exdb.seq.ReferenceSequenceAssignmentProvider import ReferenceSequenceA
 logger = logging.getLogger(__name__)
 
 
-class UniProtEtlWorker(object):
-    """ Prepare and load UniProt 'core' sequence reference data collections.
-    """
+class UniProtCoreEtlWorker(object):
+    """Prepare and load UniProt 'core' sequence reference data collections."""
 
     def __init__(self, cfgOb, cachePath, useCache=True, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, doValidate=False, verbose=False):
         self.__cfgOb = cfgOb
@@ -66,8 +65,7 @@ class UniProtEtlWorker(object):
         return False
 
     def __getReferenceSequenceProvider(self):
-        """
-        """
+        """"""
         try:
             rsaP = ReferenceSequenceAssignmentProvider(
                 self.__cfgOb,
@@ -88,9 +86,7 @@ class UniProtEtlWorker(object):
         return None
 
     def load(self, updateId, extResource, loadType="full"):
-        """ Load sequence reference data
-
-        """
+        """Load sequence reference data"""
         try:
             self.__statusList = []
             desp = DataExchangeStatus()
