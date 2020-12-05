@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)
 
 
 class ReferenceSequenceAssignmentUpdater(object):
-    """  Selected utilities to update reference sequence assignments information
-         in the core_entity collection.
+    """Selected utilities to update reference sequence assignments information
+    in the core_entity collection.
 
     """
 
@@ -77,12 +77,12 @@ class ReferenceSequenceAssignmentUpdater(object):
         return numUpd
 
     def __getPolymerReferenceSequenceAssignments(self, databaseName, collectionName, polymerType, **kwargs):
-        """ Get all accessions assigned to input reference sequence database for the input polymerType.
+        """Get all accessions assigned to input reference sequence database for the input polymerType.
 
-            Returns:
-             (dict): {"1abc_1": "rcsb_entity_container_identifiers": {"reference_sequence_identifiers": []},
-                                "rcsb_polymer_entity_align": [],
-                                "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
+        Returns:
+         (dict): {"1abc_1": "rcsb_entity_container_identifiers": {"reference_sequence_identifiers": []},
+                            "rcsb_polymer_entity_align": [],
+                            "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
         """
         cachePath = kwargs.get("cachePath", ".")
         exDbDir = "exdb"
@@ -295,8 +295,7 @@ class ReferenceSequenceAssignmentUpdater(object):
         return updateDL
 
     def __rebuildReferenceCache(self, refDbName, idList, **kwargs):
-        """
-        """
+        """"""
         dD = {}
         cachePath = kwargs.get("cachePath", ".")
         dirPath = os.path.join(cachePath, "exdb")
@@ -341,8 +340,7 @@ class ReferenceSequenceAssignmentUpdater(object):
         return dD["refDbCache"], dD["matchInfo"]
 
     def __fetchReferenceEntries(self, refDbName, idList, saveText=False, fetchLimit=None):
-        """ Fetch database entries from the input reference sequence database name.
-        """
+        """Fetch database entries from the input reference sequence database name."""
         dD = {"refDbName": refDbName, "refDbCache": {}, "matchInfo": {}}
 
         try:
@@ -418,8 +416,7 @@ class ReferenceSequenceAssignmentUpdater(object):
         return assignIdDifD, pdbUnpIdD, siftsUnpIdD
 
     def getReferenceAccessionAlignSummary(self):
-        """ Summarize the alignment of PDB accession assignments with the current reference sequence database.
-        """
+        """Summarize the alignment of PDB accession assignments with the current reference sequence database."""
         numPrimary = 0
         numSecondary = 0
         numNone = 0

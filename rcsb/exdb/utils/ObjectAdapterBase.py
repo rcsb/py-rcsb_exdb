@@ -10,7 +10,7 @@ class ObjectAdapterBase(object):
         pass
 
     def filter(self, obj, **kwargs):
-        """ Operates on the input object and returns the transformed result.
+        """Operates on the input object and returns the transformed result.
 
         Args:
             obj (object): input object/document

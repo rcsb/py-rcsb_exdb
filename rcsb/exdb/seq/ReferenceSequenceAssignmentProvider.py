@@ -31,9 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class ReferenceSequenceAssignmentProvider(object):
-    """  Utilities to cache content required to update referencence sequence assignments.
-
-    """
+    """Utilities to cache content required to update referencence sequence assignments."""
 
     def __init__(
         self,
@@ -156,12 +154,12 @@ class ReferenceSequenceAssignmentProvider(object):
         return refIdMapD, matchD, refD
 
     def __getPolymerReferenceSequenceAssignments(self, databaseName, collectionName, polymerType, fetchLimit):
-        """ Get all accessions assigned to input reference sequence database for the input polymerType.
+        """Get all accessions assigned to input reference sequence database for the input polymerType.
 
-            Returns:
-             (dict): {"1abc_1": "rcsb_polymer_entity_container_identifiers": {"reference_sequence_identifiers": []},
-                                "rcsb_polymer_entity_align": [],
-                                "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
+        Returns:
+         (dict): {"1abc_1": "rcsb_polymer_entity_container_identifiers": {"reference_sequence_identifiers": []},
+                            "rcsb_polymer_entity_align": [],
+                            "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
         """
         try:
             obEx = ObjectExtractor(
@@ -234,8 +232,7 @@ class ReferenceSequenceAssignmentProvider(object):
 
     #
     def __rebuildReferenceCache(self, idList, refDbName, **kwargs):
-        """
-        """
+        """"""
         fetchLimit = None
         doMissing = True
         dD = {}
@@ -301,8 +298,7 @@ class ReferenceSequenceAssignmentProvider(object):
         return matchD
 
     def __fetchReferenceEntries(self, refDbName, idList, saveText=False, fetchLimit=None):
-        """ Fetch database entries from the input reference sequence database name.
-        """
+        """Fetch database entries from the input reference sequence database name."""
         dD = {"refDbName": refDbName, "refDbCache": {}}
         idD = {"matchInfo": {}, "refIdMap": {}}
 

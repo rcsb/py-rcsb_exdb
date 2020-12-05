@@ -23,9 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class CitationUtils(object):
-    """ Utilities to process and normalize PDB citation data.
-
-    """
+    """Utilities to process and normalize PDB citation data."""
 
     def __init__(self, cfgOb, **kwargs):
         self.__cfgOb = cfgOb
@@ -37,9 +35,7 @@ class CitationUtils(object):
         return self.__ce.getEntryCount()
 
     def __getEntryCitations(self, **kwargs):
-        """ Extract entry citations
-
-        """
+        """Extract entry citations"""
         ce = None
         exdbDirPath = kwargs.get("exdbDirPath", None)
         saveKwargs = kwargs.get("cacheKwargs", {"fmt": "pickle"})

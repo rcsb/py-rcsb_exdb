@@ -24,32 +24,32 @@ logger = logging.getLogger(__name__)
 
 
 class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
-    """  Selected utilities to update reference sequence assignments information
-         in the core_entity collection.
+    """Selected utilities to update reference sequence assignments information
+     in the core_entity collection.
 
-        "pdbx_ec" : "5.2.1.8",
-        "rcsb_ec_lineage" : [
-            {
-                "id" : "5",
-                "depth" : NumberInt(1),
-                "name" : "Isomerases"
-            },
-            {
-                "id" : "5.2",
-                "depth" : NumberInt(2),
-                "name" : "cis-trans-Isomerases"
-            },
-            {
-                "id" : "5.2.1",
-                "depth" : NumberInt(3),
-                "name" : "cis-trans Isomerases (only sub-subclass identified to date)"
-            },
-            {
-                "id" : "5.2.1.8",
-                "depth" : NumberInt(4),
-                "name" : "peptidylprolyl isomerase"
-            }
-        ],
+    "pdbx_ec" : "5.2.1.8",
+    "rcsb_ec_lineage" : [
+        {
+            "id" : "5",
+            "depth" : NumberInt(1),
+            "name" : "Isomerases"
+        },
+        {
+            "id" : "5.2",
+            "depth" : NumberInt(2),
+            "name" : "cis-trans-Isomerases"
+        },
+        {
+            "id" : "5.2.1",
+            "depth" : NumberInt(3),
+            "name" : "cis-trans Isomerases (only sub-subclass identified to date)"
+        },
+        {
+            "id" : "5.2.1.8",
+            "depth" : NumberInt(4),
+            "name" : "peptidylprolyl isomerase"
+        }
+    ],
     """
 
     def __init__(self, refSeqAssignProvider):
@@ -519,8 +519,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
         return retL
 
     def getReferenceAccessionAlignSummary(self):
-        """ Summarize the alignment of PDB accession assignments with the current reference sequence database.
-        """
+        """Summarize the alignment of PDB accession assignments with the current reference sequence database."""
         numPrimary = 0
         numSecondary = 0
         numNone = 0

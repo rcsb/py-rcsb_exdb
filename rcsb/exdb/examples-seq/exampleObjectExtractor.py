@@ -57,8 +57,7 @@ class ObjectExtractorTests(unittest.TestCase):
         logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testExtractEntityTaxonomyContent(self):
-        """ Test case - extract unique entity source and host taxonomies
-        """
+        """Test case - extract unique entity source and host taxonomies"""
         tL = []
         try:
             obEx = ObjectExtractor(

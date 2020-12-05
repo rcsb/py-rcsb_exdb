@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)
 
 
 class ReferenceUpdateWorker(object):
-    """  A skeleton class that implements the interface expected by the multiprocessing
-         for fetching reference sequences --
+    """A skeleton class that implements the interface expected by the multiprocessing
+    for fetching reference sequences --
     """
 
     def __init__(self, cfgOb, **kwargs):
@@ -42,8 +42,8 @@ class ReferenceUpdateWorker(object):
         self.__createCollections(self.__databaseName, self.__matchDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
 
     def updateList(self, dataList, procName, optionsD, workingDir):
-        """  Update the input list of reference sequence identifiers and return
-             matching diagnostics and reference feature data.
+        """Update the input list of reference sequence identifiers and return
+        matching diagnostics and reference feature data.
         """
         _ = optionsD
         _ = workingDir
@@ -106,9 +106,7 @@ class ReferenceUpdateWorker(object):
 
 
 class ReferenceSequenceCacheProvider(object):
-    """  Utilities to cache referencence sequence data and correspondence mappings.
-
-    """
+    """Utilities to cache referencence sequence data and correspondence mappings."""
 
     def __init__(self, cfgOb, siftsProvider=None, maxChunkSize=50, fetchLimit=None, expireDays=7, numProc=1, **kwargs):
         self.__cfgOb = cfgOb
@@ -179,7 +177,9 @@ class ReferenceSequenceCacheProvider(object):
         #
         if logSizes:
             logger.info(
-                "RefMatchD %.2f RefD %.2f", getObjSize(self.__matchD) / 1000000.0, getObjSize(self.__refD) / 1000000.0,
+                "RefMatchD %.2f RefD %.2f",
+                getObjSize(self.__matchD) / 1000000.0,
+                getObjSize(self.__refD) / 1000000.0,
             )
         return ok and okC
 
@@ -285,7 +285,12 @@ class ReferenceSequenceCacheProvider(object):
     def __getReferenceData(self, databaseName, collectionName, selectD=None):
         logger.info("Searching %s %s with selection query %r", databaseName, collectionName, selectD)
         obEx = ObjectExtractor(
-            self.__cfgOb, databaseName=databaseName, collectionName=collectionName, keyAttribute="rcsb_id", uniqueAttributes=["rcsb_id"], selectionQuery=selectD,
+            self.__cfgOb,
+            databaseName=databaseName,
+            collectionName=collectionName,
+            keyAttribute="rcsb_id",
+            uniqueAttributes=["rcsb_id"],
+            selectionQuery=selectD,
         )
         docCount = obEx.getCount()
         logger.debug("Reference data match count %d", docCount)
@@ -293,11 +298,11 @@ class ReferenceSequenceCacheProvider(object):
         return objD
 
     def __getPolymerReferenceSequenceAssignments(self, fetchLimit):
-        """ Get all accessions assigned to input reference sequence database for the input polymerType.
+        """Get all accessions assigned to input reference sequence database for the input polymerType.
 
-            Returns:
-             (dict): {"1abc_1": "rcsb_polymer_entity_container_identifiers": {"reference_sequence_identifiers": []},
-                                "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
+        Returns:
+         (dict): {"1abc_1": "rcsb_polymer_entity_container_identifiers": {"reference_sequence_identifiers": []},
+                            "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
         """
         try:
             databaseName = "pdbx_core"

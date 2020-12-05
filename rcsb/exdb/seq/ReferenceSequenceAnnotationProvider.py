@@ -30,9 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class ReferenceSequenceAnnotationProvider(object):
-    """  Utilities to cache content required to update referencence sequence annotations.
-
-    """
+    """Utilities to cache content required to update referencence sequence annotations."""
 
     def __init__(self, cfgOb, maxChunkSize=100, fetchLimit=None, numProc=2, expireDays=14, **kwargs):
         self.__cfgOb = cfgOb

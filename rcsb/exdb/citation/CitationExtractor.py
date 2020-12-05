@@ -24,9 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class CitationExtractor(object):
-    """ Utilities to extract citation related data from the core_entry collection.
-
-    """
+    """Utilities to extract citation related data from the core_entry collection."""
 
     def __init__(self, cfgOb, **kwargs):
         self.__cfgOb = cfgOb
@@ -67,42 +65,42 @@ class CitationExtractor(object):
 
     def __buildIndices(self, entryD):
         """
-            Example:
-             "entryD": {
-                          "5KAL": {
-                             "citation": [
-                                {
-                                   "country": "UK",
-                                   "id": "primary",
-                                   "journal_abbrev": "Nucleic Acids Res.",
-                                   "journal_id_ASTM": "NARHAD",
-                                   "journal_id_CSD": "0389",
-                                   "journal_id_ISSN": "1362-4962",
-                                   "journal_volume": "44",
-                                   "page_first": "10862",
-                                   "page_last": "10878",
-                                   "title": "RNA Editing TUTase 1: structural foundation of substrate recognition, complex interactions and drug targeting.",
-                                   "year": 2016,
-                                   "pdbx_database_id_DOI": "10.1093/nar/gkw917",
-                                   "pdbx_database_id_PubMed": 27744351,
-                                   "rcsb_authors": [
-                                      "Rajappa-Titu, L.",
-                                      "Suematsu, T.",
-                                      "Munoz-Tello, P.",
-                                      "Long, M.",
-                                      "Demir, O.",
-                                      "Cheng, K.J.",
-                                      "Stagno, J.R.",
-                                      "Luecke, H.",
-                                      "Amaro, R.E.",
-                                      "Aphasizheva, I.",
-                                      "Aphasizhev, R.",
-                                      "Thore, S."
-                                   ]
-                                }
-                             ],
-                             "_entry_id": "5KAL"
-                          },
+        Example:
+         "entryD": {
+                      "5KAL": {
+                         "citation": [
+                            {
+                               "country": "UK",
+                               "id": "primary",
+                               "journal_abbrev": "Nucleic Acids Res.",
+                               "journal_id_ASTM": "NARHAD",
+                               "journal_id_CSD": "0389",
+                               "journal_id_ISSN": "1362-4962",
+                               "journal_volume": "44",
+                               "page_first": "10862",
+                               "page_last": "10878",
+                               "title": "RNA Editing TUTase 1: structural foundation of substrate recognition, complex interactions and drug targeting.",
+                               "year": 2016,
+                               "pdbx_database_id_DOI": "10.1093/nar/gkw917",
+                               "pdbx_database_id_PubMed": 27744351,
+                               "rcsb_authors": [
+                                  "Rajappa-Titu, L.",
+                                  "Suematsu, T.",
+                                  "Munoz-Tello, P.",
+                                  "Long, M.",
+                                  "Demir, O.",
+                                  "Cheng, K.J.",
+                                  "Stagno, J.R.",
+                                  "Luecke, H.",
+                                  "Amaro, R.E.",
+                                  "Aphasizheva, I.",
+                                  "Aphasizhev, R.",
+                                  "Thore, S."
+                               ]
+                            }
+                         ],
+                         "_entry_id": "5KAL"
+                      },
         """
         indD = {}
         missingCitationCount = 0
@@ -166,8 +164,7 @@ class CitationExtractor(object):
         return len(self.__entryD)
 
     def __extractCitations(self):
-        """ Test case - extract unique entity source and host taxonomies
-        """
+        """Test case - extract unique entity source and host taxonomies"""
         try:
             obEx = ObjectExtractor(
                 self.__cfgOb,

@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class ChemRefExtractor(object):
-    """ Selected utilities to extract data from chemical component core collections.
-    """
+    """Selected utilities to extract data from chemical component core collections."""
 
     def __init__(self, cfgOb):
         self.__cfgOb = cfgOb
@@ -32,7 +31,7 @@ class ChemRefExtractor(object):
         #
 
     def getChemCompAccessionMapping(self, extResource, **kwargs):
-        """ Get the accession code mapping between chemical component identifiers and identifier(s) for the
+        """Get the accession code mapping between chemical component identifiers and identifier(s) for the
             input external resource.
 
         Args:

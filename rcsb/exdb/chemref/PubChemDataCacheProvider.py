@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 
 
 class PubChemDataUpdateWorker(object):
-    """  A skeleton worker class that implements the interface expected by the multiprocessing module
-         for fetching PubChem chemical reference data --
+    """A skeleton worker class that implements the interface expected by the multiprocessing module
+    for fetching PubChem chemical reference data --
     """
 
     def __init__(self, cfgOb, **kwargs):
@@ -47,8 +47,8 @@ class PubChemDataUpdateWorker(object):
         self.__pcU = PubChemUtils()
 
     def updateList(self, dataList, procName, optionsD, workingDir):
-        """  Update the input list of reference data identifiers (ChemicalIdentifier()) and return
-             matching diagnostics and reference feature data.
+        """Update the input list of reference data identifiers (ChemicalIdentifier()) and return
+        matching diagnostics and reference feature data.
 
         """
         _ = workingDir
@@ -61,7 +61,7 @@ class PubChemDataUpdateWorker(object):
         retList2 = []
         diagList = []
         emptyList = []
-        #
+        # -
         try:
             tU = TimeUtil()
             pcidList = dataList
@@ -125,9 +125,7 @@ class PubChemDataUpdateWorker(object):
 
 
 class PubChemDataCacheProvider(object):
-    """  Utilities to cache chemical reference data extracted from PubChem compound data
-
-    """
+    """Utilities to cache chemical reference data extracted from PubChem compound data"""
 
     def __init__(self, cfgOb, cachePath):
         self.__cfgOb = cfgOb
@@ -328,7 +326,7 @@ class PubChemDataCacheProvider(object):
         return ok, failList
 
     def getRelatedMapping(self, pcidList):
-        """ Assemble related identifiers (xrefs) for the input PubChem compound Id list.
+        """Assemble related identifiers (xrefs) for the input PubChem compound Id list.
 
         Args:
             pcidList (list): PubChem compound ID list
@@ -380,7 +378,7 @@ class PubChemDataCacheProvider(object):
         return objD
 
     def __restore(self, objD, databaseName, collectionName, indexAttributeNames=None):
-        """ Internal method to restore the input database/collection using the input data object.
+        """Internal method to restore the input database/collection using the input data object.
 
         Args:
             objD (obj): Target reference or index data object

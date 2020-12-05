@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class ObjectTransformer(object):
-    """ Utilities to extract and update object from the document object server.
-    """
+    """Utilities to extract and update object from the document object server."""
 
     def __init__(self, cfgOb, objectAdapter=None, **kwargs):
         self.__cfgOb = cfgOb
@@ -53,8 +52,7 @@ class ObjectTransformer(object):
         return ok and okS
 
     def __selectObjectIds(self, databaseName, collectionName, selectionQueryD):
-        """  Return a list of object identifiers for the input selection query.
-        """
+        """Return a list of object identifiers for the input selection query."""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -73,8 +71,7 @@ class ObjectTransformer(object):
         #
 
     def __transform(self, databaseName, collectionName, docSelectList, logIncrement=100):
-        """  Return a list of object identifiers for the input selection query.
-        """
+        """Return a list of object identifiers for the input selection query."""
         #
         ok = True
         try:

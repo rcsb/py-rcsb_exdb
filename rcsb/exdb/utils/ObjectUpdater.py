@@ -23,9 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class ObjectUpdater(object):
-    """ Utilities to update document features from the document object server.
-
-    """
+    """Utilities to update document features from the document object server."""
 
     def __init__(self, cfgOb, **kwargs):
         self.__cfgOb = cfgOb
@@ -70,7 +68,7 @@ class ObjectUpdater(object):
         return numTotal
 
     def createCollection(self, databaseName, collectionName, indexAttributeNames=None, indexName="primary", checkExists=False, bsonSchema=None):
-        """ Create collection and optionally set index attributes for the named index and validation schema for a new collection.
+        """Create collection and optionally set index attributes for the named index and validation schema for a new collection.
 
         Args:
             databaseName (str): target database name

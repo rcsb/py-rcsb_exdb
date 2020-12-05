@@ -24,9 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class ReferenceSequenceUtils(object):
-    """  Selected utilities to integrate reference sequence information with PDB polymer entity data.
-
-    """
+    """Selected utilities to integrate reference sequence information with PDB polymer entity data."""
 
     def __init__(self, cfgOb, refDbName, **kwargs):
         self.__cfgOb = cfgOb
@@ -37,9 +35,7 @@ class ReferenceSequenceUtils(object):
         self.__refD, self.__matchD = self.__rebuildCache(refDbName, self.__refIdList, **kwargs)
 
     def __getReferenceAssignments(self, refDbName, **kwargs):
-        """ Get all accessions assigned to input reference sequence database
-
-        """
+        """Get all accessions assigned to input reference sequence database"""
         rL = []
         exdbDirPath = kwargs.get("exdbDirPath", None)
         cacheKwargs = kwargs.get("cacheKwargs", None)
@@ -58,8 +54,7 @@ class ReferenceSequenceUtils(object):
         return rL
 
     def __rebuildCache(self, refDbName, idList, **kwargs):
-        """
-        """
+        """"""
         dD = {}
         dirPath = kwargs.get("exdbDirPath", None)
         cacheKwargs = kwargs.get("cacheKwargs", None)
@@ -90,8 +85,7 @@ class ReferenceSequenceUtils(object):
         return dD["refDbCache"], dD["matchInfo"]
 
     def __fetchReferenceEntries(self, refDbName, idList, saveText=False, fetchLimit=None):
-        """ Fetch database entries from the input reference sequence database name.
-        """
+        """Fetch database entries from the input reference sequence database name."""
         dD = {"refDbName": refDbName, "refDbCache": {}, "matchInfo": {}}
 
         try:
@@ -114,8 +108,7 @@ class ReferenceSequenceUtils(object):
                 logger.info("%-15s = %r", k, v)
 
     def getReferenceAccessionAlignSummary(self):
-        """ Summarize the alignment of PDB accession assignments with the current reference sequence database.
-        """
+        """Summarize the alignment of PDB accession assignments with the current reference sequence database."""
         numPrimary = 0
         numSecondary = 0
         numNone = 0

@@ -26,9 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class ObjectExtractor(object):
-    """ Utilities to extract document features from the document object server.
-
-    """
+    """Utilities to extract document features from the document object server."""
 
     def __init__(self, cfgOb, **kwargs):
         self.__cfgOb = cfgOb
@@ -101,8 +99,7 @@ class ObjectExtractor(object):
         return cD[keyAttribute]
 
     def __selectObjects(self, **kwargs):
-        """  Return a dictionary of objects satifying the input conditions (e.g. method, resolution limit)
-        """
+        """Return a dictionary of objects satifying the input conditions (e.g. method, resolution limit)"""
         databaseName = kwargs.get("databaseName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_entry")
         selectionQueryD = kwargs.get("selectionQuery", {})
@@ -150,8 +147,8 @@ class ObjectExtractor(object):
         #
 
     def __select(self, **kwargs):
-        """  Return a dictionary of object content satifying the input conditions
-             (e.g. method, resolution limit) and selection options.
+        """Return a dictionary of object content satifying the input conditions
+        (e.g. method, resolution limit) and selection options.
         """
         databaseName = kwargs.get("databaseName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_entry")
@@ -211,8 +208,7 @@ class ObjectExtractor(object):
         return tuple(rL)
 
     def __getKeyValue(self, dct, keyName):
-        """  Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested).
-        """
+        """Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested)."""
         try:
             kys = keyName.split(".")
             for key in kys:
@@ -258,7 +254,7 @@ class ObjectExtractor(object):
         return self.__walk(dObj, jsonPath=path, funct=self.__saveCallBack)
 
     def __walk(self, jsonObj, jsonPath=None, funct=None):
-        """ Walk JSON data types. An optional funct() is called to mutate
+        """Walk JSON data types. An optional funct() is called to mutate
         the value of each element. The jsonPath is updated at each element.
         """
         if jsonPath is None:
@@ -277,8 +273,7 @@ class ObjectExtractor(object):
             return funct(jsonPath, value)
 
     def __toPath(self, path):
-        """ Convert path strings into path lists.
-        """
+        """Convert path strings into path lists."""
         if isinstance(path, list):
             return path  # already in list format
 

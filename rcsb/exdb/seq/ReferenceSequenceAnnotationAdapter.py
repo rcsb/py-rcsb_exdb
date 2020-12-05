@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
-    """  Selected utilities to update reference sequence annotations information
-         in the core_entity collection.
+    """Selected utilities to update reference sequence annotations information
+    in the core_entity collection.
     """
 
     def __init__(self, referenceSequenceAnnotationProvider):
@@ -533,8 +533,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
         return retL
 
     def getReferenceAccessionAlignSummary(self):
-        """ Summarize the alignment of PDB accession assignments with the current reference sequence database.
-        """
+        """Summarize the alignment of PDB accession assignments with the current reference sequence database."""
         numPrimary = 0
         numSecondary = 0
         numNone = 0

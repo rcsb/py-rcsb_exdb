@@ -73,9 +73,7 @@ class EntityPolymerExtractorFullTests(unittest.TestCase):
 
     @unittest.skip("rebuild cache")
     def testRebuildCache(self):
-        """ Test case - extract entity polymer info - rebuild full cache of extracted entity polymer data -
-
-        """
+        """Test case - extract entity polymer info - rebuild full cache of extracted entity polymer data -"""
         try:
             epe = EntityPolymerExtractor(
                 self.__cfgOb, saveCachePath=self.__fullEntitySaveCachePath, useCache=False, saveCacheKwargs=self.__fullCacheKwargs, entryLimit=self.__entryLimitFull
@@ -91,9 +89,7 @@ class EntityPolymerExtractorFullTests(unittest.TestCase):
             self.fail()
 
     def testAccessEntityPolymerFeatures(self):
-        """ Test case - access cached entity polymer info from full cache
-
-        """
+        """Test case - access cached entity polymer info from full cache"""
         try:
             epe = EntityPolymerExtractor(self.__cfgOb, saveCachePath=self.__fullEntitySaveCachePath, useCache=True, saveCacheKwargs=self.__fullCacheKwargs)
             eCount = epe.getEntryCount()
@@ -116,9 +112,7 @@ class EntityPolymerExtractorFullTests(unittest.TestCase):
             self.fail()
 
     def testAccessEntityPolymerReadCache(self):
-        """ Test case - access cached entity polymer info from full cache
-
-        """
+        """Test case - access cached entity polymer info from full cache"""
         try:
             epe = EntityPolymerExtractor(self.__cfgOb, saveCachePath=self.__fullEntitySaveCachePath, useCache=True, saveCacheKwargs=self.__fullCacheKwargs)
             logger.info("Cache entry count %d", epe.getEntryCount())
@@ -140,9 +134,7 @@ class EntityPolymerExtractorFullTests(unittest.TestCase):
             self.fail()
 
     def testTaxonomyEntityPolymerReadCache(self):
-        """ Test case - evaluate taxonomy - from full cache
-
-        """
+        """Test case - evaluate taxonomy - from full cache"""
         try:
             taxIdList = [562, 9606, 3701]
             for taxId in taxIdList:
