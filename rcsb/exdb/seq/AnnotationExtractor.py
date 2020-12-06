@@ -2,7 +2,8 @@
 # File: AnnotationExtractor.py
 # Date: 15-Oct-2019  jdw
 #
-# Utilities to extract identifiers from the core polymer entity collection.
+# Utilities to extract selected annotation details from the exchange collections.
+#
 # Currently, used to established covered annotations for scoping tree brower displays
 # for expansive annotation hierarchies.
 #
@@ -22,24 +23,32 @@ logger = logging.getLogger(__name__)
 
 
 class AnnotationExtractor(object):
-    """Utilities to extract selected annotation details from the core entity collection."""
+    """Utilities to extract selected annotation details from the exchange collections."""
 
     def __init__(self, cfgOb):
         self.__cfgOb = cfgOb
-        self.__databaseName = "pdbx_core"
-        self.__collectionName = "pdbx_core_polymer_entity"
 
     def getUniqueIdentifiers(self, annotationType):
+        """Extract unique rcsb_polymer_entity_annotation ids for the input annotation type.
+
+        Args:
+            annotationType (str): a value of rcsb_polymer_entity_annotation.type
+
+        Returns:
+            list: unique list of identifiers of annotationType
+        """
         idL = self.__extractEntityAnnotationIdentifiers(annotationType)
         return idL
 
     def __extractEntityAnnotationIdentifiers(self, annotationType):
         """Extract unique rcsb_polymer_entity_annotation ids for the input annotation type."""
         try:
+            databaseName = "pdbx_core"
+            collectionName = "pdbx_core_polymer_entity"
             obEx = ObjectExtractor(
                 self.__cfgOb,
-                databaseName=self.__databaseName,
-                collectionName=self.__collectionName,
+                databaseName=databaseName,
+                collectionName=collectionName,
                 cacheFilePath=None,
                 useCache=False,
                 keyAttribute="entity",
