@@ -63,8 +63,7 @@ class PubChemIndexCacheProviderTests(unittest.TestCase):
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testAPubChemIndexCacheProvider(self):
-        """ Test case - search, backup, restore and select PubChem correspondences for reference chemical definitions.
-        """
+        """Test case - search, backup, restore and select PubChem correspondences for reference chemical definitions."""
         try:
             #  -- Update/create mapping index cache ---
             numObj = 30
@@ -108,8 +107,7 @@ class PubChemIndexCacheProviderTests(unittest.TestCase):
             self.fail()
 
     def testBPubChemIndexCacheProvider(self):
-        """ Test case -  verify the PubChem index cache
-        """
+        """Test case -  verify the PubChem index cache"""
         try:
             #  -- check cache
             pcicP = PubChemIndexCacheProvider(self.__cfgOb, self.__cachePath)

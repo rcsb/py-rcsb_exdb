@@ -34,8 +34,8 @@ logger = logging.getLogger(__name__)
 
 
 class PubChemUpdateWorker(object):
-    """  A skeleton worker class that implements the interface expected by the multiprocessing module
-         for fetching CCD/BIRD to PubChem chemical compound identier correspondences --
+    """A skeleton worker class that implements the interface expected by the multiprocessing module
+    for fetching CCD/BIRD to PubChem chemical compound identier correspondences --
     """
 
     def __init__(self, cfgOb, searchIdxD, **kwargs):
@@ -74,26 +74,26 @@ class PubChemUpdateWorker(object):
         return chemIdList
 
     def updateList(self, dataList, procName, optionsD, workingDir):
-        """  Update the input list of reference data identifiers (ChemicalIdentifier()) and return
-             matching diagnostics and reference feature data.
-             {
-                    "_id" : ObjectId("5e8dfb49eab967a0483a0472"),
-                    "rcsb_id" : "local reference ID (ccid|bird)", << LOCAL CANNONICAL ID (e.g. ATP, PRD_000100)
-                    "rcsb_last_update" : ISODate("2020-04-08T16:26:47.993+0000"),
-                    "matched_ids" : [
-                        {"matched_id":  "<external reference ID code>", "search_id_type" : "oe-smiles", "search_id_source": "model-xyz",
-                                        'source_index_name': <>, 'source_inchikey': <>, 'source_smiles': <>},
-                        {"matched_id":  "<external reference ID code>", "search_id_type": ... , "search_id_source": ... , ...}
-                        ]                          ]
-                    },
-                }
-                // Failed matches are recorded with NO matchedIds:
-                {
-                    "_id" : ObjectId("5e8dfb49eab967a0483a04a3"),
-                    "rcsb_id" : "local reference ID (ccid|bird)", << LOCAL ID
-                    "rcsb_last_update" : ISODate("2020-04-08T16:26:48.025+0000"),
-                }
-                #
+        """Update the input list of reference data identifiers (ChemicalIdentifier()) and return
+        matching diagnostics and reference feature data.
+        {
+               "_id" : ObjectId("5e8dfb49eab967a0483a0472"),
+               "rcsb_id" : "local reference ID (ccid|bird)", << LOCAL CANNONICAL ID (e.g. ATP, PRD_000100)
+               "rcsb_last_update" : ISODate("2020-04-08T16:26:47.993+0000"),
+               "matched_ids" : [
+                   {"matched_id":  "<external reference ID code>", "search_id_type" : "oe-smiles", "search_id_source": "model-xyz",
+                                   'source_index_name': <>, 'source_inchikey': <>, 'source_smiles': <>},
+                   {"matched_id":  "<external reference ID code>", "search_id_type": ... , "search_id_source": ... , ...}
+                   ]                          ]
+               },
+           }
+           // Failed matches are recorded with NO matchedIds:
+           {
+               "_id" : ObjectId("5e8dfb49eab967a0483a04a3"),
+               "rcsb_id" : "local reference ID (ccid|bird)", << LOCAL ID
+               "rcsb_last_update" : ISODate("2020-04-08T16:26:48.025+0000"),
+           }
+           #
         """
         _ = workingDir
         chunkSize = optionsD.get("chunkSize", 50)
@@ -200,9 +200,7 @@ class PubChemUpdateWorker(object):
 
 
 class PubChemIndexCacheProvider(object):
-    """  Utilities to manage chemical component/BIRD to PubChem compound identifier mapping data.
-
-    """
+    """Utilities to manage chemical component/BIRD to PubChem compound identifier mapping data."""
 
     def __init__(self, cfgOb, cachePath):
         self.__cfgOb = cfgOb
@@ -396,7 +394,7 @@ class PubChemIndexCacheProvider(object):
         return ok
 
     def getMatches(self):
-        """ Get all PubChem correspondences from the current match index..
+        """Get all PubChem correspondences from the current match index..
 
         Returns:
 
@@ -418,7 +416,7 @@ class PubChemIndexCacheProvider(object):
         return pcidList
 
     def getSelectedMatches(self, **kwargs):
-        """ Select preferred PubChem correspondences from the current match index for the input source component build type.
+        """Select preferred PubChem correspondences from the current match index for the input source component build type.
             and separatel return alternative matches for other source types.
 
         Args:
@@ -574,7 +572,7 @@ class PubChemIndexCacheProvider(object):
         return ok, failList
 
     def __restore(self, objD, databaseName, collectionName, indexAttributeNames=None):
-        """ Internal method to restore the input database/collection using the input data object.
+        """Internal method to restore the input database/collection using the input data object.
 
         Args:
             objD (obj): Target reference or index data object
@@ -611,8 +609,7 @@ class PubChemIndexCacheProvider(object):
     #                           --- --- ---
     # -- Load or rebuild source chemical reference data indices --
     def __rebuildChemCompSourceIndices(self, numProc, **kwargs):
-        """ Rebuild source indices of chemical component definitions.
-        """
+        """Rebuild source indices of chemical component definitions."""
         logger.info("Rebuilding chemical definition index.")
         ok1, ccidxP = self.__buildChemCompIndex(**kwargs)
         logger.info("Rebuilding chemical search indices.")
@@ -620,8 +617,7 @@ class PubChemIndexCacheProvider(object):
         return ok1 & ok2, ccidxP, ccsidxP
 
     def __buildChemCompIndex(self, **kwargs):
-        """ Build chemical component cache files from the input component dictionaries
-        """
+        """Build chemical component cache files from the input component dictionaries"""
         try:
             molLimit = kwargs.get("molLimit", None)
             useCache = not kwargs.get("rebuildChemIndices", False)
@@ -642,8 +638,7 @@ class PubChemIndexCacheProvider(object):
         return False, None
 
     def __buildChemCompSearchIndex(self, numProc, **kwargs):
-        """ Test build search index chemical component cache files from the input component dictionaries
-        """
+        """Test build search index chemical component cache files from the input component dictionaries"""
         try:
             cachePath = kwargs.get("cachePath", self.__cachePath)
             molLimit = kwargs.get("molLimit", None)

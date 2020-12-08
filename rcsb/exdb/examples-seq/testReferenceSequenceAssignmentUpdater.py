@@ -55,8 +55,7 @@ class ReferenceSequenceAssignmentUpdaterTests(unittest.TestCase):
         logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testUpdateAssignments(self):
-        """ Test case - get reference sequences and update candidates
-        """
+        """Test case - get reference sequences and update candidates"""
         try:
             rsau = ReferenceSequenceAssignmentUpdater(self.__cfgOb, useCache=False, cachePath=self.__cachePath, fetchLimit=self.__fetchLimitTest, siftsAbbreviated="TEST")
             updateLimit = None

@@ -23,9 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class PubChemEtlWrapper(object):
-    """ Workflow wrapper for updating chemical component/BIRD to PubChem mapping and related PubChem reference data.
-
-    """
+    """Workflow wrapper for updating chemical component/BIRD to PubChem mapping and related PubChem reference data."""
 
     def __init__(self, cfgOb, cachePath, **kwargs):
         self.__cfgOb = cfgOb
@@ -128,7 +126,11 @@ class PubChemEtlWrapper(object):
             self.__stashUrl = self.__stashUrlFallBack
         if contentType.lower() == "index":
             return self.__pcicP.fromStash(
-                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix,
+                self.__stashUrl,
+                self.__stashDirPath,
+                userName=self.__stashUserName,
+                password=self.__stashPassword,
+                remoteStashPrefix=self.__stashRemotePrefix,
             )
         elif contentType.lower() == "data":
             return self.__pcdcP.fromStash(
@@ -141,7 +143,7 @@ class PubChemEtlWrapper(object):
         return False
 
     def updateIndex(self, **kwargs):
-        """ Search and store PubChem correspondences for CCD and BIRD reference chemical definitions.
+        """Search and store PubChem correspondences for CCD and BIRD reference chemical definitions.
 
         Args:
             ccUrlTarget (str, optional): target url for chemical component dictionary resource file (default: None=all public)
@@ -208,7 +210,7 @@ class PubChemEtlWrapper(object):
         return mapD, extraMapD
 
     def updateData(self, pcidList, doExport=False):
-        """ Update PubChem reference data for the input list of compound identifiers.
+        """Update PubChem reference data for the input list of compound identifiers.
 
         Args:
             pcidList (list,str): PubChem compound identifiers
@@ -227,7 +229,7 @@ class PubChemEtlWrapper(object):
         return ok
 
     def updateMatchedData(self, exportRaw=False):
-        """ Update PubChem reference data using matched compound identifiers in the current index.
+        """Update PubChem reference data using matched compound identifiers in the current index.
 
         Returns:
             (bool): True for success or False otherwise

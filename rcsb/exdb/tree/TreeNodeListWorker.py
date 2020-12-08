@@ -33,8 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 class TreeNodeListWorker(object):
-    """ Prepare and load repository holdings and repository update data.
-    """
+    """Prepare and load repository holdings and repository update data."""
 
     def __init__(self, cfgOb, cachePath, numProc=1, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False, useCache=False):
         self.__cfgOb = cfgOb
@@ -64,7 +63,7 @@ class TreeNodeListWorker(object):
         return False
 
     def load(self, updateId, loadType="full"):
-        """ Load tree node lists and status data -
+        """Load tree node lists and status data -
 
         Relevant configuration options:
 

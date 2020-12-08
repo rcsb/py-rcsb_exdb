@@ -27,9 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class EntityPolymerExtractor(object):
-    """ Utilities to extract polymer related data from entry and entity collections.
-
-    """
+    """Utilities to extract polymer related data from entry and entity collections."""
 
     def __init__(self, cfgOb, **kwargs):
         self.__cfgOb = cfgOb
@@ -274,8 +272,7 @@ class EntityPolymerExtractor(object):
         return acL
 
     def __selectEntries(self, **kwargs):
-        """  Return a dictionary of PDB entries satifying the input conditions (e.g. method, resolution limit)
-        """
+        """Return a dictionary of PDB entries satifying the input conditions (e.g. method, resolution limit)"""
 
         dbName = kwargs.get("dbName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_entry")
@@ -310,111 +307,111 @@ class EntityPolymerExtractor(object):
         #
 
     def __selectPolymerEntities(self, entryD, **kwargs):
-        """  Skeleton entity selector recovering essential biological sequence mapping features
-             for macromolecules (default type = protein).
+        """Skeleton entity selector recovering essential biological sequence mapping features
+        for macromolecules (default type = protein).
 
-              "1CP9": {
-                  "polymer_entity_ids": [
-                     "1",
-                     "2"
-                  ],
-                  "selected_polymer_entities": {
-                     "1": {
-                        "rcsb_multiple_source_flag": "N",
-                        "asym_ids": [
-                           "A"
-                        ],
-                        "auth_asym_ids": [
-                           "A"
-                        ],
-                        "entity_id": "1",
-                        "type": "polypeptide(L)",
-                        "rcsb_entity_polymer_type": "Protein",
-                        "rcsb_entity_source_organism": [
-                           {
-                              "ncbi_taxonomy_id": 587,
-                              "beg_seq_num": 1,
-                              "end_seq_num": 205,
-                              "ncbi_scientific_name": "Providencia rettgeri"
-                           }
-                        ],
-                        "struct_ref": [
-                           {
-                              "id": "1",
-                              "db_name": "UNP",
-                              "pdbx_db_accession": "Q7WZI9",
-                              "entity_id": "1",
-                              "pdbx_seq_one_letter_code": "QSTQIKIERDNYGVPHIYANDTYSLFYGYGYA...",
-                              "alignD": {
-                                 "A": [
-                                    {
-                                       "align_id": "1",
-                                       "ref_id": "1",
-                                       "pdbx_PDB_id_code": "1CP9",
-                                       "pdbx_strand_id": "A",
-                                       "seq_align_beg": 1,
-                                       "seq_align_end": 205,
-                                       "pdbx_db_accession": "Q7WZI9",
-                                       "db_align_beg": 24,
-                                       "db_align_end": 228,
-                                       "pdbx_auth_seq_align_beg": "1",
-                                       "pdbx_auth_seq_align_end": "205",
-                                       "rcsb_entity_id": "1"
-                                    }
-                                 ]
-                              }
-                           }
-                        ]
-                     },
-                 "2": {
-                        "rcsb_multiple_source_flag": "N",
-                        "asym_ids": [
-                           "B"
-                        ],
-                        "auth_asym_ids": [
-                           "B"
-                        ],
-                        "entity_id": "2",
-                        "type": "polypeptide(L)",
-                        "rcsb_entity_polymer_type": "Protein",
-                        "rcsb_entity_source_organism": [
-                           {
-                              "ncbi_taxonomy_id": 587,
-                              "beg_seq_num": 1,
-                              "end_seq_num": 553,
-                              "ncbi_scientific_name": "Providencia rettgeri"
-                           }
-                        ],
-                        "struct_ref": [
-                           {
-                              "id": "2",
-                              "db_name": "UNP",
-                              "pdbx_db_accession": "Q7WZI9",
-                              "entity_id": "2",
-                              "pdbx_seq_one_letter_code": "SNVWLVGKTKASGAKAILLNGPQFGWFNPAYTYGIGLHG",
-                              "alignD": {
-                                 "B": [
-                                    {
-                                       "align_id": "2",
-                                       "ref_id": "2",
-                                       "pdbx_PDB_id_code": "1CP9",
-                                       "pdbx_strand_id": "B",
-                                       "seq_align_beg": 1,
-                                       "seq_align_end": 553,
-                                       "pdbx_db_accession": "Q7WZI9",
-                                       "db_align_beg": 285,
-                                       "db_align_end": 837,
-                                       "pdbx_auth_seq_align_beg": "1",
-                                       "pdbx_auth_seq_align_end": "553",
-                                       "rcsb_entity_id": "2"
-                                    }
-                                 ]
-                              }
-                           }
-                        ]
-                     }
-                  }
+         "1CP9": {
+             "polymer_entity_ids": [
+                "1",
+                "2"
+             ],
+             "selected_polymer_entities": {
+                "1": {
+                   "rcsb_multiple_source_flag": "N",
+                   "asym_ids": [
+                      "A"
+                   ],
+                   "auth_asym_ids": [
+                      "A"
+                   ],
+                   "entity_id": "1",
+                   "type": "polypeptide(L)",
+                   "rcsb_entity_polymer_type": "Protein",
+                   "rcsb_entity_source_organism": [
+                      {
+                         "ncbi_taxonomy_id": 587,
+                         "beg_seq_num": 1,
+                         "end_seq_num": 205,
+                         "ncbi_scientific_name": "Providencia rettgeri"
+                      }
+                   ],
+                   "struct_ref": [
+                      {
+                         "id": "1",
+                         "db_name": "UNP",
+                         "pdbx_db_accession": "Q7WZI9",
+                         "entity_id": "1",
+                         "pdbx_seq_one_letter_code": "QSTQIKIERDNYGVPHIYANDTYSLFYGYGYA...",
+                         "alignD": {
+                            "A": [
+                               {
+                                  "align_id": "1",
+                                  "ref_id": "1",
+                                  "pdbx_PDB_id_code": "1CP9",
+                                  "pdbx_strand_id": "A",
+                                  "seq_align_beg": 1,
+                                  "seq_align_end": 205,
+                                  "pdbx_db_accession": "Q7WZI9",
+                                  "db_align_beg": 24,
+                                  "db_align_end": 228,
+                                  "pdbx_auth_seq_align_beg": "1",
+                                  "pdbx_auth_seq_align_end": "205",
+                                  "rcsb_entity_id": "1"
+                               }
+                            ]
+                         }
+                      }
+                   ]
                 },
+            "2": {
+                   "rcsb_multiple_source_flag": "N",
+                   "asym_ids": [
+                      "B"
+                   ],
+                   "auth_asym_ids": [
+                      "B"
+                   ],
+                   "entity_id": "2",
+                   "type": "polypeptide(L)",
+                   "rcsb_entity_polymer_type": "Protein",
+                   "rcsb_entity_source_organism": [
+                      {
+                         "ncbi_taxonomy_id": 587,
+                         "beg_seq_num": 1,
+                         "end_seq_num": 553,
+                         "ncbi_scientific_name": "Providencia rettgeri"
+                      }
+                   ],
+                   "struct_ref": [
+                      {
+                         "id": "2",
+                         "db_name": "UNP",
+                         "pdbx_db_accession": "Q7WZI9",
+                         "entity_id": "2",
+                         "pdbx_seq_one_letter_code": "SNVWLVGKTKASGAKAILLNGPQFGWFNPAYTYGIGLHG",
+                         "alignD": {
+                            "B": [
+                               {
+                                  "align_id": "2",
+                                  "ref_id": "2",
+                                  "pdbx_PDB_id_code": "1CP9",
+                                  "pdbx_strand_id": "B",
+                                  "seq_align_beg": 1,
+                                  "seq_align_end": 553,
+                                  "pdbx_db_accession": "Q7WZI9",
+                                  "db_align_beg": 285,
+                                  "db_align_end": 837,
+                                  "pdbx_auth_seq_align_beg": "1",
+                                  "pdbx_auth_seq_align_end": "553",
+                                  "rcsb_entity_id": "2"
+                               }
+                            ]
+                         }
+                      }
+                   ]
+                }
+             }
+           },
 
         """
         dbName = kwargs.get("dbName", "pdbx_core")

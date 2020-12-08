@@ -67,9 +67,7 @@ class EntityPolymerExtractorTests(unittest.TestCase):
         logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testExtractEntityPolymers(self):
-        """ Test case - extract entity polymer info
-
-        """
+        """Test case - extract entity polymer info"""
         try:
             epe = EntityPolymerExtractor(self.__cfgOb, exdbDirPath=self.__exdbCacheDirPath, useCache=False, cacheKwargs=self.__cacheKwargs, entryLimit=self.__entryLimitTest)
             eCount = epe.getEntryCount()
@@ -80,9 +78,7 @@ class EntityPolymerExtractorTests(unittest.TestCase):
             self.fail()
 
     def testAccessEntityPolymerFeatures(self):
-        """ Test case - access cached entity polymer info from test cache
-
-        """
+        """Test case - access cached entity polymer info from test cache"""
         try:
             epe = EntityPolymerExtractor(self.__cfgOb, exdbDirPath=self.__exdbCacheDirPath, useCache=False, cacheKwargs=self.__cacheKwargs)
             eCount = epe.getEntryCount()
@@ -103,9 +99,7 @@ class EntityPolymerExtractorTests(unittest.TestCase):
             self.fail()
 
     def testTaxonomyReadCache(self):
-        """ Test case - access cached entity polymer info from test cache
-
-        """
+        """Test case - access cached entity polymer info from test cache"""
         try:
             epe = EntityPolymerExtractor(self.__cfgOb, exdbDirPath=self.__exdbCacheDirPath, useCache=False, cacheKwargs=self.__cacheKwargs)
             logger.info("Cache entry count %d", epe.getEntryCount())
@@ -130,9 +124,7 @@ class EntityPolymerExtractorTests(unittest.TestCase):
             self.fail()
 
     def testAccessEntityPolymerReadCache(self):
-        """ Test case - access cached entity polymer info from test cache
-
-        """
+        """Test case - access cached entity polymer info from test cache"""
         try:
             epe = EntityPolymerExtractor(self.__cfgOb, exdbDirPath=self.__exdbCacheDirPath, useCache=False, cacheKwargs=self.__cacheKwargs)
             logger.info("Cache entry count %d", epe.getEntryCount())

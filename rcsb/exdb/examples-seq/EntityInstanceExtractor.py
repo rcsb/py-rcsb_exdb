@@ -32,48 +32,48 @@ logger = logging.getLogger(__name__)
 
 
 class EntityInstanceExtractor(object):
-    """ Selected utilities to extract data from entity instance collections.
+    """Selected utilities to extract data from entity instance collections.
 
-            >>> from operator import itemgetter
-            >>>
-            >>> seq2 = [1, 2, 4, 5, 6, 8, 9, 10]
-            >>> list = []
-            >>> for k, g in groupby(enumerate(seq2), lambda (i,x):i-x):
-            ...     list.append(map(itemgetter(1), g))
-            ...
-            >>> print list
-            [[1, 2], [4, 5, 6], [8, 9, 10]]
-            Or as a list comprehension:
+    >>> from operator import itemgetter
+    >>>
+    >>> seq2 = [1, 2, 4, 5, 6, 8, 9, 10]
+    >>> list = []
+    >>> for k, g in groupby(enumerate(seq2), lambda (i,x):i-x):
+    ...     list.append(map(itemgetter(1), g))
+    ...
+    >>> print list
+    [[1, 2], [4, 5, 6], [8, 9, 10]]
+    Or as a list comprehension:
 
-            >>> [map(itemgetter(1), g) for k, g in groupby(enumerate(seq2), lambda (i,x):i-x)]
-            [[1, 2], [4, 5, 6], [8, 9, 10]]
+    >>> [map(itemgetter(1), g) for k, g in groupby(enumerate(seq2), lambda (i,x):i-x)]
+    [[1, 2], [4, 5, 6], [8, 9, 10]]
 
 
-            ##
-            ##
+    ##
+    ##
 
-            import numpy as np
+    import numpy as np
 
-            def main():
-                # Generate some random data
-                x = np.cumsum(np.random.random(1000) - 0.5)
-                condition = np.abs(x) < 1
+    def main():
+        # Generate some random data
+        x = np.cumsum(np.random.random(1000) - 0.5)
+        condition = np.abs(x) < 1
 
-                # Print the start and stop indicies of each region where the absolute
-                # values of x are below 1, and the min and max of each of these regions
-                for start, stop in contiguous_regions(condition):
-                    segment = x[start:stop]
-                    print start, stop
-                    print segment.min(), segment.max()
+        # Print the start and stop indicies of each region where the absolute
+        # values of x are below 1, and the min and max of each of these regions
+        for start, stop in contiguous_regions(condition):
+            segment = x[start:stop]
+            print start, stop
+            print segment.min(), segment.max()
 
-            import numpy as np
+    import numpy as np
 
-            Samples = np.array([[1, 2, 3],
-                               [1, 2]])
-            c = np.hstack(Samples)  # Will gives [1,2,3,1,2]
-            mean, std = np.mean(c), np.std(c)
-            newSamples = np.asarray([(np.array(xi)-mean)/std for xi in Samples])
-            print newSamples
+    Samples = np.array([[1, 2, 3],
+                       [1, 2]])
+    c = np.hstack(Samples)  # Will gives [1,2,3,1,2]
+    mean, std = np.mean(c), np.std(c)
+    newSamples = np.asarray([(np.array(xi)-mean)/std for xi in Samples])
+    print newSamples
 
     """
 
@@ -86,8 +86,7 @@ class EntityInstanceExtractor(object):
         #
 
     def getEntryInfo(self, **kwargs):
-        """  Return a dictionary of PDB entries satifying the input conditions (e.g. method, resolution limit)
-        """
+        """Return a dictionary of PDB entries satifying the input conditions (e.g. method, resolution limit)"""
 
         resLimit = kwargs.get("resLimit", 3.5)
         expMethod = kwargs.get("expMethod", "X-ray")
@@ -126,8 +125,7 @@ class EntityInstanceExtractor(object):
         #
 
     def getEntityIds(self, entryIdList):
-        """
-        """
+        """"""
         dbName = "pdbx_core"
         collectionName = "pdbx_core_polymer_entity"
         docD = {}
@@ -149,8 +147,7 @@ class EntityInstanceExtractor(object):
         return docD
 
     def getPolymerEntities(self, entryD, **kwargs):
-        """  Add 'selected_polymer_entities' satisfying the input contiditions and add this to the input entry dictionary.
-        """
+        """Add 'selected_polymer_entities' satisfying the input contiditions and add this to the input entry dictionary."""
         dbName = kwargs.get("dbName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_polymer_entity")
         resultKey = kwargs.get("resultKey", "selected_polymer_entities")
@@ -248,7 +245,7 @@ class EntityInstanceExtractor(object):
         return entryD
 
     def getEntityInstances(self, entryD, **kwargs):
-        """ Get the selected validation data for the instances in the input entry dictionary.
+        """Get the selected validation data for the instances in the input entry dictionary.
 
         entryD[entryId]['selected_polymer_entities'][entityId]['validation'] = {}
 
@@ -531,7 +528,7 @@ class EntityInstanceExtractor(object):
 
     def __window(self, seq, num=2):
         """Returns a sliding window (of width n) over data from the iterable
-           s -> (s0,s1,...s[n-1]), (s1,s2,...,sn), ...
+        s -> (s0,s1,...s[n-1]), (s1,s2,...,sn), ...
         """
         it = iter(seq)
         result = tuple(islice(it, num))

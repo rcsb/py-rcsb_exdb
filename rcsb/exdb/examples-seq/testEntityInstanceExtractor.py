@@ -72,9 +72,7 @@ class EntityInstanceExtractorTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testExtractEntryInfo(self):
-        """ Test case - extract entry instance data -
-
-        """
+        """Test case - extract entry instance data -"""
         try:
             eiExt = EntityInstanceExtractor(self.__cfgOb)
             entryD = eiExt.getEntryInfo()
@@ -87,9 +85,7 @@ class EntityInstanceExtractorTests(unittest.TestCase):
             self.fail()
 
     def testExtractEntityPolymers(self):
-        """ Test case - extract entity polymer instance data -
-
-        """
+        """Test case - extract entity polymer instance data -"""
         try:
             eiExt = EntityInstanceExtractor(self.__cfgOb)
             entryD = eiExt.getEntryInfo()
@@ -109,9 +105,7 @@ class EntityInstanceExtractorTests(unittest.TestCase):
             self.fail()
 
     def testExtractEntityInstances(self):
-        """ Test case - extract entity instance data -
-
-        """
+        """Test case - extract entity instance data -"""
         try:
             eiExt = EntityInstanceExtractor(self.__cfgOb)
             entryD = eiExt.getEntryInfo()
@@ -128,8 +122,7 @@ class EntityInstanceExtractorTests(unittest.TestCase):
             self.fail()
 
     def testAnalEntityInstances(self):
-        """ Test case - analysis of entity instance data -
-        """
+        """Test case - analysis of entity instance data -"""
         try:
             eiExt = EntityInstanceExtractor(self.__cfgOb)
             entryD = eiExt.getEntryInfo()

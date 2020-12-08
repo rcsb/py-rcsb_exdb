@@ -18,7 +18,8 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
-
+import platform
+import resource
 import pprint
 import time
 import unittest
@@ -59,12 +60,14 @@ class ObjectExtractorTests(unittest.TestCase):
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
+        unitS = "MB" if platform.system() == "Darwin" else "GB"
+        rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        logger.info("Maximum resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
         endTime = time.time()
-        logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testCreateMultipleConnections(self):
-        """Test case -  multiple connection creation
-        """
+        """Test case -  multiple connection creation"""
         try:
             for _ in range(5):
                 with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -74,9 +77,7 @@ class ObjectExtractorTests(unittest.TestCase):
             self.fail()
 
     def testExtractEntriesBefore(self):
-        """ Test case - extract entries subject to date restriction
-
-        """
+        """Test case - extract entries subject to date restriction"""
         try:
             tU = TimeUtil()
             tS = tU.getTimestamp(useUtc=True, before={"days": 365 * 4})
@@ -99,9 +100,7 @@ class ObjectExtractorTests(unittest.TestCase):
             self.fail()
 
     def testExtractEntries(self):
-        """ Test case - extract entries
-
-        """
+        """Test case - extract entries"""
         try:
             obEx = ObjectExtractor(
                 self.__cfgOb,
@@ -137,9 +136,7 @@ class ObjectExtractorTests(unittest.TestCase):
             self.fail()
 
     def testExtractEntities(self):
-        """ Test case - extract entities
-
-        """
+        """Test case - extract entities"""
         try:
             obEx = ObjectExtractor(
                 self.__cfgOb,
@@ -177,7 +174,7 @@ class ObjectExtractorTests(unittest.TestCase):
             self.fail()
 
     def testExtractSelectedEntityContent(self):
-        """ Test case - extract selected entity content
+        """Test case - extract selected entity content
 
         "reference_sequence_identifiers": [
                     {
@@ -270,8 +267,7 @@ class ObjectExtractorTests(unittest.TestCase):
             self.fail()
 
     def testExtractEntityTaxonomyContent(self):
-        """ Test case - extract unique entity source and host taxonomies
-        """
+        """Test case - extract unique entity source and host taxonomies"""
         try:
             obEx = ObjectExtractor(
                 self.__cfgOb,

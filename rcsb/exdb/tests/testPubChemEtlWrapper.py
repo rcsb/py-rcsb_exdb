@@ -72,14 +72,18 @@ class PubChemEtlWrapperTests(unittest.TestCase):
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testAFromBootstrap(self):
-        """ Test case - build CCD/BIRD search indices and search for PubChem matches.
-        """
+        """Test case - build CCD/BIRD search indices and search for PubChem matches."""
         try:
             #  -- Update local chemical indices and  create PubChem mapping index ---
 
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath)
             ok = pcewP.updateIndex(
-                ccUrlTarget=self.__ccUrlTarget, birdUrlTarget=self.__birdUrlTarget, ccFileNamePrefix="cc-abbrev", exportPath=self.__dirPath, rebuildChemIndices=True, numProc=4,
+                ccUrlTarget=self.__ccUrlTarget,
+                birdUrlTarget=self.__birdUrlTarget,
+                ccFileNamePrefix="cc-abbrev",
+                exportPath=self.__dirPath,
+                rebuildChemIndices=True,
+                numProc=4,
             )
             self.assertTrue(ok)
             #
@@ -100,8 +104,7 @@ class PubChemEtlWrapperTests(unittest.TestCase):
             self.fail()
 
     def testBFromRestore(self):
-        """ Test case - operations from a restored starting point
-        """
+        """Test case - operations from a restored starting point"""
         try:
             #  --
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath)

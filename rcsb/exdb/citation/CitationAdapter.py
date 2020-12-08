@@ -22,8 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class CitationAdapter(ObjectAdapterBase):
-    """  Selected utilities to update entry citations in the core_entry collection.
-    """
+    """Selected utilities to update entry citations in the core_entry collection."""
 
     def __init__(self, citationReferenceProvider, journalTitleAbbreviationProvider):
         super(CitationAdapter, self).__init__()

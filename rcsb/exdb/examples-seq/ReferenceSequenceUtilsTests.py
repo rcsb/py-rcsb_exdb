@@ -74,9 +74,7 @@ class ReferenceSequenceUtilsTests(unittest.TestCase):
         logger.info("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testUpdateUniProtCache(self):
-        """ Test case - extract entity polymer info and update reference sequence cache
-
-        """
+        """Test case - extract entity polymer info and update reference sequence cache"""
         try:
             refDbName = "UNP"
             rsu = ReferenceSequenceUtils(

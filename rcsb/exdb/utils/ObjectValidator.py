@@ -27,8 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class ObjectValidator(object):
-    """ Utilities to extract and update object from the document object server with validation.
-    """
+    """Utilities to extract and update object from the document object server with validation."""
 
     def __init__(self, cfgOb, objectAdapter=None, cachePath=".", useCache=True, **kwargs):
         self.__cfgOb = cfgOb
@@ -84,8 +83,7 @@ class ObjectValidator(object):
         return ok and okS
 
     def __selectObjectIds(self, databaseName, collectionName, selectionQueryD):
-        """  Return a list of object identifiers for the input selection query.
-        """
+        """Return a list of object identifiers for the input selection query."""
         try:
 
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -105,8 +103,7 @@ class ObjectValidator(object):
         #
 
     def __transform(self, databaseName, collectionName, docSelectList, logIncrement=100):
-        """  Return a list of object identifiers for the input selection query.
-        """
+        """Return a list of object identifiers for the input selection query."""
         #
         ok = True
         try:

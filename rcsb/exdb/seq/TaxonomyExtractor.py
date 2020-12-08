@@ -20,8 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class TaxonomyExtractor(object):
-    """  Utilities to extract taxonomy details from the core entity collection.
-    """
+    """Utilities to extract taxonomy details from the core entity collection."""
 
     def __init__(self, cfgOb):
         self.__cfgOb = cfgOb
@@ -33,8 +32,7 @@ class TaxonomyExtractor(object):
         return taxIdL
 
     def __extractEntityTaxons(self):
-        """ Test case - extract unique entity source and host taxonomies
-        """
+        """Test case - extract unique entity source and host taxonomies"""
         try:
             obEx = ObjectExtractor(
                 self.__cfgOb,

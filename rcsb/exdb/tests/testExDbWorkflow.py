@@ -20,6 +20,8 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
+import resource
 import time
 import unittest
 
@@ -66,12 +68,14 @@ class ExDbWorkflowTests(unittest.TestCase):
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
+        unitS = "MB" if platform.system() == "Darwin" else "GB"
+        rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        logger.info("Maximum resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
         endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testExDbLoaderWorkflows(self):
-        """ Test run workflow steps ...
-        """
+        """Test run workflow steps ..."""
         try:
             opL = ["etl_chemref", "upd_ref_seq", "etl_tree_node_lists"]
             rlWf = ExDbWorkflow(**self.__commonD)
@@ -82,9 +86,9 @@ class ExDbWorkflowTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    @unittest.skip("Troubleshooting test")
     def testExDbLoaderWorkflowsWithCacheCheck(self):
-        """ Test run sequence reference data update workflow step ...
-        """
+        """Test run sequence reference data update workflow step ..."""
         #
         try:
             self.__commonD["rebuildCache"] = False

@@ -1,5 +1,5 @@
 ##
-# File:    UniProtEtlWorkerTests.py
+# File:    UniProtCoreEtlWorkerTests.py
 # Author:  J. Westbrook
 # Date:    9-Dec-2018
 #
@@ -19,12 +19,12 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
 import resource
 import time
-import tracemalloc
 import unittest
 
-from rcsb.exdb.seq.UniProtEtlWorker import UniProtEtlWorker
+from rcsb.exdb.seq.UniProtCoreEtlWorker import UniProtCoreEtlWorker
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -34,11 +34,10 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
-class UniProtEtlWorkerTests(unittest.TestCase):
+class UniProtCoreEtlWorkerTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
-        super(UniProtEtlWorkerTests, self).__init__(methodName)
+        super(UniProtCoreEtlWorkerTests, self).__init__(methodName)
         self.__verbose = True
-        self.__traceMemory = False
 
     def setUp(self):
         #
@@ -52,26 +51,21 @@ class UniProtEtlWorkerTests(unittest.TestCase):
         # sample data set
         self.__updateId = "2018_23"
         #
-        #
-        if self.__traceMemory:
-            tracemalloc.start()
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
-        if self.__traceMemory:
-            rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            current, peak = tracemalloc.get_traced_memory()
-            logger.info("Current memory usage is %.2f MB; Peak was %.2f MB Resident size %.2f MB", current / 10 ** 6, peak / 10 ** 6, rusageMax / 10 ** 6)
-            tracemalloc.stop()
+        unitS = "MB" if platform.system() == "Darwin" else "GB"
+        rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        logger.info("Maximum resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
         endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     @unittest.skip("Disable test - deprecated")
-    def testLoadUniProt(self):
-        """Test case - load UniProt reference data -"""
+    def testLoadUniProtCore(self):
+        """Test case - load UniProt core collection reference data -"""
         try:
-            uw = UniProtEtlWorker(self.__cfgOb, self.__cachePath)
+            uw = UniProtCoreEtlWorker(self.__cfgOb, self.__cachePath)
             ok = uw.load(self.__updateId, extResource="UniProt", loadType="full")
             #
             self.assertTrue(ok)
@@ -80,10 +74,10 @@ class UniProtEtlWorkerTests(unittest.TestCase):
             self.fail()
 
     @unittest.skip("Disable test - deprecated")
-    def testValidateUniProt(self):
-        """Test case - validate UniProt reference data -"""
+    def testValidateUniProtCore(self):
+        """Test case - validate UniProt core collection reference data -"""
         try:
-            uw = UniProtEtlWorker(self.__cfgOb, self.__cachePath, doValidate=True)
+            uw = UniProtCoreEtlWorker(self.__cfgOb, self.__cachePath, doValidate=True)
             ok = uw.load(self.__updateId, extResource="UniProt", loadType="full")
             #
             self.assertTrue(ok)
@@ -92,13 +86,14 @@ class UniProtEtlWorkerTests(unittest.TestCase):
             self.fail()
 
 
-def uniProtEtlWorkerSuite():
+def uniProtCoreEtlWorkerSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(UniProtEtlWorkerTests("testLoadUniProt"))
+    suiteSelect.addTest(UniProtCoreEtlWorkerTests("testLoadUniProtCore"))
+    suiteSelect.addTest(UniProtCoreEtlWorkerTests("testValidateUniProtCore"))
     return suiteSelect
 
 
 if __name__ == "__main__":
     #
-    mySuite = uniProtEtlWorkerSuite()
+    mySuite = uniProtCoreEtlWorkerSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

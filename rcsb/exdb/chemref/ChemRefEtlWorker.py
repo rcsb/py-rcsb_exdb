@@ -27,8 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class ChemRefEtlWorker(object):
-    """ Prepare and load chemical reference data collections.
-    """
+    """Prepare and load chemical reference data collections."""
 
     def __init__(self, cfgOb, cachePath, useCache=True, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
         self.__cfgOb = cfgOb
@@ -60,9 +59,7 @@ class ChemRefEtlWorker(object):
         return False
 
     def load(self, updateId, extResource, loadType="full"):
-        """ Load chemical reference integrated data for the input external resource-
-
-        """
+        """Load chemical reference integrated data for the input external resource-"""
         try:
             self.__statusList = []
             desp = DataExchangeStatus()

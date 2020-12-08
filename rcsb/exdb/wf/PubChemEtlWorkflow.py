@@ -25,13 +25,13 @@ logger = logging.getLogger(__name__)
 
 class PubChemEtlWorkflow(object):
     def __init__(self, **kwargs):
-        """ Workflow wrapper  --  PubChem ETL utilities
+        """Workflow wrapper  --  PubChem ETL utilities
 
-            Args:
-                configPath (str, optional): path to configuration file (default: exdb-config-example.yml)
-                configName (str, optional): configuration section name (default: site_info_configuration)
-                cachePath (str, optional):  path to cache directory (default: '.')
-                stashRemotePrefix (str, optional): file name prefix (channel) applied to remote stash file artifacts (default: None)
+        Args:
+            configPath (str, optional): path to configuration file (default: exdb-config-example.yml)
+            configName (str, optional): configuration section name (default: site_info_configuration)
+            cachePath (str, optional):  path to cache directory (default: '.')
+            stashRemotePrefix (str, optional): file name prefix (channel) applied to remote stash file artifacts (default: None)
         """
         configPath = kwargs.get("configPath", "exdb-config-example.yml")
         self.__configName = kwargs.get("configName", "site_info_configuration")
@@ -48,8 +48,7 @@ class PubChemEtlWorkflow(object):
         #
 
     def dump(self):
-        """ Dump the current object store of PubChem correspondences and data.
-        """
+        """Dump the current object store of PubChem correspondences and data."""
         ok1 = ok2 = ok3 = ok4 = False
         try:
             #  -- Update local chemical indices and  create PubChem mapping index ---
@@ -74,8 +73,7 @@ class PubChemEtlWorkflow(object):
         return ok1 and ok2 and ok3 and ok4
 
     def stash(self):
-        """ Stash the current cache files containing PubChem correspondences and data.
-        """
+        """Stash the current cache files containing PubChem correspondences and data."""
         ok1 = ok2 = False
         try:
             #  -- Update local chemical indices and  create PubChem mapping index ---
@@ -97,8 +95,7 @@ class PubChemEtlWorkflow(object):
         return ok1 and ok2
 
     def restore(self):
-        """ Restore the current object store of PubChem correspondences and data from stashed data sets.
-        """
+        """Restore the current object store of PubChem correspondences and data from stashed data sets."""
         ok1 = ok2 = False
         numObjData = numObjIndex = 0
         try:
@@ -126,7 +123,7 @@ class PubChemEtlWorkflow(object):
         return ok1 and ok2 and numObjData > 1 and numObjIndex > 1
 
     def updateMatchedIndex(self, **kwargs):
-        """  Update chemical indices and correspondence matches.
+        """Update chemical indices and correspondence matches.
 
         Args:
             ccUrlTarget (str, optional): target url for chemical component dictionary resource file (default: None=all public)
@@ -168,8 +165,8 @@ class PubChemEtlWorkflow(object):
         return ok1 and ok2 and ok3
 
     def updateMatchedData(self):
-        """ Update PubChem annotation data for matched correspondences.  Generate and stash
-            related identifiers for corresponding components and BIRD chemical definitions.
+        """Update PubChem annotation data for matched correspondences.  Generate and stash
+        related identifiers for corresponding components and BIRD chemical definitions.
         """
         try:
             ok1 = ok2 = ok3 = ok4 = ok5 = ok6 = False

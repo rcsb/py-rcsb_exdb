@@ -1,20 +1,18 @@
 ##
-# File:    CitationUtilsTests.py
+# File:    PolymerEntityExtractorTests.py
 # Author:  J. Westbrook
-# Date:    25-Apr-2019
+# Date:    5-Dec-2020
 #
 # Updates:
 #
 ##
 """
-Tests for citation process and normalization.
+Tests for extraction of polymer entity sequence details from the ExDB core collections.
 """
-
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
-
 
 import logging
 import os
@@ -23,10 +21,8 @@ import resource
 import time
 import unittest
 
-
-from rcsb.exdb.citation.CitationUtils import CitationUtils
+from rcsb.exdb.seq.PolymerEntityExtractor import PolymerEntityExtractor
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -36,28 +32,20 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
-class CitationUtilsTests(unittest.TestCase):
+class PolymerEntityExtractorTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
-        super(CitationUtilsTests, self).__init__(methodName)
+        super(PolymerEntityExtractorTests, self).__init__(methodName)
         self.__verbose = True
 
     def setUp(self):
         #
-        #
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        #
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
-
         #
-        self.__cachePath = os.path.join(TOPDIR, "CACHE")
-        #
-        self.__cacheKwargs = {"fmt": "json", "indent": 3}
-        self.__exdbDirPath = os.path.join(self.__cachePath, self.__cfgOb.get("EXDB_CACHE_DIR", sectionName=configName))
-        #
-        self.__mU = MarshalUtil()
-        self.__entryLimitTest = 20
+        self.__fastaPath = os.path.join(HERE, "test-output", "CACHE", "pdb-protein-entity.fa")
+        self.__taxonPath = os.path.join(HERE, "test-output", "CACHE", "pdb-protein-entity-taxon.tdd")
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -69,24 +57,35 @@ class CitationUtilsTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def testEntryCitationAccess(self):
-        """Test case - extract entry citations"""
+    def testGetProteinEntityDetails(self):
+        """Test case - get protein entity sequences and essential details"""
         try:
-            ce = CitationUtils(self.__cfgOb, exdbDirPath=self.__exdbDirPath, useCache=True, cacheKwargs=self.__cacheKwargs, entryLimit=self.__entryLimitTest)
-            eCount = ce.getCitationEntryCount()
-            self.assertGreaterEqual(eCount, self.__entryLimitTest)
-            #
+            pEx = PolymerEntityExtractor(self.__cfgOb)
+            pD, _ = pEx.getProteinSequenceDetails()
+            self.assertGreaterEqual(len(pD), 200)
+            logger.info("Polymer entity count %d", len(pD))
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
+    def testExportProteinEntityFasta(self):
+        """Test case - export protein entity sequence Fasta """
+        try:
+            pEx = PolymerEntityExtractor(self.__cfgOb)
+            ok = pEx.exportProteinEntityFasta(self.__fastaPath, self.__taxonPath, fmt="fasta")
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
 
-def citationUtilsSuite():
+def extractorSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(CitationUtilsTests("testEntryCitationAccess"))
+    suiteSelect.addTest(PolymerEntityExtractorTests("testGetProteinEntityDetails"))
+    suiteSelect.addTest(PolymerEntityExtractorTests("testExportProteinEntityFasta"))
     return suiteSelect
 
 
 if __name__ == "__main__":
-    mySuite = citationUtilsSuite()
+    mySuite = extractorSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

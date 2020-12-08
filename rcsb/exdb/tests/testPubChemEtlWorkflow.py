@@ -64,14 +64,17 @@ class PubChemEtlWorkflowTests(unittest.TestCase):
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testAUpdateIndex(self):
-        """ Test case - build CCD/BIRD search indices and search for PubChem matches.
-        """
+        """Test case - build CCD/BIRD search indices and search for PubChem matches."""
         try:
             #  -- Update local chemical indices and  create PubChem mapping index ---
 
             pcewP = PubChemEtlWorkflow(configPath=self.__configPath, configName=self.__configName, cachePath=self.__cachePath)
             ok = pcewP.updateMatchedIndex(
-                ccUrlTarget=self.__ccUrlTarget, birdUrlTarget=self.__birdUrlTarget, ccFileNamePrefix=self.__ccFileNamePrefix, numProc=4, rebuildChemIndices=True,
+                ccUrlTarget=self.__ccUrlTarget,
+                birdUrlTarget=self.__birdUrlTarget,
+                ccFileNamePrefix=self.__ccFileNamePrefix,
+                numProc=4,
+                rebuildChemIndices=True,
             )
             self.assertTrue(ok)
         except Exception as e:
@@ -79,8 +82,7 @@ class PubChemEtlWorkflowTests(unittest.TestCase):
             self.fail()
 
     def testBDump(self):
-        """ Test case - dump current stored state
-        """
+        """Test case - dump current stored state"""
         try:
             #  --
             pcewP = PubChemEtlWorkflow(configPath=self.__configPath, configName=self.__configName, cachePath=self.__cachePath)
@@ -91,8 +93,7 @@ class PubChemEtlWorkflowTests(unittest.TestCase):
             self.fail()
 
     def testCRestore(self):
-        """ Test case - restore object store from the prior dump
-        """
+        """Test case - restore object store from the prior dump"""
         try:
             #  --
             pcewP = PubChemEtlWorkflow(configPath=self.__configPath, configName=self.__configName, cachePath=self.__cachePath)
@@ -103,8 +104,7 @@ class PubChemEtlWorkflowTests(unittest.TestCase):
             self.fail()
 
     def testDUpdateData(self):
-        """ Test case - update corresponding data and generate corresponding identifiers.
-        """
+        """Test case - update corresponding data and generate corresponding identifiers."""
         try:
             #  --
             pcewP = PubChemEtlWorkflow(configPath=self.__configPath, configName=self.__configName, cachePath=self.__cachePath)

@@ -25,7 +25,7 @@ from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.exdb.chemref.ChemRefEtlWorker import ChemRefEtlWorker
 from rcsb.exdb.seq.ReferenceSequenceAnnotationAdapter import ReferenceSequenceAnnotationAdapter
 from rcsb.exdb.seq.ReferenceSequenceAnnotationProvider import ReferenceSequenceAnnotationProvider
-from rcsb.exdb.seq.UniProtEtlWorker import UniProtEtlWorker
+from rcsb.exdb.seq.UniProtCoreEtlWorker import UniProtCoreEtlWorker
 from rcsb.exdb.tree.TreeNodeListWorker import TreeNodeListWorker
 from rcsb.exdb.utils.ObjectTransformer import ObjectTransformer
 from rcsb.utils.config.ConfigUtil import ConfigUtil
@@ -48,8 +48,7 @@ def loadStatus(statusList, cfgOb, cachePath, readBackCheck=True):
 
 
 def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
-    """Generate and cache resource dependencies.
-    """
+    """Generate and cache resource dependencies."""
     ret = False
     try:
         rp = DictMethodResourceProvider(cfgOb, configName=configName, cachePath=cachePath)
@@ -87,7 +86,7 @@ def main():
     parser.add_argument("--data_set_id", default=None, help="Data set identifier (default= 2019_14 for current week)")
     parser.add_argument("--full", default=True, action="store_true", help="Fresh full load in a new tables/collections (Default)")
     parser.add_argument("--etl_chemref", default=False, action="store_true", help="ETL integrated chemical reference data")
-    parser.add_argument("--etl_uniprot", default=False, action="store_true", help="ETL UniProt reference data")
+    parser.add_argument("--etl_uniprot_core", default=False, action="store_true", help="ETL UniProt core reference data")
     parser.add_argument("--etl_tree_node_lists", default=False, action="store_true", help="ETL tree node lists")
     parser.add_argument("--upd_ref_seq", default=False, action="store_true", help="Update reference sequence assignments")
     #
@@ -175,8 +174,8 @@ def main():
             ok = crw.load(dataSetId, extResource="DrugBank", loadType=loadType)
             okS = loadStatus(crw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
-        if args.etl_uniprot:
-            crw = UniProtEtlWorker(
+        if args.etl_uniprot_core:
+            crw = UniProtCoreEtlWorker(
                 cfgOb, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, useCache=useCache
             )
             ok = crw.load(dataSetId, extResource="UniProt", loadType=loadType)
