@@ -209,12 +209,13 @@ class PolymerEntityExtractor(object):
             #
             return rL[0][0]
 
-    def exportProteinEntityFasta(self, fastaPath, taxonPath, fmt="fasta"):
+    def exportProteinEntityFasta(self, fastaPath, taxonPath, detailsPath):
         """Export protein entity Fasta file and associated taxon mapping file (for mmseqs2)
 
         Args:
-            filePath (str): FASTA output file path
+            fastaPath (str): protein sequence FASTA output file path
             taxonPath (str): taxon mapping file path (seqid TaxId) (tdd format)
+            detailPath (str): protein entity details file path (json)
 
         Returns:
             bool: True for success or False otherwise
@@ -311,7 +312,8 @@ class PolymerEntityExtractor(object):
                     taxonL.append("%s\t%s" % (seqId, taxId))
                 # ----
             mU = MarshalUtil()
-            ok = mU.doExport(fastaPath, seqDict, fmt=fmt)
+            ok = mU.doExport(detailsPath, proteinSeqD, fmt="json", indent=3)
+            ok = mU.doExport(fastaPath, seqDict, fmt="fasta")
             ok = mU.doExport(taxonPath, taxonL, fmt="list")
         except Exception as e:
             logger.exception("Failing %r with %s", fastaPath, str(e))

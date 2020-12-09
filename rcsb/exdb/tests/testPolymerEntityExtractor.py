@@ -46,6 +46,7 @@ class PolymerEntityExtractorTests(unittest.TestCase):
         #
         self.__fastaPath = os.path.join(HERE, "test-output", "CACHE", "pdb-protein-entity.fa")
         self.__taxonPath = os.path.join(HERE, "test-output", "CACHE", "pdb-protein-entity-taxon.tdd")
+        self.__detailsPath = os.path.join(HERE, "test-output", "CACHE", "pdb-protein-entity-details.json")
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -72,7 +73,7 @@ class PolymerEntityExtractorTests(unittest.TestCase):
         """Test case - export protein entity sequence Fasta """
         try:
             pEx = PolymerEntityExtractor(self.__cfgOb)
-            ok = pEx.exportProteinEntityFasta(self.__fastaPath, self.__taxonPath, fmt="fasta")
+            ok = pEx.exportProteinEntityFasta(self.__fastaPath, self.__taxonPath, self.__detailsPath)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))

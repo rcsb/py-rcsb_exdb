@@ -57,3 +57,4 @@
 29-Jul-2020 V0.65 Add stash() method to module PubChemEtlWorkflow()
 30-Aug-2020 V0.66 Update dependencies
  8-Dec-2020 V0.67 Add PolymerEntityExtractor() and UniProtExtractor() from rcsb.utils.seqalign, cleanup tests and fixture issues
+ 9-Dec-2020 V0.68 Simplify API for PolymerEntityExtractor()
