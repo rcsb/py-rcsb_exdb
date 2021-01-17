@@ -27,6 +27,7 @@ import unittest
 from rcsb.exdb.chemref.ChemRefExtractor import ChemRefExtractor
 from rcsb.exdb.chemref.ChemRefEtlWorker import ChemRefEtlWorker
 from rcsb.utils.config.ConfigUtil import ConfigUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -74,6 +75,20 @@ class ChemRefLoaderTests(unittest.TestCase):
             ok = crw.load(self.__updateId, extResource="DrugBank", loadType="full")
             #
             self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
+    def testDrugBankDataMapping(self):
+        """Test case - get DrugBank mapping -"""
+        try:
+            crExt = ChemRefExtractor(self.__cfgOb)
+            idD = crExt.getChemCompAccessionMapping(extResource="DrugBank")
+            logger.info("Mapping dictionary %r", len(idD))
+            #
+            mU = MarshalUtil()
+            fp = os.path.join(HERE, "test-output", "drugbank-mapping.json")
+            mU.doExport(fp, idD, fmt="json", indent=3)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()

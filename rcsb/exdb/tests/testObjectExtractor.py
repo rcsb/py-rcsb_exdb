@@ -76,6 +76,28 @@ class ObjectExtractorTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    def testExtractDrugbankMapping(self):
+        """Test case - extract Drugbank mapping"""
+        try:
+            obEx = ObjectExtractor(
+                self.__cfgOb,
+                databaseName="bird_chem_comp_core",
+                collectionName="bird_chem_comp_core",
+                cacheFilePath=os.path.join(self.__workPath, "drugbank-mapping-cache.json"),
+                useCache=False,
+                cacheKwargs=self.__testEntryCacheKwargs,
+                keyAttribute="chem_comp",
+                uniqueAttributes=["rcsb_id"],
+                selectionQuery={"rcsb_chem_comp_container_identifiers.drugbank_id": {"$exists": True}},
+                selectionList=["rcsb_id", "rcsb_chem_comp_container_identifiers", "rcsb_chem_comp_related"],
+            )
+            eCount = obEx.getCount()
+            logger.info("Component count ifs %d", eCount)
+            self.assertGreaterEqual(eCount, 3)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
     def testExtractEntriesBefore(self):
         """Test case - extract entries subject to date restriction"""
         try:

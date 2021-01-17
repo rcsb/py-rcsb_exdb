@@ -1,5 +1,5 @@
 --extra-index-url https://pypi.anaconda.org/OpenEye/simple
-OpenEye-toolkits >= 2020.1.0
+OpenEye-toolkits >= 2020.2.0
 numpy
 jsonschema >= 2.6.0
 rcsb.utils.io >= 0.91
