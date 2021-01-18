@@ -58,3 +58,4 @@
 30-Aug-2020 V0.66 Update dependencies
  8-Dec-2020 V0.67 Add PolymerEntityExtractor() and UniProtExtractor() from rcsb.utils.seqalign, cleanup tests and fixture issues
  9-Dec-2020 V0.68 Simplify API for PolymerEntityExtractor()
+18-Jan-2021 V0.69 Update dependencies
