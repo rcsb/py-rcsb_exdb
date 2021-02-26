@@ -23,8 +23,8 @@ import resource
 import time
 import unittest
 
-from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
+from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()

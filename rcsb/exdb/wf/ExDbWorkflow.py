@@ -15,7 +15,6 @@ __license__ = "Apache 2.0"
 import logging
 import os
 
-from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.exdb.chemref.ChemRefEtlWorker import ChemRefEtlWorker
@@ -25,6 +24,7 @@ from rcsb.exdb.seq.UniProtCoreEtlWorker import UniProtCoreEtlWorker
 from rcsb.exdb.tree.TreeNodeListWorker import TreeNodeListWorker
 from rcsb.exdb.utils.ObjectTransformer import ObjectTransformer
 from rcsb.utils.config.ConfigUtil import ConfigUtil
+from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 
 logger = logging.getLogger(__name__)
 
