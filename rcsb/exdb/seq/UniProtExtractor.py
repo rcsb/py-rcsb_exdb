@@ -61,6 +61,8 @@ class UniProtExtractor(object):
                 taxId = uD["taxonomy_id"]
                 sn = uD["source_scientific"]
                 sequence = uD["sequence"]
+                gn = None
+                pn = None
                 if "gene" in uD:
                     for tD in uD["gene"]:
                         if tD["type"] == "primary":
