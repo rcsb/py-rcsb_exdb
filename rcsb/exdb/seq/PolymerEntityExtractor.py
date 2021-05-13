@@ -39,9 +39,9 @@ class PolymerEntityExtractor(object):
     def __init__(self, cfgOb):
         self.__cfgOb = cfgOb
 
-    def exportProteinSequenceDetails(self, filePath, fmt="json"):
+    def exportProteinSequenceDetails(self, filePath, fmt="json", minSeqLen=0):
         """Export protein sequence and taxonomy data (required to build protein sequence fasta file)"""
-        rD, missingSrcD = self.getProteinSequenceDetails()
+        rD, missingSrcD = self.getProteinSequenceDetails(minSeqLen=minSeqLen)
         # ----
         mU = MarshalUtil()
         ok1 = mU.doExport(filePath, rD, fmt=fmt, indent=3)
@@ -51,7 +51,7 @@ class PolymerEntityExtractor(object):
         ok2 = mU.doExport(os.path.join(pth, "missingSrcNames.json"), missingSrcD, fmt="json")
         logger.info("Exporting (%d) protein sequence records with missing source count (%d) status %r", len(rD), len(missingSrcD), ok1 and ok2)
 
-    def getProteinSequenceDetails(self):
+    def getProteinSequenceDetails(self, minSeqLen=0):
         """Get protein sequence and taxonomy data (required to build protein sequence fasta file)"""
         missingSrcD = {}
         rD = {}
@@ -91,7 +91,7 @@ class PolymerEntityExtractor(object):
                 except Exception:
                     logger.warning("%s no one-letter-code sequence", rId)
                 #
-                if seqLen < 20:
+                if seqLen < minSeqLen:
                     continue
                 #
                 srcMethod = None
@@ -209,7 +209,7 @@ class PolymerEntityExtractor(object):
             #
             return rL[0][0]
 
-    def exportProteinEntityFasta(self, fastaPath, taxonPath, detailsPath):
+    def exportProteinEntityFasta(self, fastaPath, taxonPath, detailsPath, minSeqLen=10):
         """Export protein entity Fasta file and associated taxon mapping file (for mmseqs2)
 
         Args:
@@ -283,7 +283,7 @@ class PolymerEntityExtractor(object):
                 },
         >1ABC_#|prt|<taxid>|beg|end|refdb|refId|refTaxId|refbeg|refend|ref_gn|ref_nm
         """
-        proteinSeqD, _ = self.getProteinSequenceDetails()
+        proteinSeqD, _ = self.getProteinSequenceDetails(minSeqLen=minSeqLen)
         ok = False
 
         try:

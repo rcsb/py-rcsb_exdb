@@ -61,3 +61,4 @@
 18-Jan-2021 V0.69 Update dependencies
 25-Feb-2021 V0.70 Update with split out rcsb.utils.dictionary
 18-Mar-2021 V0.71 Adjustments in initialization  UniProtExtractor()
+13-May-2021 V0.72 Add minSeqLen argument to exportProteinEntityFasta()
