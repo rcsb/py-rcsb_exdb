@@ -33,7 +33,7 @@ class BranchedEntityExtractor(object):
         # ----
         mU = MarshalUtil()
         ok = mU.doExport(filePath, rD, fmt=fmt, indent=3)
-        logger.info("Exporting (%d) branched descriptors status %r", len(rD), ok)
+        logger.info("Exporting (%d) branched entities status %r", len(rD), ok)
         return ok
 
     def getBranchedDetails(self):
@@ -53,8 +53,8 @@ class BranchedEntityExtractor(object):
                 selectionList=["rcsb_id", "pdbx_entity_branch_descriptor", "rcsb_branched_entity_container_identifiers"],
             )
             #
-            eCount = obEx.getCount()
-            logger.info("Branched entity count is %d", eCount)
+            # eCount = obEx.getCount()
+            # logger.info("Branched entity count is %d", eCount)
             objD = obEx.getObjects()
             rD = {}
             for _, eD in objD.items():
