@@ -36,6 +36,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
         self.__ecP = self.__rsaP.getEcProvider()
         self.__refD = self.__rsaP.getRefData()
         self.__matchD = self.__rsaP.getMatchInfo()
+        self.__ggP = self.__rsaP.getGlyGenProvider()
         #
 
     def filter(self, obj, **kwargs):
@@ -167,6 +168,18 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
 
                             else:
                                 unpAnnDL.append({"provenance_source": "UniProt", "annotation_id": tD["id_code"], "type": tD["resource"], "assignment_version": uD["version"]})
+                #
+                if self.__ggP and self.__ggP.hasGlycoprotein(unpId):
+                    logger.debug("Mapping glycoprotein for %r", unpId)
+                    unpAnnDL.append(
+                        {
+                            "provenance_source": "RCSB",
+                            "annotation_id": unpId,
+                            "name": "Glycoprotein",
+                            "type": "GlyGen",
+                            "assignment_version": "1.0",
+                        }
+                    )
 
             #
             # raD {'resource_identifier': 'PF00503', 'provenance_source': 'SIFTS', 'resource_name': 'Pfam'}

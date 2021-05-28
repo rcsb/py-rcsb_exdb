@@ -21,6 +21,7 @@ from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
 from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
 from rcsb.utils.io.IoUtil import getObjSize
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+from rcsb.utils.seq.GlyGenProvider import GlyGenProvider
 from rcsb.utils.seq.InterProProvider import InterProProvider
 from rcsb.utils.seq.PfamProvider import PfamProvider
 from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
@@ -39,14 +40,13 @@ class ReferenceSequenceAnnotationProvider(object):
         self.__maxChunkSize = maxChunkSize
         self.__statusList = []
         #
+        self.__ggP = self.__fetchGlyGenProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__pfP = self.__fetchPfamProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__ipP = self.__fetchInterProProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__ssP = self.__fetchSiftsSummaryProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__goP = self.__fetchGoProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__ecP = self.__fetchEcProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
-        self.__rsaP = ReferenceSequenceCacheProvider(
-            self.__cfgOb, siftsProvider=self.__ssP, maxChunkSize=maxChunkSize, numProc=numProc, fetchLimit=fetchLimit, expireDays=expireDays
-        )
+        self.__rsaP = ReferenceSequenceCacheProvider(self.__cfgOb, siftsProvider=self.__ssP, maxChunkSize=maxChunkSize, numProc=numProc, fetchLimit=fetchLimit, expireDays=expireDays)
         self.__matchD = self.__rsaP.getMatchInfo()
         self.__refD = self.__rsaP.getRefData()
         self.__missingMatchedIdCodes = self.__rsaP.getMissingMatchedIdCodes()
@@ -75,6 +75,9 @@ class ReferenceSequenceAnnotationProvider(object):
         except Exception as e:
             logger.exception("Failing for %r with %s", goIdL, str(e))
         return gL
+
+    def getGlyGenProvider(self):
+        return self.__ggP
 
     def getPfamProvider(self):
         return self.__pfP
@@ -184,6 +187,15 @@ class ReferenceSequenceAnnotationProvider(object):
         ok = ecP.testCache()
         logger.debug("Enzyme cache status %r", ok)
         return ecP
+
+    def __fetchGlyGenProvider(self, cfgOb, configName, **kwargs):
+        _ = cfgOb
+        _ = configName
+        cachePath = kwargs.get("cachePath", ".")
+        useCache = kwargs.get("useCache", True)
+        ggP = GlyGenProvider(cachePath=cachePath, useCache=useCache)
+        ok = ggP.testCache()
+        return ggP if ok else None
 
     def __fetchPfamProvider(self, cfgOb, configName, **kwargs):
         _ = cfgOb

@@ -64,3 +64,4 @@
 13-May-2021 V0.72 Add minSeqLen argument to exportProteinEntityFasta()
 24-May-2021 V0.73 Add BranchedEntityExtractor() and associated tests
 26-May-2021 V0.74 Add modules GlycanProvider(), GlycanUtils() and associated tests
+27-May-2021 V0.75 Implement GlyGen mapping in ReferenceSequenceAnnotationProvider and ReferenceSequenceAnnotationAdapter
