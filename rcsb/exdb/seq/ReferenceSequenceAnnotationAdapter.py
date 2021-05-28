@@ -94,6 +94,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
             #
             unpGeneDL = []
             unpAnnDL = []
+            glygenDL = []
             geneLookupD = {}
             geneFilterD = defaultdict(int)
             resourceFilterD = defaultdict(int)
@@ -171,9 +172,9 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                 #
                 if self.__ggP and self.__ggP.hasGlycoprotein(unpId):
                     logger.debug("Mapping glycoprotein for %r", unpId)
-                    unpAnnDL.append(
+                    glygenDL.append(
                         {
-                            "provenance_source": "RCSB",
+                            "provenance_source": "PDB",
                             "annotation_id": unpId,
                             "name": "Glycoprotein",
                             "type": "GlyGen",
@@ -198,9 +199,13 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
             for unpAnnD in unpAnnDL:
                 peaDL.append(unpAnnD)
             #
+            if glygenDL:
+                logger.debug("%r glygenDL (%d) %r", entityKey, len(glygenDL), glygenDL)
+                peaDL.extend(glygenDL)
+
             if peaDL:
                 obj["rcsb_polymer_entity_annotation"] = peaDL
-                # logger.debug("annotation object is %r", obj["rcsb_polymer_entity_annotation"])
+                # logger.info("annotation object is %r", obj["rcsb_polymer_entity_annotation"])
             #
             # --------------  Add gene names -----------------
             #
