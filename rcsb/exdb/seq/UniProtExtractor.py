@@ -32,7 +32,7 @@ class UniProtExtractor(object):
         return ok
 
     def getReferenceSequenceDetails(self):
-        """Get reference protein sequence essential details (sequence, taxonomy, name, gene, ...) """
+        """Get reference protein sequence essential details (sequence, taxonomy, name, gene, ...)"""
         uD = None
         try:
             obEx = ObjectExtractor(

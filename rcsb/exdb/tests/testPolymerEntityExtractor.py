@@ -70,7 +70,7 @@ class PolymerEntityExtractorTests(unittest.TestCase):
             self.fail()
 
     def testExportProteinEntityFasta(self):
-        """Test case - export protein entity sequence Fasta """
+        """Test case - export protein entity sequence Fasta"""
         try:
             pEx = PolymerEntityExtractor(self.__cfgOb)
             ok = pEx.exportProteinEntityFasta(self.__fastaPath, self.__taxonPath, self.__detailsPath)

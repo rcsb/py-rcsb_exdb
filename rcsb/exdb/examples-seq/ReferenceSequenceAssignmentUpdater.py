@@ -33,9 +33,7 @@ class ReferenceSequenceAssignmentUpdater(object):
 
     """
 
-    def __init__(
-        self, cfgOb, databaseName="pdbx_core", collectionName="pdbx_core_polymer_entity", polymerType="Protein", referenceDatabaseName="UniProt", provSource="PDB", **kwargs
-    ):
+    def __init__(self, cfgOb, databaseName="pdbx_core", collectionName="pdbx_core_polymer_entity", polymerType="Protein", referenceDatabaseName="UniProt", provSource="PDB", **kwargs):
         self.__cfgOb = cfgOb
         self.__polymerType = polymerType
         self.__mU = MarshalUtil()
@@ -249,9 +247,7 @@ class ReferenceSequenceAssignmentUpdater(object):
                 updateD = {}
                 authAsymIdL = []
                 ersDL = (
-                    eD["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"]
-                    if "reference_sequence_identifiers" in eD["rcsb_entity_container_identifiers"]
-                    else None
+                    eD["rcsb_entity_container_identifiers"]["reference_sequence_identifiers"] if "reference_sequence_identifiers" in eD["rcsb_entity_container_identifiers"] else None
                 )
                 #
                 #
@@ -295,7 +291,7 @@ class ReferenceSequenceAssignmentUpdater(object):
         return updateDL
 
     def __rebuildReferenceCache(self, refDbName, idList, **kwargs):
-        """"""
+        """ """
         dD = {}
         cachePath = kwargs.get("cachePath", ".")
         dirPath = os.path.join(cachePath, "exdb")

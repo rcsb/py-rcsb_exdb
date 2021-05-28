@@ -65,7 +65,7 @@ class UniProtCoreEtlWorker(object):
         return False
 
     def __getReferenceSequenceProvider(self):
-        """"""
+        """ """
         try:
             rsaP = ReferenceSequenceAssignmentProvider(
                 self.__cfgOb,

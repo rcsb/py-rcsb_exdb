@@ -141,9 +141,7 @@ class PubChemUpdateWorker(object):
                                     else None
                                 )
                                 smiles = (
-                                    self.__searchIdxD[chemId.indexName]["smiles"]
-                                    if chemId.indexName in self.__searchIdxD and "smiles" in self.__searchIdxD[chemId.indexName]
-                                    else None
+                                    self.__searchIdxD[chemId.indexName]["smiles"] if chemId.indexName in self.__searchIdxD and "smiles" in self.__searchIdxD[chemId.indexName] else None
                                 )
                                 mL.append(
                                     {

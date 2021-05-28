@@ -191,8 +191,9 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
             if peaDL:
                 qL = []
                 for peaD in peaDL:
-                    if peaD["provenance_source"] != "UniProt":
-                        qL.append(peaD)
+                    if (peaD["provenance_source"] == "UniProt") or (peaD["type"] == "GlyGen"):
+                        continue
+                    qL.append(peaD)
                 # Put back the base object list -
                 peaDL = qL
 
@@ -200,7 +201,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                 peaDL.append(unpAnnD)
             #
             if glygenDL:
-                logger.debug("%r glygenDL (%d) %r", entityKey, len(glygenDL), glygenDL)
+                # logger.debug("%r glygenDL (%d) %r", entityKey, len(glygenDL), glygenDL)
                 peaDL.extend(glygenDL)
 
             if peaDL:

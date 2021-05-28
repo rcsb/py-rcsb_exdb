@@ -54,7 +54,7 @@ class ReferenceSequenceUtils(object):
         return rL
 
     def __rebuildCache(self, refDbName, idList, **kwargs):
-        """"""
+        """ """
         dD = {}
         dirPath = kwargs.get("exdbDirPath", None)
         cacheKwargs = kwargs.get("cacheKwargs", None)

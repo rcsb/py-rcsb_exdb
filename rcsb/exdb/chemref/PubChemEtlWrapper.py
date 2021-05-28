@@ -101,17 +101,11 @@ class PubChemEtlWrapper(object):
         if fallBack:
             self.__stashUrl = self.__stashUrlFallBack
         if contentType.lower() == "index":
-            return self.__pcicP.toStash(
-                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
-            )
+            return self.__pcicP.toStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
         elif contentType.lower() == "data":
-            return self.__pcdcP.toStash(
-                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
-            )
+            return self.__pcdcP.toStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
         elif contentType.lower() == "identifiers":
-            return self.__pcP.toStash(
-                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
-            )
+            return self.__pcP.toStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
         return False
 
     def fromStash(self, contentType, fallBack=False):
@@ -133,13 +127,9 @@ class PubChemEtlWrapper(object):
                 remoteStashPrefix=self.__stashRemotePrefix,
             )
         elif contentType.lower() == "data":
-            return self.__pcdcP.fromStash(
-                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
-            )
+            return self.__pcdcP.fromStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
         elif contentType.lower() == "identifiers":
-            return self.__pcdcP.fromStash(
-                self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix
-            )
+            return self.__pcdcP.fromStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
         return False
 
     def updateIndex(self, **kwargs):

@@ -125,7 +125,7 @@ class EntityInstanceExtractor(object):
         #
 
     def getEntityIds(self, entryIdList):
-        """"""
+        """ """
         dbName = "pdbx_core"
         collectionName = "pdbx_core_polymer_entity"
         docD = {}
@@ -197,9 +197,7 @@ class EntityInstanceExtractor(object):
                                 rD["seq_one_letter_code_can"] = dV["entity_poly"]["pdbx_seq_one_letter_code_can"]
 
                             if "rcsb_entity_source_organism" in dV:
-                                rD["ncbi_taxonomy_id"] = (
-                                    dV["rcsb_entity_source_organism"][0]["ncbi_taxonomy_id"] if "ncbi_taxonomy_id" in dV["rcsb_entity_source_organism"][0] else None
-                                )
+                                rD["ncbi_taxonomy_id"] = dV["rcsb_entity_source_organism"][0]["ncbi_taxonomy_id"] if "ncbi_taxonomy_id" in dV["rcsb_entity_source_organism"][0] else None
                                 rD["ncbi_scientific_name"] = (
                                     dV["rcsb_entity_source_organism"][0]["ncbi_scientific_name"] if "ncbi_scientific_name" in dV["rcsb_entity_source_organism"][0] else None
                                 )

@@ -232,7 +232,7 @@ class ReferenceSequenceAssignmentProvider(object):
 
     #
     def __rebuildReferenceCache(self, idList, refDbName, **kwargs):
-        """"""
+        """ """
         fetchLimit = None
         doMissing = True
         dD = {}
