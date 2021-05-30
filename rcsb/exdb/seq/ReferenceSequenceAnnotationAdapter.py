@@ -115,7 +115,8 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                 if "dbReferences" in uD:
                     logger.debug("%s : %r references %d", entityKey, unpId, len(uD["dbReferences"]))
                     for tD in uD["dbReferences"]:
-                        if "resource" in tD and "id_code" in tD and tD["resource"] in ["GO", "Pfam", "InterPro"]:
+                        # Skipping Pfam now
+                        if "resource" in tD and "id_code" in tD and tD["resource"] in ["GO", "InterPro"]:
                             resourceFilterD[(tD["resource"], tD["id_code"])] += 1
                             if resourceFilterD[(tD["resource"], tD["id_code"])] > 1:
                                 logger.debug("Skipping duplicate annotation %r %r", tD["resource"], tD["id_code"])
