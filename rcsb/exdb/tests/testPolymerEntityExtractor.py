@@ -63,7 +63,8 @@ class PolymerEntityExtractorTests(unittest.TestCase):
         try:
             pEx = PolymerEntityExtractor(self.__cfgOb)
             pD, _ = pEx.getProteinSequenceDetails()
-            self.assertGreaterEqual(len(pD), 200)
+            #
+            self.assertGreaterEqual(len(pD), 100)
             logger.info("Polymer entity count %d", len(pD))
         except Exception as e:
             logger.exception("Failing with %s", str(e))
