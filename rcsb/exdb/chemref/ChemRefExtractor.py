@@ -16,8 +16,6 @@ __license__ = "Apache 2.0"
 
 import logging
 
-from rcsb.db.mongo.Connection import Connection
-from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
 from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 
 logger = logging.getLogger(__name__)
