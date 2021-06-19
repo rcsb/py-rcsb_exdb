@@ -9,7 +9,7 @@
 #  14-Feb-2020 jdw change over to ReferenceSequenceAnnotationProvider/Adapter
 #
 ##
-__docformat__ = "restructuredtext en"
+__docformat__ = "google en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"

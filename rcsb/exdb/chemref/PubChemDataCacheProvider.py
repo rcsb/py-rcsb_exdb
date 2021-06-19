@@ -9,7 +9,7 @@
 # 16-Jul-2020 jdw separate index and reference data management.
 #
 ##
-__docformat__ = "restructuredtext en"
+__docformat__ = "google en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"

@@ -1,19 +1,21 @@
 ##
-# File:    ObjectTransformerTests.py
+# File:    ChemRefMappingProviderTests.py
 # Author:  J. Westbrook
-# Date:    25-Apr-2019
+# Date:    18-Jun-2021
 #
 # Updates:
 #
 ##
 """
-Tests for extractor and updater or selected values from collections (limited tests from mock-data repos)
+Tests for
+
 """
 
 __docformat__ = "google en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
+
 
 import logging
 import os
@@ -22,7 +24,8 @@ import resource
 import time
 import unittest
 
-from rcsb.exdb.utils.ObjectTransformer import ObjectTransformer
+from rcsb.exdb.chemref.ChemRefMappingProvider import ChemRefMappingProvider
+
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -32,21 +35,17 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
-class ObjectTransformerTests(unittest.TestCase):
+class ChemRefMappingProviderTests(unittest.TestCase):
     def __init__(self, methodName="runTest"):
-        super(ObjectTransformerTests, self).__init__(methodName)
+        super(ChemRefMappingProviderTests, self).__init__(methodName)
         self.__verbose = True
 
     def setUp(self):
-        #
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        #
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
-        #
-        self.__fetchLimit = 5
-        #
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -57,27 +56,39 @@ class ObjectTransformerTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def testTranformEntityProteinContent(self):
-        """Test case - transform selected entity protein documents"""
+    def testChemRefMapping(self):
+        """Test case - load and access mapping cache"""
         try:
-            databaseName = "pdbx_core"
-            collectionName = "pdbx_core_polymer_entity"
-            obTr = ObjectTransformer(self.__cfgOb)
-            ok = obTr.doTransform(
-                databaseName=databaseName, collectionName=collectionName, fetchLimit=self.__fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": "Protein"}
-            )
+            crmP = ChemRefMappingProvider(self.__cachePath, useCache=True)
+            ok = crmP.testCache()
             self.assertTrue(ok)
+            #
+            ok = crmP.fetchChemRefMapping(self.__cfgOb, referenceResourceNameList=None)
+            self.assertTrue(ok)
+            crmP = ChemRefMappingProvider(self.__cachePath, useCache=True)
+            ok = crmP.testCache(minCount=2)
+            self.assertTrue(ok)
+            tD = {"CHEMBL": ("CHEMBL14249", "ATP"), "DRUGBANK": ("DB00171", "ATP")}
+            for refName, refTup in tD.items():
+                tL = crmP.getReferenceIds(refName, refTup[1])
+                logger.debug("tL %r", tL)
+                self.assertTrue(refTup[0] in tL)
+                tL = crmP.getLocalIds(refName, refTup[0])
+                logger.debug("tL %r", tL)
+                self.assertTrue(refTup[1] in tL)
+            #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
 
-def objectTransformerSuite():
+def chemRefMappingSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(ObjectTransformerTests("testTransformEntityProteinContent"))
+    suiteSelect.addTest(ChemRefMappingProviderTests("testChemRefMapping"))
     return suiteSelect
 
 
 if __name__ == "__main__":
-    mySuite = objectTransformerSuite()
+    #
+    mySuite = chemRefMappingSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

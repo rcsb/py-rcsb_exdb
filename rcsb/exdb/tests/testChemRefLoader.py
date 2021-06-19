@@ -1,17 +1,17 @@
 ##
 # File:    ChemRefLoaderTests.py
 # Author:  J. Westbrook
-# Date:    9-Dec-2018
+# Date:    18-Jun-2021
 #
 # Updates:
 #
 ##
 """
-Tests for loading repository holdings information.
+Tests for loading chemical reference data and identifer mapping information.
 
 """
 
-__docformat__ = "restructuredtext en"
+__docformat__ = "google en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
@@ -51,7 +51,7 @@ class ChemRefLoaderTests(unittest.TestCase):
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         #
         # sample data set
-        self.__updateId = "2018_23"
+        self.__updateId = "2021_10"
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -69,7 +69,7 @@ class ChemRefLoaderTests(unittest.TestCase):
             crw = ChemRefEtlWorker(self.__cfgOb, self.__cachePath)
             crExt = ChemRefExtractor(self.__cfgOb)
 
-            idD = crExt.getChemCompAccessionMapping(extResource="DrugBank")
+            idD = crExt.getChemCompAccessionMapping(referenceResourceName="DrugBank")
             logger.info("Mapping dictionary %r", len(idD))
             #
             ok = crw.load(self.__updateId, extResource="DrugBank", loadType="full")
@@ -83,7 +83,7 @@ class ChemRefLoaderTests(unittest.TestCase):
         """Test case - get DrugBank mapping -"""
         try:
             crExt = ChemRefExtractor(self.__cfgOb)
-            idD = crExt.getChemCompAccessionMapping(extResource="DrugBank")
+            idD = crExt.getChemCompAccessionMapping(referenceResourceName="DrugBank")
             logger.info("Mapping dictionary %r", len(idD))
             #
             mU = MarshalUtil()

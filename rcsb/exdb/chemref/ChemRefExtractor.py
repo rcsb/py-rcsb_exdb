@@ -9,7 +9,7 @@
 #  3-Sep-2019  jdw moved again to module rcsb.exdb.chemref
 #
 ##
-__docformat__ = "restructuredtext en"
+__docformat__ = "google en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
@@ -18,6 +18,7 @@ import logging
 
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
+from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -30,44 +31,41 @@ class ChemRefExtractor(object):
         self.__resourceName = "MONGO_DB"
         #
 
-    def getChemCompAccessionMapping(self, extResource, **kwargs):
+    def getChemCompAccessionMapping(self, referenceResourceName):
         """Get the accession code mapping between chemical component identifiers and identifier(s) for the
-            input external resource.
+            input external reference resource.
 
         Args:
-            extFesource (str):  resource name (e.g. DrugBank, CCDC)
-            **kwargs: unused
+            referenceResourceName (str):  resource name (e.g. DrugBank, ChEMBL, CCDC)
 
         Returns:
-            dict: {dbExtId: True, dbExtId: True, ...  }
+            dict: {referenceResourceId: chem_comp/bird_id, referenceResourceId: chem_comp/bird_id, ...  }
 
         """
         idD = {}
-        logger.debug("With %r %r", extResource, kwargs)
         try:
-            docList = []
-            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                mg = MongoDbUtil(client)
-                if mg.collectionExists("chem_comp_core", "bird_chem_comp_core"):
-                    logger.info("Document count is %d", mg.count("chem_comp_core", "chem_comp_core"))
-                    qD = {"rcsb_chem_comp_related.resource_name": extResource}
-                    selectL = ["rcsb_chem_comp_related"]
-                    tL = mg.fetch("chem_comp_core", "chem_comp_core", selectL, queryD=qD)
-                    logger.info("CC mapping count %d", len(tL))
-                    docList.extend(tL)
-
-                if mg.collectionExists("bird_chem_comp_core", "bird_chem_comp_core"):
-                    qD = {"rcsb_chem_comp_related.resource_name": extResource}
-                    selectL = ["rcsb_chem_comp_related"]
-                    tL = mg.fetch("bird_chem_comp_core", "bird_chem_comp_core", selectL, queryD=qD)
-                    logger.info("CC/BIRD mapping count %d", len(tL))
-                    docList.extend(tL)
-                #
-                for doc in docList:
-                    dL = doc["rcsb_chem_comp_related"] if "rcsb_chem_comp_related" in doc else []
-                    for dD in dL:
-                        if dD["resource_name"] == extResource and "resource_accession_code" in dD:
-                            idD[dD["resource_accession_code"]] = True
+            databaseName = "bird_chem_comp_core"
+            collectionName = "bird_chem_comp_core"
+            selectD = {"rcsb_chem_comp_related.resource_name": referenceResourceName}
+            selectionList = ["rcsb_id", "rcsb_chem_comp_related"]
+            logger.info("Searching %s %s with selection query %r", databaseName, collectionName, selectD)
+            obEx = ObjectExtractor(
+                self.__cfgOb,
+                databaseName=databaseName,
+                collectionName=collectionName,
+                keyAttribute="rcsb_id",
+                uniqueAttributes=["rcsb_id"],
+                selectionQuery=selectD,
+                selectionList=selectionList,
+                stripObjectId=True,
+            )
+            logger.info("Reference data object count %d", obEx.getCount())
+            objD = obEx.getObjects()
+            for _, doc in objD.items():
+                dL = doc["rcsb_chem_comp_related"] if "rcsb_chem_comp_related" in doc else []
+                for dD in dL:
+                    if dD["resource_name"] == referenceResourceName and "resource_accession_code" in dD:
+                        idD.setdefault(dD["resource_accession_code"], []).append(dD["comp_id"])
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return idD

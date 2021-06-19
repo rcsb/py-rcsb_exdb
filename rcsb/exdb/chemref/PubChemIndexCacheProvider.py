@@ -9,7 +9,7 @@
 # 16-Jul-2020 jdw separate index and reference data management.
 #
 ##
-__docformat__ = "restructuredtext en"
+__docformat__ = "google en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 class PubChemUpdateWorker(object):
     """A skeleton worker class that implements the interface expected by the multiprocessing module
-    for fetching CCD/BIRD to PubChem chemical compound identier correspondences --
+    for fetching CCD/BIRD to PubChem chemical compound identifier correspondences --
     """
 
     def __init__(self, cfgOb, searchIdxD, **kwargs):

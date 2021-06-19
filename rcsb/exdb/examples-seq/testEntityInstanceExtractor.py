@@ -12,7 +12,7 @@ Tests for preliminary version of the extractor selected values from entity insta
      PRELIMINARY VERSION
 """
 
-__docformat__ = "restructuredtext en"
+__docformat__ = "google en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
