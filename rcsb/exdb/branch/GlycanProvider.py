@@ -16,18 +16,18 @@ import time
 
 from rcsb.exdb.branch.GlycanUtils import GlycanUtils
 from rcsb.utils.io.MarshalUtil import MarshalUtil
-from rcsb.utils.io.StashUtil import StashUtil
+from rcsb.utils.io.StashableBase import StashableBase
 
 logger = logging.getLogger(__name__)
 
 
-class GlycanProvider:
+class GlycanProvider(StashableBase):
     """Accessors for entity glycan mapped identifiers.
 
     dirPath -> CACHE/glycan/
-                             mapped_identifiers/branched_entity_glycan_identifier_map.json
-                                                accession-wurcs-mapping.json
-                             stash/entity_glycan_mapped_identifiers.tar.gz
+                             branched_entity_glycan_identifier_map.json
+                             accession-wurcs-mapping.json
+                     stash/entity_glycan_mapped_identifiers.tar.gz
 
     """
 
@@ -36,12 +36,9 @@ class GlycanProvider:
         self.__version = "0.50"
         cachePath = kwargs.get("cachePath", ".")
         useCache = kwargs.get("useCache", True)
-        self.__dirPath = os.path.join(cachePath, "glycan")
-        #
-        #  - Configuration for stash services -
-        #
-        #    Local target directory name to be stashed.  (subdir of dirPath)
-        self.__stashDir = "mapped_identifiers"
+        self.__dirName = "glycan"
+        self.__dirPath = os.path.join(cachePath, self.__dirName)
+        super(GlycanProvider, self).__init__(cachePath, [self.__dirName])
         #
         self.__mU = MarshalUtil(workPath=self.__dirPath)
         self.__glyD = self.__reload(fmt="json", useCache=useCache)
@@ -69,7 +66,7 @@ class GlycanProvider:
     def __getMappingFilePath(self, fmt="json"):
         baseFileName = "branched_entity_glycan_identifier_map"
         fExt = ".json" if fmt == "json" else ".pic"
-        fp = os.path.join(self.__dirPath, self.__stashDir, baseFileName + fExt)
+        fp = os.path.join(self.__dirPath, baseFileName + fExt)
         return fp
 
     def update(self, cfgOb, fmt="json", indent=3):
@@ -83,7 +80,7 @@ class GlycanProvider:
         """
         ok = False
         try:
-            gU = GlycanUtils(cfgOb, os.path.join(self.__dirPath, self.__stashDir))
+            gU = GlycanUtils(cfgOb, self.__dirPath)
             eaD = gU.updateEntityAccessionMap()
             logger.info("Got branched entity glycan accession map (%d)", len(eaD))
             #
@@ -116,47 +113,3 @@ class GlycanProvider:
             logger.info("reading cached path %r", mappingFilePath)
             pcD = self.__mU.doImport(mappingFilePath, fmt=fmt)
         return pcD
-
-    def toStash(self, url, stashRemoteDirPath, userName=None, password=None, remoteStashPrefix=None):
-        """Copy tar and gzipped bundled cache data to remote server/location.
-
-        Args:
-            url (str): server URL (e.g. sftp://hostname.domain) None for local host
-            stashRemoteDirPath (str): path to target directory on remote server
-            userName (str, optional): server username. Defaults to None.
-            password (str, optional): server password. Defaults to None.
-            remoteStashPrefix (str, optional): channel prefix. Defaults to None.
-
-        Returns:
-            (bool): True for success or False otherwise
-        """
-        ok = False
-        try:
-            stU = StashUtil(os.path.join(self.__dirPath, "stash"), "entity_glycan_mapped_identifiers")
-            ok = stU.makeBundle(self.__dirPath, [self.__stashDir])
-            if ok:
-                ok = stU.storeBundle(url, stashRemoteDirPath, remoteStashPrefix=remoteStashPrefix, userName=userName, password=password)
-        except Exception as e:
-            logger.error("Failing with url %r stashDirPath %r: %s", url, stashRemoteDirPath, str(e))
-        return ok
-
-    def fromStash(self, url, stashRemoteDirPath, userName=None, password=None, remoteStashPrefix=None):
-        """Restore local cache from a tar and gzipped bundle to fetched from a remote server/location.
-
-        Args:
-            url (str): server URL (e.g. sftp://hostname.domain) None for local host
-            stashRemoteDirPath (str): path to target directory on remote server
-            userName (str, optional): server username. Defaults to None.
-            password (str, optional): server password. Defaults to None.
-            remoteStashPrefix (str, optional): channel prefix. Defaults to None.
-
-        Returns:
-            (bool): True for success or False otherwise
-        """
-        ok = False
-        try:
-            stU = StashUtil(os.path.join(self.__dirPath, "stash"), "entity_glycan_mapped_identifiers")
-            ok = stU.fetchBundle(self.__dirPath, url, stashRemoteDirPath, remoteStashPrefix=remoteStashPrefix, userName=userName, password=password)
-        except Exception as e:
-            logger.error("Failing with url %r stashDirPath %r: %s", url, stashRemoteDirPath, str(e))
-        return ok

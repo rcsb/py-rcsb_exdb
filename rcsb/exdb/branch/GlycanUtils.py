@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class GlycanUtils:
     """Utilities for fetching and mapping glycan annotations."""
 
-    def __init__(self, cfgOb, dirPath, **kwargs):
+    def __init__(self, cfgOb, dirPath):
         self.__cfgOb = cfgOb
         self.__dirPath = dirPath
         self.__mU = MarshalUtil(workPath=self.__dirPath)

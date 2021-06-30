@@ -30,7 +30,7 @@ logger = logging.getLogger()
 
 class GlycanUtilsTests(unittest.TestCase):
     def setUp(self):
-        self.__dirPath = os.path.join(HERE, "test-output", "CACHE", "glycan", "mapped_identifiers")
+        self.__dirPath = os.path.join(HERE, "test-output", "CACHE", "glycan")
         #
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
