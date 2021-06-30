@@ -70,4 +70,4 @@
 19-Jun-2021 V0.78 Add ChemRefMappingProvider(), modernize ChemRefExtractor(), and update __docformat__
 28-Jun-2021 V0.79 Add LigandNeighborMappingProvider() LigandNeighborMappingExtractor() and associated tests
 30-Jun-2021 V0.80 GlycanProvider() a subclass of StashableBase(), add GlycanEtlWorkflow() and associated tests
-
+30-Jun-2021 V0.81 Simplify install scripts and update pipeline configuration
