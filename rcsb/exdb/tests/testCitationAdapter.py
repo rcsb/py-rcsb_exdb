@@ -7,7 +7,7 @@
 #
 ##
 """
-Tests of reference seequence assignment adapter.
+Tests of reference sequence assignment adapter.
 """
 
 __docformat__ = "google en"

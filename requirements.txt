@@ -2,7 +2,7 @@
 OpenEye-toolkits >= 2020.2.0
 numpy
 jsonschema >= 2.6.0
-rcsb.utils.io >= 1.00
+rcsb.utils.io >= 1.15
 rcsb.db >= 1.674
 rcsb.utils.chemref >= 0.65
 rcsb.utils.chem >= 0.70

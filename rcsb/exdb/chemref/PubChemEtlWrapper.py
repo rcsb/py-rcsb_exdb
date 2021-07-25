@@ -27,26 +27,11 @@ class PubChemEtlWrapper(object):
 
     def __init__(self, cfgOb, cachePath, **kwargs):
         self.__cfgOb = cfgOb
-        configName = self.__cfgOb.getDefaultSectionName()
+        self.__configName = self.__cfgOb.getDefaultSectionName()
         self.__cachePath = cachePath
         self.__dirPath = os.path.join(self.__cachePath, "PubChem")
         #
         self.__stashRemotePrefix = kwargs.get("stashRemotePrefix", None)
-        #
-        stashMode = cfgOb.get("STASH_MODE", sectionName=configName)
-        logger.info("Using stash mode %r", stashMode)
-        if stashMode == "local":
-            bp = self.__cfgOb.get("STASH_LOCAL_BASE_PATH", sectionName=configName)
-            self.__stashDirPath = os.path.join(self.__cachePath, bp)
-            self.__stashUserName = self.__stashPassword = self.__stashUrl = self.__stashUrlFallBack = None
-        else:
-            # Optional configuration for remote stash server -
-            self.__stashUserName = cfgOb.get("_STASH_AUTH_USERNAME", sectionName=configName)
-            self.__stashPassword = cfgOb.get("_STASH_AUTH_PASSWORD", sectionName=configName)
-            self.__stashDirPath = cfgOb.get("_STASH_SERVER_BASE_PATH", sectionName=configName)
-            self.__stashUrlPrimary = cfgOb.get("STASH_SERVER_URL", sectionName=configName)
-            self.__stashUrlFallBack = cfgOb.get("STASH_SERVER_FALLBACK_URL", sectionName=configName)
-            self.__stashUrl = self.__stashUrlPrimary
         #
         self.__pcicP = PubChemIndexCacheProvider(self.__cfgOb, self.__cachePath)
         self.__pcdcP = PubChemDataCacheProvider(self.__cfgOb, self.__cachePath)
@@ -55,8 +40,8 @@ class PubChemEtlWrapper(object):
         self.__identifierD = None
         #
 
-    def restore(self, contentType="index"):
-        """Restore the input content type in the data store from saved backup.
+    def reloadDump(self, contentType="index"):
+        """Reload the input content type in the data store from saved object store dump.
 
         Args:
             contentType (str): target content to restore (data|index)
@@ -66,9 +51,9 @@ class PubChemEtlWrapper(object):
         """
         numRecords = 0
         if contentType.lower() == "index":
-            numRecords = self.__pcicP.restore()
+            numRecords = self.__pcicP.reloadDump()
         elif contentType.lower() == "data":
-            numRecords = self.__pcdcP.restore()
+            numRecords = self.__pcdcP.reloadDump()
         return numRecords
 
     def dump(self, contentType):
@@ -90,7 +75,7 @@ class PubChemEtlWrapper(object):
 
         return ok
 
-    def toStash(self, contentType, fallBack=False):
+    def toStash(self, contentType):
         """Store PubChem extracted content () on the remote stash storage resource.
 
         Args:
@@ -98,38 +83,28 @@ class PubChemEtlWrapper(object):
         Returns:
             (bool): True for success or False otherwise
         """
-        if fallBack:
-            self.__stashUrl = self.__stashUrlFallBack
         if contentType.lower() == "index":
-            return self.__pcicP.toStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
+            return self.__pcicP.backup(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=True, useStash=True)
         elif contentType.lower() == "data":
-            return self.__pcdcP.toStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
+            return self.__pcdcP.backup(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=True, useStash=True)
         elif contentType.lower() == "identifiers":
-            return self.__pcP.toStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
+            return self.__pcP.backup(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=True, useStash=True)
         return False
 
-    def fromStash(self, contentType, fallBack=False):
-        """Fetch PubChem extracted content () on the remote stash storage resource.
+    def fromStash(self, contentType):
+        """Fetch PubChem extracted content from the remote stash storage resource.
 
         Args:
             contentType (str): target content to fetch (data|index)
         Returns:
             (bool): True for success or False otherwise
         """
-        if fallBack:
-            self.__stashUrl = self.__stashUrlFallBack
         if contentType.lower() == "index":
-            return self.__pcicP.fromStash(
-                self.__stashUrl,
-                self.__stashDirPath,
-                userName=self.__stashUserName,
-                password=self.__stashPassword,
-                remoteStashPrefix=self.__stashRemotePrefix,
-            )
+            return self.__pcicP.restore(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useStash=True, useGit=True)
         elif contentType.lower() == "data":
-            return self.__pcdcP.fromStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
+            return self.__pcdcP.restore(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useStash=True, useGit=True)
         elif contentType.lower() == "identifiers":
-            return self.__pcdcP.fromStash(self.__stashUrl, self.__stashDirPath, userName=self.__stashUserName, password=self.__stashPassword, remoteStashPrefix=self.__stashRemotePrefix)
+            return self.__pcdcP.restore(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useStash=True, useGit=True)
         return False
 
     def updateIndex(self, **kwargs):
@@ -140,7 +115,7 @@ class PubChemEtlWrapper(object):
             birdUrlTarget (str, optional): target url for bird dictionary resource file (cc format) (default: None=all public)
             ccFileNamePrefix (str, optional): index file prefix (default: full)
             rebuildChemIndices (bool, optional): rebuild indices from source (default: False)
-            fetchlLimit (int, optional): maximum number of definitions to process (default: None)
+            fetchLimit (int, optional): maximum number of definitions to process (default: None)
             exportPath(str, optional): path to export raw PubChem search results  (default: None)
             numProc(int):  number processors to include in multiprocessing mode (default: 12)
 
