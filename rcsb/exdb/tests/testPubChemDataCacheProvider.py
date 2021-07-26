@@ -96,10 +96,6 @@ class PubChemDataCacheProviderTests(unittest.TestCase):
             logger.info("numUpd %d", numUpd)
             self.assertGreaterEqual(numUpd, len(self.__cidList))
             #
-            stashDirPath = os.path.join(self.__cachePath, "PubChem", "stash-remote")
-            pcdcP.toStash(None, stashDirPath)
-            pcdcP.fromStash(None, stashDirPath)
-            #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
