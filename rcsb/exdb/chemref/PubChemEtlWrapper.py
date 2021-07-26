@@ -75,7 +75,7 @@ class PubChemEtlWrapper(object):
 
         return ok
 
-    def toStash(self, contentType):
+    def toStash(self, contentType, useGit=False, useStash=True):
         """Store PubChem extracted content () on the remote stash storage resource.
 
         Args:
@@ -84,14 +84,14 @@ class PubChemEtlWrapper(object):
             (bool): True for success or False otherwise
         """
         if contentType.lower() == "index":
-            return self.__pcicP.backup(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=True, useStash=True)
+            return self.__pcicP.backup(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=useGit, useStash=useStash)
         elif contentType.lower() == "data":
-            return self.__pcdcP.backup(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=True, useStash=True)
+            return self.__pcdcP.backup(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=useGit, useStash=useStash)
         elif contentType.lower() == "identifiers":
-            return self.__pcP.backup(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=True, useStash=True)
+            return self.__pcP.backup(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=useGit, useStash=useStash)
         return False
 
-    def fromStash(self, contentType):
+    def fromStash(self, contentType, useStash=True, useGit=True):
         """Fetch PubChem extracted content from the remote stash storage resource.
 
         Args:
@@ -100,11 +100,11 @@ class PubChemEtlWrapper(object):
             (bool): True for success or False otherwise
         """
         if contentType.lower() == "index":
-            return self.__pcicP.restore(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useStash=True, useGit=True)
+            return self.__pcicP.restore(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=useGit, useStash=useStash)
         elif contentType.lower() == "data":
-            return self.__pcdcP.restore(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useStash=True, useGit=True)
+            return self.__pcdcP.restore(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=useGit, useStash=useStash)
         elif contentType.lower() == "identifiers":
-            return self.__pcdcP.restore(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useStash=True, useGit=True)
+            return self.__pcdcP.restore(self.__cfgOb, self.__configName, remotePrefix=self.__stashRemotePrefix, useGit=useGit, useStash=useStash)
         return False
 
     def updateIndex(self, **kwargs):

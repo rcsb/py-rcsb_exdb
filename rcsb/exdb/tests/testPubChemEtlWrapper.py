@@ -110,7 +110,8 @@ class PubChemEtlWrapperTests(unittest.TestCase):
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath)
             ok = pcewP.fromStash(contentType="index")
             self.assertTrue(ok)
-            numObjects = pcewP.restore(contentType="index")
+            #
+            numObjects = pcewP.reloadDump(contentType="index")
             logger.info("Restored %d correspondence records", numObjects)
             self.assertGreaterEqual(numObjects, self.__numComponents)
             mapD, extraMapD = pcewP.getSelectedMatches(exportPath=os.path.join(self.__cachePath, "mapping"))

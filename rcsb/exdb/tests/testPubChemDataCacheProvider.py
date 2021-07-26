@@ -82,7 +82,7 @@ class PubChemDataCacheProviderTests(unittest.TestCase):
             self.fail()
 
     def testBackupAndRestore(self):
-        """Test case - backup and restore operations."""
+        """Test case - load and dump operations."""
         try:
             #  -- Backup/Restore cache ---
             pcdcP = PubChemDataCacheProvider(self.__cfgOb, self.__cachePath)
@@ -91,10 +91,6 @@ class PubChemDataCacheProviderTests(unittest.TestCase):
             self.assertTrue(ok)
             ok = pcdcP.dump(fmt="json")
             self.assertTrue(ok)
-            #
-            numUpd = pcdcP.restore(fmt="json")
-            logger.info("numUpd %d", numUpd)
-            self.assertGreaterEqual(numUpd, len(self.__cidList))
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
