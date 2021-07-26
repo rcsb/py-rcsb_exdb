@@ -71,4 +71,4 @@
 28-Jun-2021 V0.79 Add LigandNeighborMappingProvider() LigandNeighborMappingExtractor() and associated tests
 30-Jun-2021 V0.80 Make GlycanProvider() a subclass of StashableBase(), add GlycanEtlWorkflow() and associated tests
 30-Jun-2021 V0.81 Simplify install scripts and update pipeline configuration
-24-Jul-2021 V0.82 Replace all explicit use of StashUtil with StashableBase subclasses
+26-Jul-2021 V0.82 Replace all explicit use of StashUtil with StashableBase subclasses
