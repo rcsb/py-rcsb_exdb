@@ -13,7 +13,6 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-import glob
 import logging
 import os.path
 
@@ -103,7 +102,6 @@ class TreeNodeListWorker(object):
             #
             logger.info("Starting with cache path %r (useCache=%r)", self.__cachePath, useCache)
             #
-            sectionName = "tree_node_lists_configuration"
             self.__statusList = []
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
