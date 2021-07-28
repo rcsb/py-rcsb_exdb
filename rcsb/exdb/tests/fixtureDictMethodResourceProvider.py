@@ -71,7 +71,7 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
             ]
             rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
             for resourceName in resourceNameL:
-                rP.getResource(resourceName, useCache=False, default=None, doRestore=True, doBackup=False, useStash=False, useGit=True)
+                rP.getResource(resourceName, useCache=True, default=None, doRestore=True, doBackup=False, useStash=False, useGit=True)
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
