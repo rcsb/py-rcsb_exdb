@@ -69,9 +69,9 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
                 "ScopClassificationProvider instance",
                 "TaxonomyProvider instance",
             ]
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, restoreUseStash=False, restoreUseGit=True)
             for resourceName in resourceNameL:
-                rP.getResource(resourceName, useCache=True, default=None, doRestore=True, doBackup=False, useStash=False, useGit=True)
+                rP.getResource(resourceName, useCache=True, default=None, doRestore=True, doBackup=False)
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))

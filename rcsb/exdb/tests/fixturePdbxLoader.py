@@ -45,6 +45,8 @@ class PdbxLoaderFixture(unittest.TestCase):
     def setUp(self):
         #
         #
+        self.__isMac = platform.system() == "Darwin"
+        self.__excludeType = None if self.__isMac else "optional"
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
         configName = "site_info_configuration"
@@ -109,6 +111,9 @@ class PdbxLoaderFixture(unittest.TestCase):
                 validationLevel=kwargs["validationLevel"],
                 mergeContentTypes=kwargs["mergeContentTypes"],
                 useNameFlag=False,
+                providerTypeExclude=self.__excludeType,
+                restoreUseGit=True,
+                restoreUseStash=False,
             )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
