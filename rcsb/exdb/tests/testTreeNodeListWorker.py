@@ -42,6 +42,8 @@ class TreeNodeListWorkerTests(unittest.TestCase):
         self.__verbose = True
 
     def setUp(self):
+        self.__isMac = platform.system() == "Darwin"
+        self.__doLoad = True if self.__isMac else False
         #
         #
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
@@ -88,7 +90,7 @@ class TreeNodeListWorkerTests(unittest.TestCase):
                 useCache=self.__useCache,
             )
             #
-            ok = rhw.load(updateId, loadType=self.__loadType)
+            ok = rhw.load(updateId, loadType=self.__loadType, doLoad=self.__doLoad)
             self.assertTrue(ok)
             #
         except Exception as e:
