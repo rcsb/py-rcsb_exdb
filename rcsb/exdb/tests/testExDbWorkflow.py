@@ -41,7 +41,7 @@ class ExDbWorkflowTests(unittest.TestCase):
         self.__verbose = True
 
     def setUp(self):
-        self.__isMac = platform.system() != "Darwin"
+        self.__isMac = platform.system() == "Darwin"
         self.__excludeType = None if self.__isMac else "optional"
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(mockTopPath, "config", "dbload-setup-example.yml")
