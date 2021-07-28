@@ -68,13 +68,14 @@ class ChemRefMappingProviderTests(unittest.TestCase):
             crmP = ChemRefMappingProvider(self.__cachePath, useCache=True)
             ok = crmP.testCache(minCount=2)
             self.assertTrue(ok)
-            tD = {"CHEMBL": ("CHEMBL14249", "ATP"), "DRUGBANK": ("DB00171", "ATP")}
+            # tD = {"CHEMBL": ("CHEMBL14249", "ATP"), "DRUGBANK": ("DB00171", "ATP")}
+            tD = {"DRUGBANK": ("DB00171", "ATP")}
             for refName, refTup in tD.items():
                 tL = crmP.getReferenceIds(refName, refTup[1])
-                logger.debug("tL %r", tL)
+                logger.info("tL %r", tL)
                 self.assertTrue(refTup[0] in tL)
                 tL = crmP.getLocalIds(refName, refTup[0])
-                logger.debug("tL %r", tL)
+                logger.info("tL %r", tL)
                 self.assertTrue(refTup[1] in tL)
             #
         except Exception as e:

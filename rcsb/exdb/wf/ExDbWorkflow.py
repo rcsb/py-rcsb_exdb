@@ -46,8 +46,16 @@ class ExDbWorkflow(object):
         #  Rebuild or check resource cache
         rebuildCache = kwargs.get("rebuildCache", False)
         self.__useCache = not rebuildCache
+        restoreUseGit = kwargs.get("restoreUseGit", True)
+        restoreUseStash = kwargs.get("restoreUseStash", True)
+        providerTypeExclude = kwargs.get("providerTypeExclude", None)
         #
-        self.__cacheStatus = self.buildResourceCache(rebuildCache=rebuildCache)
+        self.__cacheStatus = self.buildResourceCache(
+            rebuildCache=rebuildCache,
+            providerTypeExclude=providerTypeExclude,
+            restoreUseGit=restoreUseGit,
+            restoreUseStash=restoreUseStash,
+        )
         logger.debug("Cache status if %r", self.__cacheStatus)
         #
 
@@ -155,12 +163,19 @@ class ExDbWorkflow(object):
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def buildResourceCache(self, rebuildCache=False):
+    def buildResourceCache(self, rebuildCache=False, providerTypeExclude=None, restoreUseGit=True, restoreUseStash=True):
         """Generate and cache resource dependencies."""
         ret = False
         try:
-            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
-            ret = rp.cacheResources(useCache=not rebuildCache)
+            rp = DictMethodResourceProvider(
+                self.__cfgOb,
+                configName=self.__configName,
+                cachePath=self.__cachePath,
+                providerTypeExclude=providerTypeExclude,
+                restoreUseGit=restoreUseGit,
+                restoreUseStash=restoreUseStash,
+            )
+            ret = rp.cacheResources(useCache=not rebuildCache, doBackup=False)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return ret

@@ -41,13 +41,24 @@ class ExDbWorkflowTests(unittest.TestCase):
         self.__verbose = True
 
     def setUp(self):
+        self.__isMac = platform.system() != "Darwin"
+        self.__excludeType = None if self.__isMac else "optional"
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(mockTopPath, "config", "dbload-setup-example.yml")
         configName = "site_info_configuration"
         cachePath = os.path.join(TOPDIR, "CACHE")
         self.__dataPath = os.path.join(HERE, "test-data")
         #
-        self.__commonD = {"configPath": configPath, "mockTopPath": mockTopPath, "configName": configName, "cachePath": cachePath, "rebuildCache": False}
+        self.__commonD = {
+            "configPath": configPath,
+            "mockTopPath": mockTopPath,
+            "configName": configName,
+            "cachePath": cachePath,
+            "rebuildCache": False,
+            "providerTypeExclude": self.__excludeType,
+            "restoreUseGit": True,
+            "restoreUseStash": False,
+        }
         self.__loadCommonD = {"readBackCheck": True, "numProc": 2, "chunkSize": 10, "loadType": "full"}
         #
         # These are test source files for chemical component/BIRD indices

@@ -65,8 +65,8 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
                 "EnzymeDatabaseProvider instance",
                 "PfamProvider instance",
                 "SiftsSummaryProvider instance",
-                "CathClassificationProvider instance",
-                "ScopClassificationProvider instance",
+                "CathProvider instance",
+                "ScopProvider instance",
                 "TaxonomyProvider instance",
             ]
             rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, restoreUseStash=False, restoreUseGit=True)
