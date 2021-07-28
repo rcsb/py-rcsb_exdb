@@ -54,11 +54,25 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testBuildResourceCache(self):
-        """Fixture - generate and check resource caches"""
+        """Fixture - generate and check selected resource caches"""
         try:
-            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
-            ret = rp.cacheResources(useCache=True)
-            self.assertTrue(ret)
+            resourceNameL = [
+                "AtcProvider instance",
+                "DrugBankProvider instance",
+                "PubChemProvider instance",
+                "CitationReferenceProvider instance",
+                "JournalTitleAbbreviationProvider instance",
+                "EnzymeDatabaseProvider instance",
+                "PfamProvider instance",
+                "SiftsSummaryProvider instance",
+                "CathClassificationProvider instance",
+                "ScopClassificationProvider instance",
+                "TaxonomyProvider instance",
+            ]
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            for resourceName in resourceNameL:
+                rP.getResource(resourceName, useCache=False, default=None, doRestore=True, doBackup=False, useStash=False, useGit=True)
+            #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
@@ -78,7 +92,7 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
 def dictMethodResourceProviderSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(DictMethodResourceProviderFixture("testBuildResourceCache"))
-    suiteSelect.addTest(DictMethodResourceProviderFixture("testRecoverResourceCache"))
+    # suiteSelect.addTest(DictMethodResourceProviderFixture("testRecoverResourceCache"))
     return suiteSelect
 
 

@@ -1,10 +1,10 @@
 --extra-index-url https://pypi.anaconda.org/OpenEye/simple
-OpenEye-toolkits >= 2020.2.0
+OpenEye-toolkits >= 2020.2.2
 numpy
 jsonschema >= 2.6.0
 rcsb.utils.io >= 1.15
-rcsb.db >= 1.674
-rcsb.utils.chemref >= 0.77
+rcsb.db >= 1.682
+rcsb.utils.chemref >= 0.78
 rcsb.utils.chem >= 0.73
 rcsb.utils.citation >= 0.16
 rcsb.utils.config >= 0.35
@@ -13,5 +13,5 @@ rcsb.utils.go >= 0.17
 rcsb.utils.seq >= 0.63
 rcsb.utils.struct >= 0.32
 rcsb.utils.taxonomy >= 0.37
-rcsb.utils.dictionary >= 0.46
+rcsb.utils.dictionary >= 0.51
 statistics; python_version < "3.0"
