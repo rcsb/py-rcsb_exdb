@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class GlycanProvider(StashableBase):
-    """Accessors for entity glycan mapped identifiers.
+    """Accessors and generators for entity glycan mapped identifiers.
 
     dirPath -> CACHE/glycan/
                              branched_entity_glycan_identifier_map.json
@@ -44,10 +44,11 @@ class GlycanProvider(StashableBase):
         self.__glyD = self.__reload(fmt="json", useCache=useCache)
         #
 
-    def testCache(self, minCount=0):
+    def testCache(self, minCount=1):
         if minCount == 0:
             return True
         if self.__glyD and minCount and ("identifiers" in self.__glyD) and len(self.__glyD["identifiers"]) >= minCount:
+            logger.info("Glycan identifiers (%d)", len(self.__glyD["identifiers"]))
             return True
         return False
 

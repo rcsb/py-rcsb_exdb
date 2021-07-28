@@ -57,7 +57,6 @@ class PubChemEtlWorkflow(object):
             logger.info("Dumping index data")
             ok1 = pcewP.dump(contentType="index")
             ok2 = pcewP.toStash(contentType="index")
-            _ = pcewP.toStash(contentType="index", fallBack=True)
             eTime = time.time()
             logger.info("Dumping index data done in (%.4f seconds)", eTime - sTime)
 
@@ -65,7 +64,6 @@ class PubChemEtlWorkflow(object):
             logger.info("Dumping reference data")
             ok3 = pcewP.dump(contentType="data")
             ok4 = pcewP.toStash(contentType="data")
-            _ = pcewP.toStash(contentType="data", fallBack=True)
             eTime = time.time()
             logger.info("Dumping data done in (%.4f seconds)", eTime - sTime)
         except Exception as e:
@@ -80,14 +78,12 @@ class PubChemEtlWorkflow(object):
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
             sTime = time.time()
             ok1 = pcewP.toStash(contentType="index")
-            _ = pcewP.toStash(contentType="index", fallBack=True)
             eTime = time.time()
             logger.info("Stashing index data done in (%.4f seconds)", eTime - sTime)
 
             sTime = time.time()
             logger.info("Stashing reference data")
             ok2 = pcewP.toStash(contentType="data")
-            _ = pcewP.toStash(contentType="data", fallBack=True)
             eTime = time.time()
             logger.info("Stashing data done in (%.4f seconds)", eTime - sTime)
         except Exception as e:
@@ -102,20 +98,16 @@ class PubChemEtlWorkflow(object):
             #  -- Update local chemical indices and  create PubChem mapping index ---
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
             sTime = time.time()
-            logger.info("Restoring index data")
+            logger.info("Restoring stashed index data")
             ok1 = pcewP.fromStash(contentType="index")
-            if not ok1:
-                ok1 = pcewP.fromStash(contentType="index", fallBack=True)
-            numObjIndex = pcewP.restore(contentType="index")
+            numObjIndex = pcewP.reloadDump(contentType="index")
             eTime = time.time()
             logger.info("Restoring index data done in (%.4f seconds)", eTime - sTime)
 
             sTime = time.time()
             logger.info("Restoring reference data")
             ok2 = pcewP.fromStash(contentType="data")
-            if not ok2:
-                ok2 = pcewP.fromStash(contentType="data", fallBack=True)
-            numObjData = pcewP.restore(contentType="data")
+            numObjData = pcewP.reloadDump(contentType="data")
             eTime = time.time()
             logger.info("Restoring data done in (%.4f seconds)", eTime - sTime)
         except Exception as e:
@@ -158,7 +150,6 @@ class PubChemEtlWorkflow(object):
             )
             ok2 = pcewP.dump(contentType="index")
             ok3 = pcewP.toStash(contentType="index")
-            ok3 = pcewP.toStash(contentType="index", fallBack=True)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         #

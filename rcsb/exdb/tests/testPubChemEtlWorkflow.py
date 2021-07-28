@@ -38,10 +38,8 @@ class PubChemEtlWorkflowTests(unittest.TestCase):
 
     def setUp(self):
         #
-        self.__workPath = os.path.join(HERE, "test-output")
         self.__dataPath = os.path.join(HERE, "test-data")
         self.__cachePath = os.path.join(HERE, "test-output", "CACHE")
-        self.__dirPath = os.path.join(self.__cachePath, "PubChem")
         #
         # Site configuration used for database resource access -
         # self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")

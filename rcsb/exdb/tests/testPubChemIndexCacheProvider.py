@@ -46,8 +46,8 @@ class PubChemIndexCacheProviderTests(unittest.TestCase):
         # Site configuration used for database resource access -
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info_configuration"
-        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
+        self.__configName = "site_info_configuration"
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=self.__configName, mockTopPath=self.__mockTopPath)
         #
         # These are test source files for chemical component/BIRD indices
         self.__ccUrlTarget = os.path.join(self.__dataPath, "components-abbrev.cif")
@@ -87,9 +87,6 @@ class PubChemIndexCacheProviderTests(unittest.TestCase):
             ok = pcicP.dump()
             self.assertTrue(ok)
             #
-            numTotal = pcicP.restore()
-            logger.info("Restored %d correspondence records", numTotal)
-            self.assertGreaterEqual(numTotal, numObj)
             mapD, extraMapD = pcicP.getSelectedMatches(exportPath=os.path.join(self.__cachePath, "mapping"))
             self.assertGreaterEqual(len(mapD), 20)
             logger.info("mapD (%d) extraMapD (%d) %r", len(mapD), len(extraMapD), extraMapD)
@@ -97,10 +94,6 @@ class PubChemIndexCacheProviderTests(unittest.TestCase):
             cidList = pcicP.getMatches()
             logger.info("cidList (%d)", len(cidList))
             self.assertGreaterEqual(len(cidList), 49)
-            #
-            stashDirPath = os.path.join(self.__cachePath, "PubChem", "stash-remote")
-            pcicP.toStash(None, stashDirPath)
-            pcicP.fromStash(None, stashDirPath)
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))

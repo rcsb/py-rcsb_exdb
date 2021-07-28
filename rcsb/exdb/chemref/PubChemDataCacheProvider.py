@@ -2,11 +2,12 @@
 # File: PubChemDataCacheProvider.py
 # Date: 2-Apr-2020  jdw
 #
-# Utilities to cache chemical referencence data and mappings for PubChem
+# Utilities to cache chemical reference data and mappings for PubChem
 #
 # Updates:
 #  9-May-2020 jdw separate cache behavior with separate option rebuildChemIndices=True/False
 # 16-Jul-2020 jdw separate index and reference data management.
+# 23-Jul-2021 jdw Make PubChemDataCacheProvider a subclass of StashableBase()
 #
 ##
 __docformat__ = "google en"
@@ -23,7 +24,7 @@ from rcsb.exdb.utils.ObjectUpdater import ObjectUpdater
 from rcsb.utils.chemref.PubChemUtils import PubChemUtils, ChemicalIdentifier
 from rcsb.utils.io.IoUtil import getObjSize
 from rcsb.utils.io.MarshalUtil import MarshalUtil
-from rcsb.utils.io.StashUtil import StashUtil
+from rcsb.utils.io.StashableBase import StashableBase
 from rcsb.utils.io.TimeUtil import TimeUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
@@ -40,7 +41,6 @@ class PubChemDataUpdateWorker(object):
         self.__cfgOb = cfgOb
         #
         _ = kwargs
-
         self.__databaseName = "pubchem_exdb"
         self.__refDataCollectionName = "reference_entry"
         self.__createCollections(self.__databaseName, self.__refDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
@@ -124,13 +124,14 @@ class PubChemDataUpdateWorker(object):
         return (iList[i : i + chunkSize] for i in range(0, len(iList), chunkSize))
 
 
-class PubChemDataCacheProvider(object):
+class PubChemDataCacheProvider(StashableBase):
     """Utilities to cache chemical reference data extracted from PubChem compound data"""
 
     def __init__(self, cfgOb, cachePath):
+        dirName = "PubChem-data"
+        super(PubChemDataCacheProvider, self).__init__(cachePath, [dirName])
         self.__cfgOb = cfgOb
-        self.__dirPath = os.path.join(cachePath, "PubChem")
-        self.__stashDir = "dump-pubchem-match-data"
+        self.__dirPath = os.path.join(cachePath, dirName)
         #
         self.__databaseName = "pubchem_exdb"
         self.__refDataCollectionName = "reference_entry"
@@ -177,7 +178,7 @@ class PubChemDataCacheProvider(object):
     def __getdumpFilePath(self, fmt="json"):
         stashBaseFileName = "pubchem_match_data_object_list"
         fExt = ".json" if fmt == "json" else ".pic"
-        fp = os.path.join(self.__dirPath, self.__stashDir, stashBaseFileName + fExt)
+        fp = os.path.join(self.__dirPath, stashBaseFileName + fExt)
         return fp
 
     def dump(self, fmt="json"):
@@ -204,8 +205,8 @@ class PubChemDataCacheProvider(object):
             logger.exception("Failing for %r with %s", self.__dirPath, str(e))
         return ok
 
-    def restore(self, fmt="json"):
-        """Restore PubChem reference data store from saved backup.
+    def reloadDump(self, fmt="json"):
+        """Load PubChem reference data store from saved dump.
 
         Args:
             fmt (str, optional): format of the backup file (pickle or json). Defaults to "json".
@@ -221,54 +222,11 @@ class PubChemDataCacheProvider(object):
                 logger.info("Restoring object store from %s", fp)
                 mU = MarshalUtil(workPath=self.__dirPath)
                 refD = mU.doImport(fp, fmt=fmt)
-                numUpd = self.__restore(refD, self.__databaseName, self.__refDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
+                numUpd = self.__reloadDump(refD, self.__databaseName, self.__refDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
         except Exception as e:
             logger.exception("Failing for %r with %s", self.__dirPath, str(e))
         # --
         return numUpd
-
-    def toStash(self, url, stashRemoteDirPath, userName=None, password=None, remoteStashPrefix=None):
-        """Copy tar and gzipped bundled cache data to remote server/location.
-
-        Args:
-            url (str): server URL (e.g. sftp://hostname.domain) None for local host
-            stashRemoteDirPath (str): path to target directory on remote server
-            userName (str, optional): server username. Defaults to None.
-            password (str, optional): server password. Defaults to None.
-            remoteStashPrefix (str, optional): channel prefix. Defaults to None.
-
-        Returns:
-            (bool): True for success or False otherwise
-        """
-        ok = False
-        try:
-            stU = StashUtil(os.path.join(self.__dirPath, "stash"), "pubchem-match-data")
-            ok = stU.makeBundle(self.__dirPath, [self.__stashDir])
-            if ok:
-                ok = stU.storeBundle(url, stashRemoteDirPath, remoteStashPrefix=remoteStashPrefix, userName=userName, password=password)
-        except Exception as e:
-            logger.exception("Failing with url %r stashRemoteDirPath %r: %s", url, stashRemoteDirPath, str(e))
-        return ok
-
-    def fromStash(self, url, stashRemoteDirPath, userName=None, password=None, remoteStashPrefix=None):
-        """Restore local cache from a tar and gzipped bundle to fetched from a remote server/location.
-
-        Args:
-            url (str): server URL (e.g. sftp://hostname.domain) None for local host
-            stashRemoteDirPath (str): path to target directory on remote server
-            userName (str, optional): server username. Defaults to None.
-            password (str, optional): server password. Defaults to None.
-            remoteStashPrefix (str, optional): channel prefix. Defaults to None.
-
-        Returns:
-            (bool): True for success or False otherwise
-        """
-        try:
-            stU = StashUtil(os.path.join(self.__dirPath, "stash"), "pubchem-match-data")
-            ok = stU.fetchBundle(self.__dirPath, url, stashRemoteDirPath, remoteStashPrefix=remoteStashPrefix, userName=userName, password=password)
-        except Exception as e:
-            logger.exception("Failing with url %r stashRemoteDirPath %r: %s", url, stashRemoteDirPath, str(e))
-        return ok
 
     def updateMissing(self, idList, exportPath=None, numProc=1, chunkSize=5):
         """Fetch and load reference data for any missing PubChem ID codes in the input list.
@@ -377,13 +335,13 @@ class PubChemDataCacheProvider(object):
         objD = obEx.getObjects()
         return objD
 
-    def __restore(self, objD, databaseName, collectionName, indexAttributeNames=None):
+    def __reloadDump(self, objD, databaseName, collectionName, indexAttributeNames=None):
         """Internal method to restore the input database/collection using the input data object.
 
         Args:
             objD (obj): Target reference or index data object
             databaseName (str): target database name
-            collectionName (str): target collecion name
+            collectionName (str): target collection name
             indexAttributeNames (list, optional): Primary index attributes. Defaults to None.
 
         Returns:

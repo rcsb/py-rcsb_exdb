@@ -7,6 +7,7 @@
 # Updates:
 #  9-May-2020 jdw separate cache behavior with separate option rebuildChemIndices=True/False
 # 16-Jul-2020 jdw separate index and reference data management.
+# 23-Jul-2021 jdw Make PubChemIndexCacheProvider a subclass of StashableBase()
 #
 ##
 __docformat__ = "google en"
@@ -25,7 +26,7 @@ from rcsb.utils.chem.ChemCompSearchIndexProvider import ChemCompSearchIndexProvi
 from rcsb.utils.chemref.PubChemUtils import PubChemUtils, ChemicalIdentifier
 from rcsb.utils.io.IoUtil import getObjSize
 from rcsb.utils.io.MarshalUtil import MarshalUtil
-from rcsb.utils.io.StashUtil import StashUtil
+from rcsb.utils.io.StashableBase import StashableBase
 from rcsb.utils.io.TimeUtil import TimeUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
@@ -78,7 +79,7 @@ class PubChemUpdateWorker(object):
         matching diagnostics and reference feature data.
         {
                "_id" : ObjectId("5e8dfb49eab967a0483a0472"),
-               "rcsb_id" : "local reference ID (ccid|bird)", << LOCAL CANNONICAL ID (e.g. ATP, PRD_000100)
+               "rcsb_id" : "local reference ID (ccid|bird)", << LOCAL CANONICAL ID (e.g. ATP, PRD_000100)
                "rcsb_last_update" : ISODate("2020-04-08T16:26:47.993+0000"),
                "matched_ids" : [
                    {"matched_id":  "<external reference ID code>", "search_id_type" : "oe-smiles", "search_id_source": "model-xyz",
@@ -197,20 +198,20 @@ class PubChemUpdateWorker(object):
         return (iList[i : i + chunkSize] for i in range(0, len(iList), chunkSize))
 
 
-class PubChemIndexCacheProvider(object):
+class PubChemIndexCacheProvider(StashableBase):
     """Utilities to manage chemical component/BIRD to PubChem compound identifier mapping data."""
 
     def __init__(self, cfgOb, cachePath):
+        dirName = "PubChem-index"
+        super(PubChemIndexCacheProvider, self).__init__(cachePath, [dirName])
         self.__cfgOb = cfgOb
+        self.__cachePath = cachePath
+        self.__dirPath = os.path.join(self.__cachePath, dirName)
         #
         self.__databaseName = "pubchem_exdb"
         self.__matchIndexCollectionName = "reference_match_index"
         #
-        self.__cachePath = cachePath
-        self.__dirPath = os.path.join(self.__cachePath, "PubChem")
-        self.__stashDir = "dump-pubchem-match-index"
-        self.__ccIdxP = None
-        self.__ccsidxP = None
+
         self.__matchD = None
 
     def getMatchData(self, expireDays=0):
@@ -240,7 +241,7 @@ class PubChemIndexCacheProvider(object):
     def __getdumpFilePath(self, fmt="json"):
         stashBaseFileName = "pubchem_match_index_object_list"
         fExt = ".json" if fmt == "json" else ".pic"
-        fp = os.path.join(self.__dirPath, self.__stashDir, stashBaseFileName + fExt)
+        fp = os.path.join(self.__dirPath, stashBaseFileName + fExt)
         return fp
 
     def dump(self, fmt="json"):
@@ -267,8 +268,8 @@ class PubChemIndexCacheProvider(object):
             logger.exception("Failing for %r with %s", self.__dirPath, str(e))
         return ok
 
-    def restore(self, fmt="json"):
-        """Restore PubChem reference data store from saved backup.
+    def reloadDump(self, fmt="json"):
+        """Reload PubChem reference data store from saved dump.
 
         Args:
             fmt (str, optional): format of the backup file (pickle or json). Defaults to "json".
@@ -284,54 +285,11 @@ class PubChemIndexCacheProvider(object):
                 logger.info("Restoring object store from %s", fp)
                 mU = MarshalUtil(workPath=self.__dirPath)
                 matchD = mU.doImport(fp, fmt=fmt)
-                numUpd = self.__restore(matchD, self.__databaseName, self.__matchIndexCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
+                numUpd = self.__reloadDump(matchD, self.__databaseName, self.__matchIndexCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
         except Exception as e:
             logger.exception("Failing for %r with %s", self.__dirPath, str(e))
         # --
         return numUpd
-
-    def toStash(self, url, stashRemoteDirPath, userName=None, password=None, remoteStashPrefix=None):
-        """Copy tar and gzipped bundled cache data to remote server/location.
-
-        Args:
-            url (str): server URL (e.g. sftp://hostname.domain) None for local host
-            stashRemoteDirPath (str): path to target directory on remote server
-            userName (str, optional): server username. Defaults to None.
-            password (str, optional): server password. Defaults to None.
-            remoteStashPrefix (str, optional): channel prefix. Defaults to None.
-
-        Returns:
-            (bool): True for success or False otherwise
-        """
-        ok = False
-        try:
-            stU = StashUtil(os.path.join(self.__dirPath, "stash"), "pubchem-match-index")
-            ok = stU.makeBundle(self.__dirPath, [self.__stashDir])
-            if ok:
-                ok = stU.storeBundle(url, stashRemoteDirPath, remoteStashPrefix=remoteStashPrefix, userName=userName, password=password)
-        except Exception as e:
-            logger.exception("Failing with url %r stashRemoteDirPath %r: %s", url, stashRemoteDirPath, str(e))
-        return ok
-
-    def fromStash(self, url, stashRemoteDirPath, userName=None, password=None, remoteStashPrefix=None):
-        """Restore local cache from a tar and gzipped bundle to fetched from a remote server/location.
-
-        Args:
-            url (str): server URL (e.g. sftp://hostname.domain) None for local host
-            stashRemoteDirPath (str): path to target directory on remote server
-            userName (str, optional): server username. Defaults to None.
-            password (str, optional): server password. Defaults to None.
-            remoteStashPrefix (str, optional): channel prefix. Defaults to None.
-
-        Returns:
-            (bool): True for success or False otherwise
-        """
-        try:
-            stU = StashUtil(os.path.join(self.__dirPath, "stash"), "pubchem-match-index")
-            ok = stU.fetchBundle(self.__dirPath, url, stashRemoteDirPath, remoteStashPrefix=remoteStashPrefix, userName=userName, password=password)
-        except Exception as e:
-            logger.exception("Failing with url %r stashRemoteDirPath %r: %s", url, stashRemoteDirPath, str(e))
-        return ok
 
     def updateMissing(self, expireDays=0, fetchLimit=None, updateUnmatched=True, numProc=12, **kwargs):
         """Update match index from object store
@@ -428,7 +386,7 @@ class PubChemIndexCacheProvider(object):
                 Example match index entry:
                 {
                     "_id" : ObjectId("5e8dfb49eab967a0483a0472"),
-                    "rcsb_id" : "local reference ID (ccid|bird)", << LOCAL CANNONICAL ID (e.g. ATP, PRD_000100)
+                    "rcsb_id" : "local reference ID (ccid|bird)", << LOCAL CANONICAL ID (e.g. ATP, PRD_000100)
                     "rcsb_last_update" : ISODate("2020-04-08T16:26:47.993+0000"),
                     "matched_ids" : [
                         {"matched_id":  "<external reference ID code>", "search_id_type" : "oe-smiles", "search_id_source": "model-xyz",
@@ -544,7 +502,7 @@ class PubChemIndexCacheProvider(object):
         """Launch worker methods to update chemical reference data correspondences.
 
         Args:
-            idList (list): list of local chemical identifiers (ChemIndentifier())
+            idList (list): list of local chemical identifiers (ChemIdentifier())
 
         Returns:
             (bool, list): status flag, list of unmatched identifiers
@@ -569,13 +527,13 @@ class PubChemIndexCacheProvider(object):
         #
         return ok, failList
 
-    def __restore(self, objD, databaseName, collectionName, indexAttributeNames=None):
+    def __reloadDump(self, objD, databaseName, collectionName, indexAttributeNames=None):
         """Internal method to restore the input database/collection using the input data object.
 
         Args:
             objD (obj): Target reference or index data object
             databaseName (str): target database name
-            collectionName (str): target collecion name
+            collectionName (str): target collection name
             indexAttributeNames (list, optional): Primary index attributes. Defaults to None.
 
         Returns:
