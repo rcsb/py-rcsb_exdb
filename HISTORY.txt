@@ -74,3 +74,4 @@
 26-Jul-2021 V0.82 Replace all explicit use of StashUtil with StashableBase subclasses
 26-Jul-2021 V0.83 Add tree node lists for SCOP2 and ECOD
 28-Jul-2021 V0.84 Update stash options for GlycanEtlWorkflow and PubChemEtlWrapper
+29-Jul-2021 V0.85 Gracefully handle and report missing ligand_comp_id's in LigandNeighborMappingProvider()

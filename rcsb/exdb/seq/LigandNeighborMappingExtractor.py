@@ -71,7 +71,10 @@ class LigandNeighborMappingExtractor(object):
                     entityId = peiD["rcsb_polymer_entity_instance_container_identifiers"]["entity_id"]
                     ky = entryId + "_" + entityId
                     for lnD in peiD["rcsb_ligand_neighbors"] if "rcsb_ligand_neighbors" in peiD else []:
-                        rD.setdefault(ky, set()).add((lnD["ligand_comp_id"], lnD["ligand_is_bound"]))
+                        if "ligand_comp_id" in lnD and "ligand_is_bound" in lnD:
+                            rD.setdefault(ky, set()).add((lnD["ligand_comp_id"], lnD["ligand_is_bound"]))
+                        else:
+                            logger.warning("%s %s missing details lnD %r", entryId, entityId, lnD)
                 except Exception as e:
                     logger.exception("Failing with %s", str(e))
             rD = {k: list(v) for k, v in rD.items()}
