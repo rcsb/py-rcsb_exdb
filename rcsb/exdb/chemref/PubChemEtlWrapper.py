@@ -75,7 +75,7 @@ class PubChemEtlWrapper(object):
 
         return ok
 
-    def toStash(self, contentType, useGit=False, useStash=True):
+    def toStash(self, contentType, useGit=True, useStash=True):
         """Store PubChem extracted content () on the remote stash storage resource.
 
         Args:

@@ -56,7 +56,7 @@ class GlycanEtlWorkflow(object):
         try:
             ok1 = ok2 = False
             gP = GlycanProvider(cachePath=self.__cachePath, useCache=True)
-            ok = gP.restore(self.__cfgOb, self.__configName, self.__stashRemotePrefix)
+            ok = gP.restore(self.__cfgOb, self.__configName, self.__stashRemotePrefix, useStash=True, useGit=True)
             logger.info("Restore glycan matched identifiers status (%r)", ok)
 
             ok1 = gP.update(self.__cfgOb, fmt="json", indent=3)
@@ -64,7 +64,7 @@ class GlycanEtlWorkflow(object):
             logger.info("Matched glycan identifiers (%d)", len(riD))
             #
             if backup:
-                ok2 = gP.backup(self.__cfgOb, self.__configName, self.__stashRemotePrefix)
+                ok2 = gP.backup(self.__cfgOb, self.__configName, self.__stashRemotePrefix, useGit=True, useStash=True)
                 logger.info("Backup matched glycan identifiers (%r)", ok2)
             else:
                 ok2 = True
