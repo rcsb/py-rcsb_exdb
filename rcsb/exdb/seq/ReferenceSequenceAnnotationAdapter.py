@@ -371,7 +371,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                     obj["rcsb_polymer_entity_align"] = retDL
                 else:
                     del obj["rcsb_polymer_entity_align"]
-                    logger.info("Incomplete reference sequence alignment update for %s", entityKey)
+                    logger.debug("Reference sequence alignment NOT updated for %s", entityKey)
         except Exception as e:
             ok = False
             logger.exception("Filter adapter failing with error with %s", str(e))

@@ -70,7 +70,7 @@ class ObjectTransformer(object):
         return dL
         #
 
-    def __transform(self, databaseName, collectionName, docSelectList, logIncrement=100):
+    def __transform(self, databaseName, collectionName, docSelectList, logIncrement=10000):
         """Return a list of object identifiers for the input selection query."""
         #
         ok = True

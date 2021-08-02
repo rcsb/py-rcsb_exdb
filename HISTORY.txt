@@ -75,3 +75,4 @@
 26-Jul-2021 V0.83 Add tree node lists for SCOP2 and ECOD
 28-Jul-2021 V0.84 Update stash options for GlycanEtlWorkflow and PubChemEtlWrapper
 29-Jul-2021 V0.85 Gracefully handle and report missing ligand_comp_id's in LigandNeighborMappingProvider()
+ 2-Aug-2021 V0.86 Adjust reporting intervals and diagnostic output
