@@ -99,7 +99,7 @@ class ObjectExtractor(object):
         return cD[keyAttribute]
 
     def __selectObjects(self, **kwargs):
-        """Return a dictionary of objects satifying the input conditions (e.g. method, resolution limit)"""
+        """Return a dictionary of objects satisfying the input conditions (e.g. method, resolution limit)"""
         databaseName = kwargs.get("databaseName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_entry")
         selectionQueryD = kwargs.get("selectionQuery", {})
@@ -109,7 +109,7 @@ class ObjectExtractor(object):
         tV = kwargs.get("objectLimit", None)
         objLimit = int(tV) if tV is not None else None
         stripObjectId = kwargs.get("stripObjectId", False)
-        logIncrement = kwargs.get("logIncrement", 1000)
+        logIncrement = kwargs.get("logIncrement", 10000)
         #
         objectD = {}
         try:
@@ -147,7 +147,7 @@ class ObjectExtractor(object):
         #
 
     def __select(self, **kwargs):
-        """Return a dictionary of object content satifying the input conditions
+        """Return a dictionary of object content satisfying the input conditions
         (e.g. method, resolution limit) and selection options.
         """
         databaseName = kwargs.get("databaseName", "pdbx_core")
