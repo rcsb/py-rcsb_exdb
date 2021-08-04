@@ -409,7 +409,7 @@ class ReferenceSequenceAssignmentAdapter(ObjectAdapterBase):
                     elif not taxIdL:
                         logger.debug("%s no taxids with UniProt (%s) secondary mapping", entityKey, rId)
                     else:
-                        logger.info("%s ambiguous mapping for a UniProt (%s) secondary mapping - taxIds %r", entityKey, rId, taxIdL)
+                        logger.debug("%s ambiguous mapping for a UniProt (%s) secondary mapping - taxIds %r", entityKey, rId, taxIdL)
                 #
             except Exception:
                 pass
