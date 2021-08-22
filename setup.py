@@ -12,8 +12,16 @@ from setuptools import setup
 packages = []
 thisPackage = "rcsb.exdb"
 
-with open("rcsb/exdb/cli/__init__.py", "r") as fd:
+with open("rcsb/exdb/cli/__init__.py", "r", encoding="utf-8") as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE).group(1)
+
+
+# Load packages from requirements*.txt
+with open("requirements.txt", "r", encoding="utf-8") as ifh:
+    packagesRequired = [ln.strip() for ln in ifh.readlines()]
+
+with open("README.md", "r", encoding="utf-8") as ifh:
+    longDescription = ifh.read()
 
 if not version:
     raise RuntimeError("Cannot find version information")
@@ -22,7 +30,8 @@ setup(
     name=thisPackage,
     version=version,
     description="RCSB Python ExDB data extraction and loading workflows",
-    long_description="See:  README.md",
+    long_description_content_type="text/markdown",
+    long_description=longDescription,
     author="John Westbrook",
     author_email="john.westbrook@rcsb.org",
     url="https://github.com/rcsb/py-rcsb_exdb",
@@ -39,23 +48,7 @@ setup(
     ],
     entry_points={"console_scripts": ["exdb_exec_cli=rcsb.exdb.cli.ExDbExec:main"]},
     #
-    install_requires=[
-        "jsonschema >= 2.6.0",
-        "numpy",
-        "rcsb.utils.io >= 1.00",
-        "rcsb.db >= 1.674",
-        "rcsb.utils.chemref >= 0.65",
-        "rcsb.utils.chem >= 0.70",
-        "rcsb.utils.citation >= 0.15",
-        "rcsb.utils.config >= 0.35",
-        "rcsb.utils.seq >= 0.60",
-        "rcsb.utils.ec >= 0.21",
-        "rcsb.utils.go >= 0.17",
-        "rcsb.utils.struct >= 0.26",
-        "rcsb.utils.taxonomy >= 0.31",
-        "rcsb.utils.dictionary >= 0.34",
-        'statistics; python_version < "3.0"',
-    ],
+    install_requires=packagesRequired,
     packages=find_packages(exclude=["rcsb.mock-data", "rcsb.exdb.tests-anal", "rcsb.exdb.tests-*", "tests.*"]),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
