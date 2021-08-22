@@ -48,7 +48,7 @@ setup(
     ],
     entry_points={"console_scripts": ["exdb_exec_cli=rcsb.exdb.cli.ExDbExec:main"]},
     #
-    install_requires=packagesRequired,
+    install_requires=packagesRequired[1:],
     packages=find_packages(exclude=["rcsb.mock-data", "rcsb.exdb.tests-anal", "rcsb.exdb.tests-*", "tests.*"]),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
