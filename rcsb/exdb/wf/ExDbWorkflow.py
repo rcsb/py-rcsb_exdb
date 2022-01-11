@@ -50,13 +50,16 @@ class ExDbWorkflow(object):
         restoreUseStash = kwargs.get("restoreUseStash", True)
         providerTypeExclude = kwargs.get("providerTypeExclude", None)
         #
-        self.__cacheStatus = self.buildResourceCache(
-            rebuildCache=rebuildCache,
-            providerTypeExclude=providerTypeExclude,
-            restoreUseGit=restoreUseGit,
-            restoreUseStash=restoreUseStash,
-        )
-        logger.debug("Cache status if %r", self.__cacheStatus)
+        self.__cacheStatus = True
+        rebuildCache = False
+        if rebuildCache:
+            self.__cacheStatus = self.buildResourceCache(
+                rebuildCache=rebuildCache,
+                providerTypeExclude=providerTypeExclude,
+                restoreUseGit=restoreUseGit,
+                restoreUseStash=restoreUseStash,
+            )
+            logger.debug("Cache status if %r", self.__cacheStatus)
         #
 
     def load(self, op, **kwargs):
@@ -65,7 +68,7 @@ class ExDbWorkflow(object):
             logger.error("Resource cache test or rebuild has failed - exiting")
             return False
         # argument processing
-        if op not in ["etl_tree_node_lists", "etl_chemref", "etl_uniprot_core", "upd_ref_seq", "refresh_pubchem"]:
+        if op not in ["etl_tree_node_lists", "etl_chemref", "etl_uniprot_core", "upd_ref_seq", "upd_ref_seq_comp_models", "refresh_pubchem"]:
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
@@ -136,7 +139,13 @@ class ExDbWorkflow(object):
                 okS = self.loadStatus(crw.getLoadStatus(), readBackCheck=readBackCheck)
 
             elif op == "upd_ref_seq":
+                databaseName = "pdbx_core"
+                collectionName = "pdbx_core_polymer_entity"
+                polymerType = "Protein"
                 ok = self.doReferenceSequenceUpdate(
+                    databaseName,
+                    collectionName,
+                    polymerType,
                     fetchLimit=documentLimit,
                     useSequenceCache=useSequenceCache,
                     testMode=testMode,
@@ -145,7 +154,22 @@ class ExDbWorkflow(object):
                     refChunkSize=refChunkSize,
                 )
                 okS = ok
-
+            elif op == "upd_ref_seq_comp_models":
+                databaseName = "pdbx_comp_model_core"
+                collectionName = "pdbx_core_polymer_entity"
+                polymerType = "Protein"
+                ok = self.doReferenceSequenceUpdate(
+                    databaseName,
+                    collectionName,
+                    polymerType,
+                    fetchLimit=documentLimit,
+                    useSequenceCache=useSequenceCache,
+                    testMode=testMode,
+                    minMatchPrimaryPercent=minMatchPrimaryPercent,
+                    minMissing=minMissing,
+                    refChunkSize=refChunkSize,
+                )
+                okS = ok
         #
         logger.info("Completed operation %r with status %r\n", op, ok and okS)
         return ok and okS
@@ -180,15 +204,16 @@ class ExDbWorkflow(object):
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def doReferenceSequenceUpdate(self, fetchLimit=None, useSequenceCache=False, testMode=False, minMatchPrimaryPercent=None, minMissing=0, refChunkSize=50, **kwargs):
+    def doReferenceSequenceUpdate(
+        self, databaseName, collectionName, polymerType, fetchLimit=None, useSequenceCache=False, testMode=False, minMatchPrimaryPercent=None, minMissing=0, refChunkSize=50, **kwargs
+    ):
         try:
             _ = kwargs
-            databaseName = "pdbx_core"
-            collectionName = "pdbx_core_polymer_entity"
-            polymerType = "Protein"
             _ = testMode
             # -------
-            rsaP = ReferenceSequenceAnnotationProvider(self.__cfgOb, useCache=useSequenceCache, cachePath=self.__cachePath, maxChunkSize=refChunkSize)
+            rsaP = ReferenceSequenceAnnotationProvider(
+                self.__cfgOb, databaseName, collectionName, polymerType, useCache=useSequenceCache, cachePath=self.__cachePath, maxChunkSize=refChunkSize
+            )
             ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent, minMissing=minMissing)
             if ok:
                 rsa = ReferenceSequenceAnnotationAdapter(rsaP)
