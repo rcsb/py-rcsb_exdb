@@ -62,14 +62,18 @@ class ReferenceSequenceCacheProviderTests(unittest.TestCase):
         """Test case - create and read cached reference sequences."""
         try:
             #  -- Update/create cache ---
-            rsaP = ReferenceSequenceCacheProvider(self.__cfgOb, maxChunkSize=50, numProc=2, expireDays=0)
+            databaseName = "pdbx_core"
+            collectionName = "pdbx_core_polymer_entity"
+            polymerType = "Protein"
+            #
+            rsaP = ReferenceSequenceCacheProvider(self.__cfgOb, databaseName, collectionName, polymerType, maxChunkSize=50, numProc=2, expireDays=0)
             ok = rsaP.testCache()
             self.assertTrue(ok)
             numRef = rsaP.getRefDataCount()
             self.assertGreaterEqual(numRef, 90)
             #
             # ---  Reload from cache ---
-            rsaP = ReferenceSequenceCacheProvider(self.__cfgOb, maxChunkSize=50, numProc=2, expireDays=14)
+            rsaP = ReferenceSequenceCacheProvider(self.__cfgOb, databaseName, collectionName, polymerType, maxChunkSize=50, numProc=2, expireDays=14)
             ok = rsaP.testCache()
             self.assertTrue(ok)
             numRef = rsaP.getRefDataCount()

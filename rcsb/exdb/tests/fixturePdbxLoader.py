@@ -17,7 +17,7 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-
+import glob
 import logging
 import os
 import platform
@@ -28,6 +28,7 @@ import unittest
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.mongo.PdbxLoader import PdbxLoader
 from rcsb.utils.config.ConfigUtil import ConfigUtil
+from rcsb.utils.io.FileUtil import FileUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -47,10 +48,10 @@ class PdbxLoaderFixture(unittest.TestCase):
         #
         self.__isMac = platform.system() == "Darwin"
         self.__excludeType = None if self.__isMac else "optional"
-        mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
+        self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
         configName = "site_info_configuration"
-        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
         self.__resourceName = "MONGO_DB"
         self.__failedFilePath = os.path.join(HERE, "test-output", "failed-list.txt")
@@ -58,13 +59,56 @@ class PdbxLoaderFixture(unittest.TestCase):
         self.__readBackCheck = True
         self.__numProc = 2
         self.__chunkSize = 10
-        self.__fileLimit = None
+        self.__fileLimit = 38
         self.__documentStyle = "rowwise_by_name_with_cardinality"
+        #
+        self.__pdbIdList = [
+            "1ah1",
+            "1b5f",
+            "1bmv",
+            "1c58",
+            "1dsr",
+            "1dul",
+            "1kqe",
+            "1o3q",
+            "1sfo",
+            "2hw3",
+            "2hyv",
+            "2osl",
+            "2voo",
+            "2wmg",
+            "3ad7",
+            "3hya",
+            "3iyd",
+            "3mbg",
+            "3rer",
+            "3vd8",
+            "3vfj",
+            "3x11",
+            "3ztj",
+            "4e2o",
+            "4en8",
+            "4mey",
+            "5eu8",
+            "5kds",
+            "5tm0",
+            "5vh4",
+            "5vp2",
+            "6fsz",
+            "6lu7",
+            "6nn7",
+            "6q20",
+            "6rfk",
+            "6rku",
+            "6yrq",
+        ]
         self.__ldList = [
-            {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
-            {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": ["vrpt"], "validationLevel": "min"},
+            {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min", "inputIdCodeList": None},
+            {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": ["vrpt"], "validationLevel": "min", "inputIdCodeList": self.__pdbIdList},
+            {"databaseName": "pdbx_comp_model_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min", "inputIdCodeList": None},
         ]
         #
+        self.__modelFixture()
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -74,6 +118,18 @@ class PdbxLoaderFixture(unittest.TestCase):
         logger.info("Maximum resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+
+    def __modelFixture(self):
+        fU = FileUtil()
+        modelSourcePath = os.path.join(self.__mockTopPath, "AF")
+        for iPath in glob.iglob(os.path.join(modelSourcePath, "*.cif.gz")):
+            fn = os.path.basename(iPath)
+            uId = fn.split("-")[1]
+            h3 = uId[-2:]
+            h2 = uId[-4:-2]
+            h1 = uId[-6:-4]
+            oPath = os.path.join(self.__cachePath, "computed-models", h1, h2, h3, fn)
+            fU.put(iPath, oPath)
 
     def testPdbxLoader(self):
         #
@@ -90,7 +146,7 @@ class PdbxLoaderFixture(unittest.TestCase):
                 resourceName=self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,
-                fileLimit=None,
+                fileLimit=self.__fileLimit,
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
                 maxStepLength=2000,
@@ -102,6 +158,7 @@ class PdbxLoaderFixture(unittest.TestCase):
                 collectionLoadList=kwargs["collectionNameList"],
                 loadType=kwargs["loadType"],
                 inputPathList=None,
+                inputIdCodeList=kwargs["inputIdCodeList"],
                 styleType=self.__documentStyle,
                 dataSelectors=["PUBLIC_RELEASE"],
                 failedFilePath=self.__failedFilePath,

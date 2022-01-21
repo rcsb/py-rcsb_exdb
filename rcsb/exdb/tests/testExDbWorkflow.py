@@ -97,6 +97,18 @@ class ExDbWorkflowTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    def testExDbLoaderModelWorkflows(self):
+        """Test run workflow steps ..."""
+        try:
+            opL = ["upd_ref_seq_comp_models"]
+            rlWf = ExDbWorkflow(**self.__commonD)
+            for op in opL:
+                ok = rlWf.load(op, **self.__loadCommonD)
+                self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
     @unittest.skip("Troubleshooting test")
     def testExDbLoaderWorkflowsWithCacheCheck(self):
         """Test run sequence reference data update workflow step ..."""

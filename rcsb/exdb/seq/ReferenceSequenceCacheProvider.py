@@ -35,11 +35,12 @@ class ReferenceUpdateWorker(object):
     def __init__(self, cfgOb, **kwargs):
         self.__cfgOb = cfgOb
         _ = kwargs
-        self.__databaseName = "uniprot_exdb"
+        self.__refDatabaseName = "uniprot_exdb"
         self.__refDataCollectionName = "reference_entry"
-        self.__matchDataCollectionName = "reference_match"
-        self.__createCollections(self.__databaseName, self.__refDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
-        self.__createCollections(self.__databaseName, self.__matchDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
+        self.__refMatchDataCollectionName = "reference_match"
+        #
+        self.__createCollections(self.__refDatabaseName, self.__refDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
+        self.__createCollections(self.__refDatabaseName, self.__refMatchDataCollectionName, indexAttributeNames=["rcsb_id", "rcsb_last_update"])
 
     def updateList(self, dataList, procName, optionsD, workingDir):
         """Update the input list of reference sequence identifiers and return
@@ -75,8 +76,8 @@ class ReferenceUpdateWorker(object):
                         tD["rcsb_last_update"] = tU.getDateTimeObj(tU.getTimestamp())
                         retList2.append(tD)
                     successList.extend(idList)
-                    self.__updateReferenceData(self.__databaseName, self.__refDataCollectionName, retList2)
-                    self.__updateReferenceData(self.__databaseName, self.__matchDataCollectionName, retList1)
+                    self.__updateReferenceData(self.__refDatabaseName, self.__refDataCollectionName, retList2)
+                    self.__updateReferenceData(self.__refDatabaseName, self.__refMatchDataCollectionName, retList1)
                 else:
                     logger.info("Failing with fetch for %d entries with matchD %r", len(idList), matchD)
             else:
@@ -108,18 +109,18 @@ class ReferenceUpdateWorker(object):
 class ReferenceSequenceCacheProvider(object):
     """Utilities to cache referencence sequence data and correspondence mappings."""
 
-    def __init__(self, cfgOb, siftsProvider=None, maxChunkSize=50, fetchLimit=None, expireDays=7, numProc=1, **kwargs):
+    def __init__(self, cfgOb, databaseName, collectionName, polymerType, siftsProvider=None, maxChunkSize=50, fetchLimit=None, expireDays=14, numProc=1, **kwargs):
         self.__cfgOb = cfgOb
         #
         self.__maxChunkSize = maxChunkSize
         self.__numProc = numProc
         #
-        self.__databaseName = "uniprot_exdb"
+        self.__refDatabaseName = "uniprot_exdb"
         self.__refDataCollectionName = "reference_entry"
-        self.__matchDataCollectionName = "reference_match"
+        self.__refMatchDataCollectionName = "reference_match"
 
         self.__ssP = siftsProvider
-        self.__matchD, self.__refD, self.__missingMatchIds = self.__reload(fetchLimit, expireDays, **kwargs)
+        self.__matchD, self.__refD, self.__missingMatchIds = self.__reload(databaseName, collectionName, polymerType, fetchLimit, expireDays, **kwargs)
 
     def getMatchInfo(self):
         return self.__matchD
@@ -183,7 +184,7 @@ class ReferenceSequenceCacheProvider(object):
             )
         return ok and okC
 
-    def __reload(self, fetchLimit, expireDays, **kwargs):
+    def __reload(self, databaseName, collectionName, polymerType, fetchLimit, expireDays, **kwargs):
         _ = kwargs
 
         # --  This
@@ -195,7 +196,7 @@ class ReferenceSequenceCacheProvider(object):
         matchD = {}
         refD = {}
         failList = []
-        assignRefD = self.__getPolymerReferenceSequenceAssignments(fetchLimit)
+        assignRefD = self.__getPolymerReferenceSequenceAssignments(databaseName, collectionName, polymerType, fetchLimit)
         refIdMapD, _ = self.__getAssignmentMap(assignRefD)
         # refIdD[<database_accession>] = [entity_key1, entity_key2,...]
         entryIdL = [rcsbId[:4] for rcsbId in assignRefD]
@@ -215,8 +216,8 @@ class ReferenceSequenceCacheProvider(object):
         else:
             logger.info("No reference sequence updates required")
         #
-        matchD = self.__getReferenceData(self.__databaseName, self.__matchDataCollectionName)
-        refD = self.__getReferenceData(self.__databaseName, self.__refDataCollectionName)
+        matchD = self.__getReferenceData(self.__refDatabaseName, self.__refMatchDataCollectionName)
+        refD = self.__getReferenceData(self.__refDatabaseName, self.__refDataCollectionName)
         logger.info("Completed - returning match length %d and reference data length %d num missing %d", len(matchD), len(refD), len(failList))
         return matchD, refD, len(failList)
 
@@ -243,10 +244,10 @@ class ReferenceSequenceCacheProvider(object):
         if tFrac < failureFraction:
             obUpd = ObjectUpdater(self.__cfgOb)
             selectD = {"rcsb_id": failList}
-            numPurge = obUpd.delete(self.__databaseName, self.__matchDataCollectionName, selectD)
+            numPurge = obUpd.delete(self.__refDatabaseName, self.__refMatchDataCollectionName, selectD)
             if len(failList) != numPurge:
                 logger.info("Update match failures %d purge count %d", len(failList), numPurge)
-            numPurge = obUpd.delete(self.__databaseName, self.__refDataCollectionName, selectD)
+            numPurge = obUpd.delete(self.__refDatabaseName, self.__refDataCollectionName, selectD)
             if len(failList) != numPurge:
                 logger.info("Update reference data failures %d purge count %d", len(failList), numPurge)
         return len(failList)
@@ -266,7 +267,7 @@ class ReferenceSequenceCacheProvider(object):
             tU = TimeUtil()
             tS = tU.getTimestamp(useUtc=True, before={"days": expireDays})
             selectD = {"rcsb_latest_update": {"$lt": tU.getDateTimeObj(tS)}}
-        matchD = self.__getReferenceData(self.__databaseName, self.__matchDataCollectionName, selectD=selectD)
+        matchD = self.__getReferenceData(self.__refDatabaseName, self.__refMatchDataCollectionName, selectD=selectD)
         return sorted(matchD.keys())
 
     def __updateReferenceData(self, idList):
@@ -297,7 +298,7 @@ class ReferenceSequenceCacheProvider(object):
         objD = obEx.getObjects()
         return objD
 
-    def __getPolymerReferenceSequenceAssignments(self, fetchLimit):
+    def __getPolymerReferenceSequenceAssignments(self, databaseName, collectionName, polymerType, fetchLimit):
         """Get all accessions assigned to input reference sequence database for the input polymerType.
 
         Returns:
@@ -305,9 +306,7 @@ class ReferenceSequenceCacheProvider(object):
                             "rcsb_entity_source_organism"" {"ncbi_taxonomy_id": []}
         """
         try:
-            databaseName = "pdbx_core"
-            collectionName = "pdbx_core_polymer_entity"
-            polymerType = "Protein"
+
             obEx = ObjectExtractor(
                 self.__cfgOb,
                 databaseName=databaseName,
