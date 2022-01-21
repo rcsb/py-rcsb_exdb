@@ -65,7 +65,9 @@ def doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=None, refCh
         polymerType = "Protein"
         #
         #  -- create cache ---
-        rsaP = ReferenceSequenceAnnotationProvider(cfgOb, maxChunkSize=refChunkSize, useCache=useCache, cachePath=cachePath, fetchLimit=fetchLimit, siftsAbbreviated="TEST")
+        rsaP = ReferenceSequenceAnnotationProvider(
+            cfgOb, databaseName, collectionName, polymerType, maxChunkSize=refChunkSize, useCache=useCache, cachePath=cachePath, fetchLimit=fetchLimit, siftsAbbreviated="TEST"
+        )
         ok = rsaP.testCache()
         if not ok:
             logger.error("Cache construction fails %s", ok)

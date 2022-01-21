@@ -79,5 +79,4 @@
  4-Aug-2021 V0.87 Adjust logging verbosity and dependencies
 22-Sep-2021 V0.88 Add modules EntryInfoProvider and EntryInfoEtlWorkflow and associated tests.
 23-Sep-2021 V0.89 Update dependencies
-10-Jan-2022 V0.90 Adjust ReferenceSequenceAnnotationProvider & ReferenceSequenceCacheProvider; added computed-models to tests & WF
-                  (jdw unpushed changes)
+10-Jan-2022 V0.90 Adjust ReferenceSequenceAnnotationProvider & ReferenceSequenceCacheProvider; add computed-models to tests & WF
