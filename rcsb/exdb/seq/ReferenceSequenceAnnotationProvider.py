@@ -157,7 +157,12 @@ class ReferenceSequenceAnnotationProvider(object):
         cacheKwargs = kwargs.get("cacheKwargs", {"fmt": "pickle"})
         useCache = kwargs.get("useCache", True)
         #
-        srcDirPath = os.path.join(cachePath, cfgOb.getPath("SIFTS_SUMMARY_DATA_PATH", sectionName=configName))
+        siftsSummaryDataPath = cfgOb.getPath("SIFTS_SUMMARY_DATA_PATH", sectionName=configName)
+        # logger.info("Using SIFTS_SUMMARY_DATA_PATH, %r", siftsSummaryDataPath)
+        if siftsSummaryDataPath.lower().startswith("http"):
+            srcDirPath = siftsSummaryDataPath
+        else:
+            srcDirPath = os.path.join(cachePath, siftsSummaryDataPath)
         cacheDirPath = os.path.join(cachePath, cfgOb.get("SIFTS_SUMMARY_CACHE_DIR", sectionName=configName))
         logger.debug("ssP %r %r", srcDirPath, cacheDirPath)
         ssP = SiftsSummaryProvider(srcDirPath=srcDirPath, cacheDirPath=cacheDirPath, useCache=useCache, abbreviated=abbreviated, cacheKwargs=cacheKwargs)
