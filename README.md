@@ -35,7 +35,7 @@ Installation is via the program [pip](https://pypi.python.org/pypi/pip).  To run
 from the source tree, the package must be installed in editable mode (i.e. -e):
 
 ```bash
-pip install -i https://pypi.anaconda.org/OpenEye/simple OpenEye-toolkits
+pip install -r requirements.txt   # OR:   pip install -i https://pypi.anaconda.org/OpenEye/simple OpenEye-toolkits
 
 pip install -e .
 ```
