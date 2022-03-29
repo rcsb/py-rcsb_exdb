@@ -102,7 +102,7 @@ class ObjectExtractorTests(unittest.TestCase):
         """Test case - extract entries subject to date restriction"""
         try:
             tU = TimeUtil()
-            tS = tU.getTimestamp(useUtc=True, before={"days": 365 * 4 + 20})
+            tS = tU.getTimestamp(useUtc=True, before={"days": 365 * 4})
             tD = tU.getDateTimeObj(tS)
             obEx = ObjectExtractor(
                 self.__cfgOb,
@@ -118,7 +118,7 @@ class ObjectExtractorTests(unittest.TestCase):
             eCount = obEx.getCount()
             logger.info("Entry count is %d", eCount)
             logger.info("Entries are %r", list(eD.keys()))
-            self.assertGreaterEqual(eCount, 6)
+            self.assertGreaterEqual(eCount, 5)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
