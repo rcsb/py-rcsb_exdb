@@ -156,7 +156,7 @@ class ExDbWorkflow(object):
                 okS = ok
             elif op == "upd_ref_seq_comp_models":
                 databaseName = "pdbx_comp_model_core"
-                collectionName = "pdbx_core_polymer_entity"
+                collectionName = "pdbx_comp_model_core_polymer_entity"
                 polymerType = "Protein"
                 ok = self.doReferenceSequenceUpdate(
                     databaseName,
