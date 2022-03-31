@@ -158,7 +158,7 @@ class PdbxLoaderFixture(unittest.TestCase):
                 collectionLoadList=kwargs["collectionNameList"],
                 loadType=kwargs["loadType"],
                 inputPathList=None,
-                # inputIdCodeList=kwargs["inputIdCodeList"],  # Comment back in once new version of rcsb.db is released which adds this argument
+                inputIdCodeList=kwargs["inputIdCodeList"],
                 styleType=self.__documentStyle,
                 dataSelectors=["PUBLIC_RELEASE"],
                 failedFilePath=self.__failedFilePath,
