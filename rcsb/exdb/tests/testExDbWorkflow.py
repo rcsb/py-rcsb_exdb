@@ -97,8 +97,9 @@ class ExDbWorkflowTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
-    def testExDbLoaderModelWorkflows(self):
-        """Test run workflow steps ..."""
+    # def testExDbLoaderModelWorkflows(self):
+    #     """Test run workflow steps ..."""
+        logger.info("testExDbLoaderModelWorkflows")
         try:
             opL = ["upd_ref_seq_comp_models"]
             rlWf = ExDbWorkflow(**self.__commonD)
@@ -134,6 +135,7 @@ class ExDbWorkflowTests(unittest.TestCase):
 
 def workflowLoadSuite():
     suiteSelect = unittest.TestSuite()
+    # suiteSelect.addTest(ExDbWorkflowTests("testExDbLoaderModelWorkflows"))
     suiteSelect.addTest(ExDbWorkflowTests("testExDbLoaderWorkflows"))
     suiteSelect.addTest(ExDbWorkflowTests("testExDbLoaderWorkflowsWithCacheCheck"))
     return suiteSelect
