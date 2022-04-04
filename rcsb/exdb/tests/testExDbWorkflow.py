@@ -97,9 +97,8 @@ class ExDbWorkflowTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
-    # def testExDbLoaderModelWorkflows(self):
-    #     """Test run workflow steps ..."""
-        logger.info("testExDbLoaderModelWorkflows")
+        # Above needs to run first in order for below to work; will need to investigate why
+        logger.info("Now running ExDbWorkflow for computed-models")
         try:
             opL = ["upd_ref_seq_comp_models"]
             rlWf = ExDbWorkflow(**self.__commonD)
@@ -135,7 +134,6 @@ class ExDbWorkflowTests(unittest.TestCase):
 
 def workflowLoadSuite():
     suiteSelect = unittest.TestSuite()
-    # suiteSelect.addTest(ExDbWorkflowTests("testExDbLoaderModelWorkflows"))
     suiteSelect.addTest(ExDbWorkflowTests("testExDbLoaderWorkflows"))
     suiteSelect.addTest(ExDbWorkflowTests("testExDbLoaderWorkflowsWithCacheCheck"))
     return suiteSelect
