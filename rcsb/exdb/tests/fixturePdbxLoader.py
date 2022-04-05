@@ -39,7 +39,6 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class PdbxLoaderFixture(unittest.TestCase):
-    # loadLocal = False
 
     def __init__(self, methodName="runTest"):
         super(PdbxLoaderFixture, self).__init__(methodName)
@@ -65,17 +64,56 @@ class PdbxLoaderFixture(unittest.TestCase):
         self.__fileLimit = 38
         self.__documentStyle = "rowwise_by_name_with_cardinality"
         #
-        # self.__birdIdList = [
-        #     "PRD_000010",
-        #     "PRD_000060",
-        #     "PRD_000220",
-        #     "PRD_000882",
-        #     "PRD_000154",
-        #     "PRD_000877",
-        #     "PRD_000198",
-        #     "PRD_000009",
-        #     "PRD_000979",
-        # ]
+        self.__birdChemCompCoreIdList = [
+            "PRD_000010",
+            "PRD_000060",
+            "PRD_000220",
+            "PRD_000882",
+            "PRD_000154",
+            "PRD_000877",
+            "PRD_000198",
+            "PRD_000009",
+            "PRD_000979",
+            "PRDCC_000010",
+            "PRDCC_000220",
+            "PRDCC_000882",
+            "PRDCC_000154",
+            "PRDCC_000198",
+            "PRDCC_000009",
+            "FAM_000010",
+            "FAM_000210",
+            "FAM_000220",
+            "FAM_000001",
+            "FAM_000391",
+            "FAM_000093",
+            "FAM_000084",
+            "FAM_000016",
+            "FAM_000336",
+            "1G1",
+            "2RT",
+            "2XL",
+            "2XN",
+            "ATP",
+            "BJA",
+            "BM3",
+            "CNC",
+            "DAL",
+            "DDZ",
+            "DHA",
+            "DSN",
+            "GTP",
+            "HKL",
+            "NAC",
+            "NAG",
+            "NND",
+            "PTR",
+            "SEP",
+            "SMJ",
+            "STL",
+            "UNK",
+            "UNX",
+            "UVL",
+        ]
         #
         self.__pdbIdList = [
             "1ah1",
@@ -124,11 +162,25 @@ class PdbxLoaderFixture(unittest.TestCase):
                 "loadType": "full",
                 "mergeContentTypes": None,
                 "validationLevel": "min",
-                "inputIdCodeList": None
-                # "inputIdCodeList": self.__birdIdList
+                # "inputIdCodeList": None
+                "inputIdCodeList": self.__birdChemCompCoreIdList
             },
-            {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": ["vrpt"], "validationLevel": "min", "inputIdCodeList": self.__pdbIdList},
-            {"databaseName": "pdbx_comp_model_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min", "inputIdCodeList": None},
+            {
+                "databaseName": "pdbx_core",
+                "collectionNameList": None,
+                "loadType": "full",
+                "mergeContentTypes": ["vrpt"],
+                "validationLevel": "min",
+                "inputIdCodeList": self.__pdbIdList
+            },
+            {
+                "databaseName": "pdbx_comp_model_core",
+                "collectionNameList": None,
+                "loadType": "full",
+                "mergeContentTypes": None,
+                "validationLevel": "min",
+                "inputIdCodeList": None
+            },
         ]
         #
         self.__modelFixture()
@@ -154,15 +206,14 @@ class PdbxLoaderFixture(unittest.TestCase):
             oPath = os.path.join(self.__cachePath, "computed-models", h1, h2, h3, fn)
             fU.put(iPath, oPath)
 
-    # @unittest.skipUnless(loadLocal, "Skip local load test")
     def testPdbxLoader(self):
         #
         for ld in self.__ldList:
-            # self.__pdbxLoaderWrapper(**ld)
-            if ld["databaseName"] == "bird_chem_comp_core":
-                self.__pdbxLoaderWrapper(fileLimit=None, **ld)
-            else:
-                self.__pdbxLoaderWrapper(**ld)
+            self.__pdbxLoaderWrapper(**ld)
+            # if ld["databaseName"] == "bird_chem_comp_core":
+            #     self.__pdbxLoaderWrapper(fileLimit=None, **ld)
+            # else:
+            #     self.__pdbxLoaderWrapper(**ld)
 
     def __pdbxLoaderWrapper(self, **kwargs):
         """Wrapper for the PDBx loader module"""
