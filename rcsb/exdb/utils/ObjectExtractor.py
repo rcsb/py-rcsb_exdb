@@ -80,8 +80,6 @@ class ObjectExtractor(object):
         selectL = kwargs.get("selectionList", [])
         #
         cD = {keyAttribute: {}}
-        # logger.info("HERE kwargs: %r", kwargs)
-        # logger.info("selectL: %r", selectL)
         try:
             if useCache and cacheFilePath and os.access(cacheFilePath, os.R_OK):
                 cD = self.__mU.doImport(cacheFilePath, **cacheKwargs)

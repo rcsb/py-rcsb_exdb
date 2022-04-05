@@ -50,8 +50,8 @@ class PdbxLoaderFixture(unittest.TestCase):
         self.__isMac = platform.system() == "Darwin"
         self.__excludeType = None if self.__isMac else "optional"
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        # configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example-local.yml")
+        # configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
+        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example-local.yml")
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
@@ -210,10 +210,6 @@ class PdbxLoaderFixture(unittest.TestCase):
         #
         for ld in self.__ldList:
             self.__pdbxLoaderWrapper(**ld)
-            # if ld["databaseName"] == "bird_chem_comp_core":
-            #     self.__pdbxLoaderWrapper(fileLimit=None, **ld)
-            # else:
-            #     self.__pdbxLoaderWrapper(**ld)
 
     def __pdbxLoaderWrapper(self, **kwargs):
         """Wrapper for the PDBx loader module"""

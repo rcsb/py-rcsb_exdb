@@ -32,7 +32,6 @@ logger = logging.getLogger()
 
 
 class EntryInfoProviderTests(unittest.TestCase):
-    # doInternal = True  # Try this locally
     doInternal = False
 
     def setUp(self):
