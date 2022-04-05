@@ -39,6 +39,8 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class PdbxLoaderFixture(unittest.TestCase):
+    # loadLocal = False
+
     def __init__(self, methodName="runTest"):
         super(PdbxLoaderFixture, self).__init__(methodName)
         self.__verbose = True
@@ -49,7 +51,8 @@ class PdbxLoaderFixture(unittest.TestCase):
         self.__isMac = platform.system() == "Darwin"
         self.__excludeType = None if self.__isMac else "optional"
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example-local.yml")
+        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
+        # configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example-local.yml")
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
@@ -151,10 +154,15 @@ class PdbxLoaderFixture(unittest.TestCase):
             oPath = os.path.join(self.__cachePath, "computed-models", h1, h2, h3, fn)
             fU.put(iPath, oPath)
 
+    # @unittest.skipUnless(loadLocal, "Skip local load test")
     def testPdbxLoader(self):
         #
         for ld in self.__ldList:
-            self.__pdbxLoaderWrapper(**ld)
+            # self.__pdbxLoaderWrapper(**ld)
+            if ld["databaseName"] == "bird_chem_comp_core":
+                self.__pdbxLoaderWrapper(fileLimit=None, **ld)
+            else:
+                self.__pdbxLoaderWrapper(**ld)
 
     def __pdbxLoaderWrapper(self, **kwargs):
         """Wrapper for the PDBx loader module"""
@@ -166,7 +174,7 @@ class PdbxLoaderFixture(unittest.TestCase):
                 resourceName=self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
+                fileLimit=kwargs.get("fileLimit", self.__fileLimit),
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
                 maxStepLength=2000,
