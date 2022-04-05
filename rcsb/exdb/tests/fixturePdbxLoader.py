@@ -49,7 +49,7 @@ class PdbxLoaderFixture(unittest.TestCase):
         self.__isMac = platform.system() == "Darwin"
         self.__excludeType = None if self.__isMac else "optional"
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
+        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example-local.yml")
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
@@ -61,6 +61,18 @@ class PdbxLoaderFixture(unittest.TestCase):
         self.__chunkSize = 10
         self.__fileLimit = 38
         self.__documentStyle = "rowwise_by_name_with_cardinality"
+        #
+        # self.__birdIdList = [
+        #     "PRD_000010",
+        #     "PRD_000060",
+        #     "PRD_000220",
+        #     "PRD_000882",
+        #     "PRD_000154",
+        #     "PRD_000877",
+        #     "PRD_000198",
+        #     "PRD_000009",
+        #     "PRD_000979",
+        # ]
         #
         self.__pdbIdList = [
             "1ah1",
@@ -103,7 +115,15 @@ class PdbxLoaderFixture(unittest.TestCase):
             "6yrq",
         ]
         self.__ldList = [
-            {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min", "inputIdCodeList": None},
+            {
+                "databaseName": "bird_chem_comp_core",
+                "collectionNameList": None,
+                "loadType": "full",
+                "mergeContentTypes": None,
+                "validationLevel": "min",
+                "inputIdCodeList": None
+                # "inputIdCodeList": self.__birdIdList
+            },
             {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": ["vrpt"], "validationLevel": "min", "inputIdCodeList": self.__pdbIdList},
             {"databaseName": "pdbx_comp_model_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min", "inputIdCodeList": None},
         ]
