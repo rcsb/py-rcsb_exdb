@@ -50,8 +50,13 @@ class PdbxLoaderFixture(unittest.TestCase):
         self.__isMac = platform.system() == "Darwin"
         self.__excludeType = None if self.__isMac else "optional"
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        # configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example-local.yml")
+        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
+        # configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example-local.yml")
+        # To Do: Investigate why GitUtil gives divergence error when using 'DISCOVERY_MODE: remote', but not with 'local':
+        #            stderr: 'fatal: Need to specify how to reconcile divergent branches.'
+        #        Only reason I can think of is that not all the same data is obtained with remote vs local mode, but to
+        #        fully debug will need to add more logging statements to GitUtil, StashableBase, & StashUtil (in rcsb.utils.io)
+        #        Or, can try to resolve error directly by specifying how to reconcile diverent branches in git.Repo class.
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
@@ -162,7 +167,6 @@ class PdbxLoaderFixture(unittest.TestCase):
                 "loadType": "full",
                 "mergeContentTypes": None,
                 "validationLevel": "min",
-                # "inputIdCodeList": None
                 "inputIdCodeList": self.__birdChemCompCoreIdList
             },
             {
