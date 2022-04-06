@@ -67,13 +67,15 @@ class ReferenceSequenceAnnotationAdapterTests(unittest.TestCase):
             collectionName = "pdbx_core_polymer_entity"
             polymerType = "Protein"
             #  -- create cache ---
-            rsaP = ReferenceSequenceAnnotationProvider(self.__cfgOb, fetchLimit=self.__fetchLimit, siftsAbbreviated="TEST", cachePath=self.__cachePath, useCache=True)
+            rsaP = ReferenceSequenceAnnotationProvider(
+                self.__cfgOb, databaseName, collectionName, polymerType, fetchLimit=self.__fetchLimit, siftsAbbreviated="TEST", cachePath=self.__cachePath, useCache=True
+            )
             ok = rsaP.testCache()
             self.assertTrue(ok)
             numRef1 = rsaP.getRefDataCount()
             #
             # ---  Reload from cache ---
-            rsaP = ReferenceSequenceAnnotationProvider(self.__cfgOb, cachePath=self.__cachePath, useCache=True)
+            rsaP = ReferenceSequenceAnnotationProvider(self.__cfgOb, databaseName, collectionName, polymerType, cachePath=self.__cachePath, useCache=True)
             ok = rsaP.testCache()
             self.assertTrue(ok)
             numRef2 = rsaP.getRefDataCount()

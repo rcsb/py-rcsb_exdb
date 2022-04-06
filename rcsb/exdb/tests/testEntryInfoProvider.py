@@ -75,9 +75,11 @@ class EntryInfoProviderTests(unittest.TestCase):
         riD = eiP.getEntryInfo("1kip")
         logger.info("riD (%d)", len(riD))
         self.assertGreaterEqual(len(riD), 1)
-        ok = eiP.backup(cfgOb, configName)
+        configName = "site_info_configuration"
+        cfgOb = ConfigUtil(configPath=self.__configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
+        ok = eiP.backup(cfgOb, configName, useStash=False, useGit=True)
         self.assertTrue(ok)
-        ok = eiP.restore(cfgOb, configName)
+        ok = eiP.restore(cfgOb, configName, useStash=False, useGit=True)
         self.assertTrue(ok)
         eiP = EntryInfoProvider(cachePath=self.__cachePath, useCache=True)
         ok = eiP.testCache(minCount=minCount)

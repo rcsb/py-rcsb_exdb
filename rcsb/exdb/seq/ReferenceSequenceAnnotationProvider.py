@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 class ReferenceSequenceAnnotationProvider(object):
     """Utilities to cache content required to update referencence sequence annotations."""
 
-    def __init__(self, cfgOb, maxChunkSize=100, fetchLimit=None, numProc=2, expireDays=14, **kwargs):
+    def __init__(self, cfgOb, databaseName, collectionName, polymerType, maxChunkSize=100, fetchLimit=None, numProc=2, expireDays=14, **kwargs):
         self.__cfgOb = cfgOb
         self.__mU = MarshalUtil()
         #
@@ -46,7 +46,10 @@ class ReferenceSequenceAnnotationProvider(object):
         self.__ssP = self.__fetchSiftsSummaryProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__goP = self.__fetchGoProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
         self.__ecP = self.__fetchEcProvider(self.__cfgOb, self.__cfgOb.getDefaultSectionName(), **kwargs)
-        self.__rsaP = ReferenceSequenceCacheProvider(self.__cfgOb, siftsProvider=self.__ssP, maxChunkSize=maxChunkSize, numProc=numProc, fetchLimit=fetchLimit, expireDays=expireDays)
+        #
+        self.__rsaP = ReferenceSequenceCacheProvider(
+            self.__cfgOb, databaseName, collectionName, polymerType, siftsProvider=self.__ssP, maxChunkSize=maxChunkSize, numProc=numProc, fetchLimit=fetchLimit, expireDays=expireDays
+        )
         self.__matchD = self.__rsaP.getMatchInfo()
         self.__refD = self.__rsaP.getRefData()
         self.__missingMatchedIdCodes = self.__rsaP.getMissingMatchedIdCodes()

@@ -58,14 +58,12 @@ def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
     return ret
 
 
-def doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=None, refChunkSize=100):
+def doReferenceSequenceUpdate(cfgOb, databaseName, collectionName, polymerType, cachePath, useCache, fetchLimit=None, refChunkSize=100):
     try:
-        databaseName = "pdbx_core"
-        collectionName = "pdbx_core_polymer_entity"
-        polymerType = "Protein"
-        #
         #  -- create cache ---
-        rsaP = ReferenceSequenceAnnotationProvider(cfgOb, maxChunkSize=refChunkSize, useCache=useCache, cachePath=cachePath, fetchLimit=fetchLimit, siftsAbbreviated="TEST")
+        rsaP = ReferenceSequenceAnnotationProvider(
+            cfgOb, databaseName, collectionName, polymerType, maxChunkSize=refChunkSize, useCache=useCache, cachePath=cachePath, fetchLimit=fetchLimit, siftsAbbreviated="TEST"
+        )
         ok = rsaP.testCache()
         if not ok:
             logger.error("Cache construction fails %s", ok)
@@ -182,7 +180,10 @@ def main():
             okS = loadStatus(crw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.upd_ref_seq:
-            ok = doReferenceSequenceUpdate(cfgOb, cachePath, useCache, fetchLimit=documentLimit, refChunkSize=100)
+            databaseName = "pdbx_core"
+            collectionName = "pdbx_core_polymer_entity"
+            polymerType = "Protein"
+            ok = doReferenceSequenceUpdate(cfgOb, databaseName, collectionName, polymerType, cachePath, useCache, fetchLimit=documentLimit, refChunkSize=100)
             okS = ok
         #
         logger.info("Operation completed with status %r " % ok and okS)
