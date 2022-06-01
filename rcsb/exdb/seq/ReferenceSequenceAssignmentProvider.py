@@ -109,7 +109,7 @@ class ReferenceSequenceAssignmentProvider(object):
     def testCache(self, minMatchPrimaryPercent=None, logSizes=False):
         okC = True
         logger.info("Reference cache lengths: refIdMap %d matchD %d refD %d", len(self.__refIdMapD), len(self.__matchD), len(self.__refD))
-        ok = bool(self.__refIdMapD and self.__matchD and self.__refD)
+        ok = bool(self.__refIdMapD and self.__matchD and self.__refD and self.__ssP)
         #
         numRef = len(self.__refIdMapD)
         countD = defaultdict(int)
@@ -332,7 +332,6 @@ class ReferenceSequenceAssignmentProvider(object):
         useCache = kwargs.get("useCache", True)
         #
         siftsSummaryDataPath = cfgOb.getPath("SIFTS_SUMMARY_DATA_PATH", sectionName=configName)
-        # logger.info("Using SIFTS_SUMMARY_DATA_PATH, %r", siftsSummaryDataPath)
         if siftsSummaryDataPath.lower().startswith("http"):
             srcDirPath = siftsSummaryDataPath
         else:
@@ -341,6 +340,9 @@ class ReferenceSequenceAssignmentProvider(object):
         logger.debug("ssP %r %r", srcDirPath, cacheDirPath)
         ssP = SiftsSummaryProvider(srcDirPath=srcDirPath, cacheDirPath=cacheDirPath, useCache=useCache, abbreviated=abbreviated, cacheKwargs=cacheKwargs)
         ok = ssP.testCache()
+        if not ok:
+            logger.error("Failed to refetch SIFTS summary data using srcDirPath %s, cacheDirPath %s", srcDirPath, cacheDirPath)
+            return None
         logger.debug("SIFTS cache status %r", ok)
         logger.debug("ssP entry count %d", ssP.getEntryCount())
         return ssP
