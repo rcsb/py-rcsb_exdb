@@ -84,3 +84,4 @@
                   Add computed-models to tests & workflow;
                   Fix test case in testObjectExtractor;
                   Switch fixturePdbxLoader to use remote HTTP loading for Azure tests instead of local mock/sandbox paths
+25-May-2022 V0.92 Add error checking for SIFTS data loading in ReferenceSequenceAnnotationProvider and ReferenceSequenceAssignmentProvider

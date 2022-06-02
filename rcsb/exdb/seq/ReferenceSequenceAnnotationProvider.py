@@ -5,7 +5,7 @@
 # Utilities to cache content required to update referencence sequence annotations.
 #
 # Updates:
-#
+#  25-May-2022 dwp Add error checking for SIFTS data loading
 ##
 __docformat__ = "google en"
 __author__ = "John Westbrook"
@@ -127,7 +127,7 @@ class ReferenceSequenceAnnotationProvider(object):
     def testCache(self, minMatchPrimaryPercent=None, logSizes=False, minMissing=0):
         okC = True
         logger.info("Reference sequence cache lengths: matchD %d refD %d", len(self.__matchD), len(self.__refD))
-        ok = bool(self.__matchD and self.__refD and self.__missingMatchedIdCodes <= minMissing)
+        ok = bool(self.__matchD and self.__refD and self.__ssP and self.__missingMatchedIdCodes <= minMissing)
         #
         numRef = len(self.__matchD)
         countD = defaultdict(int)
@@ -161,7 +161,6 @@ class ReferenceSequenceAnnotationProvider(object):
         useCache = kwargs.get("useCache", True)
         #
         siftsSummaryDataPath = cfgOb.getPath("SIFTS_SUMMARY_DATA_PATH", sectionName=configName)
-        # logger.info("Using SIFTS_SUMMARY_DATA_PATH, %r", siftsSummaryDataPath)
         if siftsSummaryDataPath.lower().startswith("http"):
             srcDirPath = siftsSummaryDataPath
         else:
@@ -170,6 +169,9 @@ class ReferenceSequenceAnnotationProvider(object):
         logger.debug("ssP %r %r", srcDirPath, cacheDirPath)
         ssP = SiftsSummaryProvider(srcDirPath=srcDirPath, cacheDirPath=cacheDirPath, useCache=useCache, abbreviated=abbreviated, cacheKwargs=cacheKwargs)
         ok = ssP.testCache()
+        if not ok:
+            logger.error("Failed to refetch SIFTS summary data using srcDirPath %s, cacheDirPath %s", srcDirPath, cacheDirPath)
+            return None
         logger.debug("SIFTS cache status %r", ok)
         logger.debug("ssP entry count %d", ssP.getEntryCount())
         return ssP

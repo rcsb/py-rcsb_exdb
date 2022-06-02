@@ -197,17 +197,21 @@ class ReferenceSequenceCacheProvider(object):
         refD = {}
         failList = []
         assignRefD = self.__getPolymerReferenceSequenceAssignments(databaseName, collectionName, polymerType, fetchLimit)
+        logger.info("Polymer reference sequence assignments %d (assignRefD)", len(assignRefD))
         refIdMapD, _ = self.__getAssignmentMap(assignRefD)
+        logger.info("Reference ID assignemnt map length %d (refIdMapD)", len(refIdMapD))
         # refIdD[<database_accession>] = [entity_key1, entity_key2,...]
         entryIdL = [rcsbId[:4] for rcsbId in assignRefD]
         siftsUniProtL = self.__ssP.getEntryUniqueIdentifiers(entryIdL, idType="UNPID") if self.__ssP else []
         logger.info("Incorporating all %d SIFTS accessions for %d entities", len(siftsUniProtL), len(entryIdL))
         unpIdList = sorted(set(list(refIdMapD.keys()) + siftsUniProtL))
+        logger.info("UniProt ID list length %d (unpIdList)", len(unpIdList))
         #
         cacheUnpIdList = self.__getReferenceDataIds(expireDays=0)
         logger.info("Using %d cached reference sequences", len(cacheUnpIdList))
         #
         updateUnpIdList = sorted(set(unpIdList) - set(cacheUnpIdList))
+        logger.info("UniProt list lengths (unique): set(unpIdList) %d - set(cacheUnpIdList) %d", len(set(unpIdList)), len(set(cacheUnpIdList)))
         #
         if updateUnpIdList:
             logger.info("Updating cache for %d UniProt accessions (consolidated PDB + SIFTS)", len(updateUnpIdList))
