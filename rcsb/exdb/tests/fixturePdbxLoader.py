@@ -17,7 +17,7 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-import glob
+# import glob
 import logging
 import os
 import platform
@@ -28,7 +28,7 @@ import unittest
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.mongo.PdbxLoader import PdbxLoader
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.io.FileUtil import FileUtil
+# from rcsb.utils.io.FileUtil import FileUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -177,17 +177,17 @@ class PdbxLoaderFixture(unittest.TestCase):
                 "validationLevel": "min",
                 "inputIdCodeList": self.__pdbIdList
             },
-            {
-                "databaseName": "pdbx_comp_model_core",
-                "collectionNameList": None,
-                "loadType": "full",
-                "mergeContentTypes": None,
-                "validationLevel": "min",
-                "inputIdCodeList": None
-            },
+            # {
+            #     "databaseName": "pdbx_comp_model_core",
+            #     "collectionNameList": None,
+            #     "loadType": "full",
+            #     "mergeContentTypes": None,
+            #     "validationLevel": "min",
+            #     "inputIdCodeList": None
+            # },
         ]
         #
-        self.__modelFixture()
+        # self.__modelFixture()
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -198,17 +198,17 @@ class PdbxLoaderFixture(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def __modelFixture(self):
-        fU = FileUtil()
-        modelSourcePath = os.path.join(self.__mockTopPath, "AF")
-        for iPath in glob.iglob(os.path.join(modelSourcePath, "*.cif.gz")):
-            fn = os.path.basename(iPath)
-            uId = fn.split("-")[1]
-            h3 = uId[-2:]
-            h2 = uId[-4:-2]
-            h1 = uId[-6:-4]
-            oPath = os.path.join(self.__cachePath, "computed-models", h1, h2, h3, fn)
-            fU.put(iPath, oPath)
+    # def __modelFixture(self):
+    #     fU = FileUtil()
+    #     modelSourcePath = os.path.join(self.__mockTopPath, "AF")
+    #     for iPath in glob.iglob(os.path.join(modelSourcePath, "*.cif.gz")):
+    #         fn = os.path.basename(iPath)
+    #         uId = fn.split("-")[1]
+    #         h3 = uId[-2:]
+    #         h2 = uId[-4:-2]
+    #         h1 = uId[-6:-4]
+    #         oPath = os.path.join(self.__cachePath, "computed-models", h1, h2, h3, fn)
+    #         fU.put(iPath, oPath)
 
     def testPdbxLoader(self):
         #
