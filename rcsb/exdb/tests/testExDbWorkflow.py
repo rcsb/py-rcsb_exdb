@@ -98,16 +98,16 @@ class ExDbWorkflowTests(unittest.TestCase):
             self.fail()
 
         # Above needs to run first in order for below to work; will need to investigate why
-        logger.info("Now running ExDbWorkflow for computed-models")
-        try:
-            opL = ["upd_ref_seq_comp_models"]
-            rlWf = ExDbWorkflow(**self.__commonD)
-            for op in opL:
-                ok = rlWf.load(op, **self.__loadCommonD)
-                self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
+        # logger.info("Now running ExDbWorkflow for computed-models")
+        # try:
+        #     opL = ["upd_ref_seq_comp_models"]
+        #     rlWf = ExDbWorkflow(**self.__commonD)
+        #     for op in opL:
+        #         ok = rlWf.load(op, **self.__loadCommonD)
+        #         self.assertTrue(ok)
+        # except Exception as e:
+        #     logger.exception("Failing with %s", str(e))
+        #     self.fail()
 
     @unittest.skip("Troubleshooting test")
     def testExDbLoaderWorkflowsWithCacheCheck(self):
