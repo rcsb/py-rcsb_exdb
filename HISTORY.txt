@@ -85,3 +85,4 @@
                   Fix test case in testObjectExtractor;
                   Switch fixturePdbxLoader to use remote HTTP loading for Azure tests instead of local mock/sandbox paths
 25-May-2022 V0.92 Add error checking for SIFTS data loading in ReferenceSequenceAnnotationProvider and ReferenceSequenceAssignmentProvider
+ 9-Jan-2023 V0.93 Configuration changes to support tox 4
