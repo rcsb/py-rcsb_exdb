@@ -155,15 +155,23 @@ class PubChemEtlWorkflow(object):
         #
         return ok1 and ok2 and ok3
 
-    def updateMatchedData(self):
+    def updateMatchedData(self, **kwargs):
         """Update PubChem annotation data for matched correspondences.  Generate and stash
         related identifiers for corresponding components and BIRD chemical definitions.
+
+        Args:
+            numProc(int):  number processors to include in multiprocessing mode (default: 12)
+
+        Returns:
+            (bool): True for success or False otherwise
         """
         try:
             ok1 = ok2 = ok3 = ok4 = ok5 = ok6 = False
             #  --
+            numProc = kwargs.get("numProc", 12)
+            #
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
-            ok1 = pcewP.updateMatchedData()
+            ok1 = pcewP.updateMatchedData(numProc=numProc)
             ok2 = pcewP.dump(contentType="data")
             ok3 = pcewP.toStash(contentType="data")
             #

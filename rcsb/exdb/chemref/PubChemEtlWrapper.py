@@ -174,7 +174,7 @@ class PubChemEtlWrapper(object):
         logger.debug("mapD (%d) extraMapD (%d) %r", len(mapD), len(extraMapD), extraMapD)
         return mapD, extraMapD
 
-    def updateData(self, pcidList, doExport=False):
+    def updateData(self, pcidList, doExport=False, numProc=1):
         """Update PubChem reference data for the input list of compound identifiers.
 
         Args:
@@ -186,14 +186,14 @@ class PubChemEtlWrapper(object):
         ok = False
         try:
             exportPath = self.__dirPath if doExport else None
-            ok, failList = self.__pcdcP.updateMissing(pcidList, exportPath=exportPath)
+            ok, failList = self.__pcdcP.updateMissing(pcidList, exportPath=exportPath, numProc=numProc)
             if failList:
                 logger.info("No data updated for %r", failList)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return ok
 
-    def updateMatchedData(self, exportRaw=False):
+    def updateMatchedData(self, exportRaw=False, numProc=1):
         """Update PubChem reference data using matched compound identifiers in the current index.
 
         Returns:
@@ -203,7 +203,7 @@ class PubChemEtlWrapper(object):
         try:
             pcidList = self.getMatches()
             exportPath = self.__dirPath if exportRaw else None
-            ok, failList = self.__pcdcP.updateMissing(pcidList, exportPath=exportPath)
+            ok, failList = self.__pcdcP.updateMissing(pcidList, exportPath=exportPath, numProc=numProc)
             if failList:
                 logger.info("No data updated for %r", failList)
         except Exception as e:

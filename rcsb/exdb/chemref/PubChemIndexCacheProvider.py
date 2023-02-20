@@ -339,7 +339,7 @@ class PubChemIndexCacheProvider(StashableBase):
             #
             if updateIdList:
                 logger.info("Update reference data cache for %d chemical identifers", len(updateIdList))
-                ok, failList = self.__updateReferenceData(updateIdList, searchIdxD, **kwargs)
+                ok, failList = self.__updateReferenceData(updateIdList, searchIdxD, numProc, **kwargs)
                 logger.info("Update reference data return status is %r missing count %d", ok, len(failList))
             else:
                 logger.info("No reference data updates required")
@@ -498,7 +498,7 @@ class PubChemIndexCacheProvider(StashableBase):
         objD = obEx.getObjects()
         return objD
 
-    def __updateReferenceData(self, idList, searchIdxD, **kwargs):
+    def __updateReferenceData(self, idList, searchIdxD, numProc=1, **kwargs):
         """Launch worker methods to update chemical reference data correspondences.
 
         Args:
@@ -507,7 +507,6 @@ class PubChemIndexCacheProvider(StashableBase):
         Returns:
             (bool, list): status flag, list of unmatched identifiers
         """
-        numProc = 1
         chunkSize = 50
         exportPath = kwargs.get("exportPath", None)
         logger.info("Length starting list is %d", len(idList))
