@@ -123,7 +123,8 @@ class PubChemEtlWorkflow(object):
             ccFileNamePrefix (str, optional): index file prefix (default: full)
             rebuildChemIndices (bool, optional): rebuild indices from source (default: False)
             exportPath(str, optional): path to export raw PubChem search results  (default: None)
-            numProc(int):  number processors to include in multiprocessing mode (default: 12)
+            numProcChem(int):  number processors to include in multiprocessing mode (default: 12)
+            numProc(int):  number processors to include in multiprocessing mode (default: 1)
 
         Returns:
             (bool): True for success or False otherwise
@@ -135,7 +136,8 @@ class PubChemEtlWorkflow(object):
             ccUrlTarget = kwargs.get("ccUrlTarget", None)
             birdUrlTarget = kwargs.get("birdUrlTarget", None)
             ccFileNamePrefix = kwargs.get("ccFileNamePrefix", "cc-full")
-            numProc = kwargs.get("numProc", 12)
+            numProcChem = kwargs.get("numProcChem", 12)
+            numProc = kwargs.get("numProc", 1)
             rebuildChemIndices = kwargs.get("rebuildChemIndices", True)
             exportPath = kwargs.get("exportPath", None)
             #
@@ -146,6 +148,7 @@ class PubChemEtlWorkflow(object):
                 ccFileNamePrefix=ccFileNamePrefix,
                 exportPath=exportPath,
                 rebuildChemIndices=rebuildChemIndices,
+                numProcChem=numProcChem,
                 numProc=numProc,
             )
             ok2 = pcewP.dump(contentType="index")

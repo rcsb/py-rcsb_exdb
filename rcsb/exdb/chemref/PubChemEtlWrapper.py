@@ -117,7 +117,8 @@ class PubChemEtlWrapper(object):
             rebuildChemIndices (bool, optional): rebuild indices from source (default: False)
             fetchLimit (int, optional): maximum number of definitions to process (default: None)
             exportPath(str, optional): path to export raw PubChem search results  (default: None)
-            numProc(int):  number processors to include in multiprocessing mode (default: 12)
+            numProcChem(int):  number processors to include in multiprocessing mode (default: 12)
+            numProc(int):  number processors to include in multiprocessing mode (default: 1)
 
             Returns:
                 (bool): True for success or False otherwise
@@ -131,7 +132,8 @@ class PubChemEtlWrapper(object):
             fetchLimit = kwargs.get("fetchLimit", None)
             exportPath = kwargs.get("exportPath", None)
             expireDays = kwargs.get("expireDays", 0)
-            numProc = kwargs.get("numProc", 12)
+            numProcChem = kwargs.get("numProcChem", 12)
+            numProc = kwargs.get("numProc", 1)
 
             #  -- Update/create mapping index cache  ---
             ok = self.__pcicP.updateMissing(
@@ -143,6 +145,7 @@ class PubChemEtlWrapper(object):
                 exportPath=exportPath,
                 rebuildChemIndices=rebuildChemIndices,
                 fetchLimit=fetchLimit,
+                numProcChem=numProcChem,
                 numProc=numProc,
             )
         except Exception as e:

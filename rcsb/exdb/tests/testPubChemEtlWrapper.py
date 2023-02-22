@@ -83,7 +83,7 @@ class PubChemEtlWrapperTests(unittest.TestCase):
                 ccFileNamePrefix="cc-abbrev",
                 exportPath=self.__dirPath,
                 rebuildChemIndices=True,
-                numProc=4,
+                numProcChem=4,
             )
             self.assertTrue(ok)
             #

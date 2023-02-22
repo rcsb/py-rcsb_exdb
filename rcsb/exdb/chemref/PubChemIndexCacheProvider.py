@@ -291,14 +291,15 @@ class PubChemIndexCacheProvider(StashableBase):
         # --
         return numUpd
 
-    def updateMissing(self, expireDays=0, fetchLimit=None, updateUnmatched=True, numProc=12, **kwargs):
+    def updateMissing(self, expireDays=0, fetchLimit=None, updateUnmatched=True, numProcChem=12, numProc=1, **kwargs):
         """Update match index from object store
 
         Args:
             expireDays (int): expiration days on match data (default 0 meaning none)
             fetchLimit (int): limit to the number of entry updates performed (None)
             updateUnmatched (bool): Previously unmatched search definitions will be retried on update (default=True)
-            numProc (int): for rebuilding local chemical indices the number processors to apply (default=12)
+            numProcChem (int): for rebuilding local chemical indices the number processors to apply (default=12)
+            numProc (int): for rebuilding local PubChem indices the number processors to apply (default=1)
 
         Returns:
             bool: True for success or False otherwise
@@ -320,7 +321,7 @@ class PubChemIndexCacheProvider(StashableBase):
         try:
             # ---
             # Get current the indices of source chemical reference data -
-            ok, ccidxP, ccsidxP = self.__rebuildChemCompSourceIndices(numProc, **kwargs)
+            ok, ccidxP, ccsidxP = self.__rebuildChemCompSourceIndices(numProcChem, **kwargs)
             if not ok:
                 return matchD
             #
