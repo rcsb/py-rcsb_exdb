@@ -152,6 +152,7 @@ class ExDbWorkflow(object):
                     minMatchPrimaryPercent=minMatchPrimaryPercent,
                     minMissing=minMissing,
                     refChunkSize=refChunkSize,
+                    numProc=numProc
                 )
                 okS = ok
             elif op == "upd_ref_seq_comp_models":
@@ -205,14 +206,14 @@ class ExDbWorkflow(object):
         return ret
 
     def doReferenceSequenceUpdate(
-        self, databaseName, collectionName, polymerType, fetchLimit=None, useSequenceCache=False, testMode=False, minMatchPrimaryPercent=None, minMissing=0, refChunkSize=50, **kwargs
+        self, databaseName, collectionName, polymerType, fetchLimit=None, useSequenceCache=False, testMode=False, minMatchPrimaryPercent=None, minMissing=0, refChunkSize=50, numProc=2, **kwargs
     ):
         try:
             _ = kwargs
             _ = testMode
             # -------
             rsaP = ReferenceSequenceAnnotationProvider(
-                self.__cfgOb, databaseName, collectionName, polymerType, useCache=useSequenceCache, cachePath=self.__cachePath, maxChunkSize=refChunkSize
+                self.__cfgOb, databaseName, collectionName, polymerType, useCache=useSequenceCache, cachePath=self.__cachePath, maxChunkSize=refChunkSize, numProc=numProc
             )
             ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent, minMissing=minMissing)
             if ok:
