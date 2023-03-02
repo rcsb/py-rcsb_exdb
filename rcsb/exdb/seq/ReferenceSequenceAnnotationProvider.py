@@ -127,7 +127,9 @@ class ReferenceSequenceAnnotationProvider(object):
     def testCache(self, minMatchPrimaryPercent=None, logSizes=False, minMissing=0):
         okC = True
         logger.info("Reference sequence cache lengths: matchD %d refD %d", len(self.__matchD), len(self.__refD))
+        logger.info("missingMatchedIdCodes %r minMissing %r", self.__missingMatchedIdCodes, minMissing)
         ok = bool(self.__matchD and self.__refD and self.__ssP and self.__missingMatchedIdCodes <= minMissing)
+        logger.info("Initial testCache check status %r", ok)
         #
         numRef = len(self.__matchD)
         countD = defaultdict(int)
