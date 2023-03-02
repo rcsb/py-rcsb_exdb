@@ -8,6 +8,7 @@
 #  9-May-2020 jdw separate cache behavior with separate option rebuildChemIndices=True/False
 # 16-Jul-2020 jdw separate index and reference data management.
 # 23-Jul-2021 jdw Make PubChemIndexCacheProvider a subclass of StashableBase()
+#  2-Mar-2023 aae Return correct status from Single proc
 #
 ##
 __docformat__ = "google en"
@@ -339,7 +340,7 @@ class PubChemIndexCacheProvider(StashableBase):
             updateIdList = updateIdList[:fetchLimit] if fetchLimit else updateIdList
             #
             if updateIdList:
-                logger.info("Update reference data cache for %d chemical identifers", len(updateIdList))
+                logger.info("Update reference data cache for %d chemical identifiers", len(updateIdList))
                 ok, failList = self.__updateReferenceData(updateIdList, searchIdxD, numProc, **kwargs)
                 logger.info("Update reference data return status is %r missing count %d", ok, len(failList))
             else:
@@ -522,7 +523,7 @@ class PubChemIndexCacheProvider(StashableBase):
         else:
             successList, _, _, _ = rWorker.updateList(idList, "SingleProc", optD, self.__dirPath)
             failList = list(set(idList) - set(successList))
-            ok = len(failList) > 0
+            ok = len(failList) == 0
             logger.info("Single-proc status %r failures %r", ok, len(failList))
         #
         return ok, failList
