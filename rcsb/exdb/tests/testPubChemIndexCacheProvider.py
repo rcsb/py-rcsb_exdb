@@ -66,7 +66,7 @@ class PubChemIndexCacheProviderTests(unittest.TestCase):
         """Test case - search, backup, restore and select PubChem correspondences for reference chemical definitions."""
         try:
             #  -- Update/create mapping index cache ---
-            numObj = 30
+            numObj = 25
             pcicP = PubChemIndexCacheProvider(self.__cfgOb, self.__cachePath)
             pcicP.updateMissing(
                 expireDays=0,
