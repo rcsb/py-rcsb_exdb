@@ -5,6 +5,7 @@
 #  Workflow wrapper  --  exchange database loading utilities --
 #
 #  Updates:
+#   2-Mar-2023 dwp Add "numProc" parameter to 'upd_ref_seq' operation methods
 #
 ##
 __docformat__ = "google en"
@@ -206,7 +207,18 @@ class ExDbWorkflow(object):
         return ret
 
     def doReferenceSequenceUpdate(
-        self, databaseName, collectionName, polymerType, fetchLimit=None, useSequenceCache=False, testMode=False, minMatchPrimaryPercent=None, minMissing=0, refChunkSize=50, numProc=2, **kwargs
+        self,
+        databaseName,
+        collectionName,
+        polymerType,
+        fetchLimit=None,
+        useSequenceCache=False,
+        testMode=False,
+        minMatchPrimaryPercent=None,
+        minMissing=0,
+        refChunkSize=50,
+        numProc=2,
+        **kwargs
     ):
         try:
             _ = kwargs
