@@ -216,7 +216,7 @@ class ExDbWorkflow(object):
         testMode=False,
         minMatchPrimaryPercent=None,
         minMissing=0,
-        refChunkSize=50,
+        refChunkSize=10,
         numProc=2,
         **kwargs
     ):
