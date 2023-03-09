@@ -81,7 +81,7 @@ class ExDbWorkflow(object):
             readBackCheck = kwargs.get("readBackCheck", False)
             numProc = int(kwargs.get("numProc", 1))
             chunkSize = int(kwargs.get("chunkSize", 10))
-            refChunkSize = int(kwargs.get("refChunkSize", 50))
+            refChunkSize = int(kwargs.get("refChunkSize", 10))
             documentLimit = int(kwargs.get("documentLimit")) if "documentLimit" in kwargs else None
             loadType = kwargs.get("loadType", "full")  # or replace
             dbType = kwargs.get("dbType", "mongo")
@@ -216,7 +216,7 @@ class ExDbWorkflow(object):
         testMode=False,
         minMatchPrimaryPercent=None,
         minMissing=0,
-        refChunkSize=10,
+        refChunkSize=25,
         numProc=2,
         **kwargs
     ):

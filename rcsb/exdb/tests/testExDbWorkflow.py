@@ -117,13 +117,13 @@ class ExDbWorkflowTests(unittest.TestCase):
             self.__commonD["rebuildCache"] = False
             rlWf = ExDbWorkflow(**self.__commonD)
             #
-            ok = rlWf.load("upd_ref_seq", minMatchPrimaryPercent=50.0, refChunkSize=50, **self.__loadCommonD)
+            ok = rlWf.load("upd_ref_seq", minMatchPrimaryPercent=50.0, refChunkSize=10, **self.__loadCommonD)
             logger.info("Cache status is %r", ok)
             self.assertTrue(ok)
             if ok:
                 self.__commonD["rebuildCache"] = False
                 rlWf = ExDbWorkflow(**self.__commonD)
-                ok1 = rlWf.load("upd_ref_seq", refChunkSize=50, **self.__loadCommonD)
+                ok1 = rlWf.load("upd_ref_seq", refChunkSize=10, **self.__loadCommonD)
                 self.assertTrue(ok1)
                 ok3 = rlWf.load("etl_tree_node_lists", **self.__loadCommonD)
                 self.assertTrue(ok3)

@@ -58,7 +58,7 @@ def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
     return ret
 
 
-def doReferenceSequenceUpdate(cfgOb, databaseName, collectionName, polymerType, cachePath, useCache, fetchLimit=None, refChunkSize=100):
+def doReferenceSequenceUpdate(cfgOb, databaseName, collectionName, polymerType, cachePath, useCache, fetchLimit=None, refChunkSize=10):
     try:
         #  -- create cache ---
         rsaP = ReferenceSequenceAnnotationProvider(
@@ -183,7 +183,7 @@ def main():
             databaseName = "pdbx_core"
             collectionName = "pdbx_core_polymer_entity"
             polymerType = "Protein"
-            ok = doReferenceSequenceUpdate(cfgOb, databaseName, collectionName, polymerType, cachePath, useCache, fetchLimit=documentLimit, refChunkSize=100)
+            ok = doReferenceSequenceUpdate(cfgOb, databaseName, collectionName, polymerType, cachePath, useCache, fetchLimit=documentLimit, refChunkSize=10)
             okS = ok
         #
         logger.info("Operation completed with status %r " % ok and okS)
