@@ -5,7 +5,8 @@
 #  Workflow wrapper  --  exchange database loading utilities --
 #
 #  Updates:
-#
+#   2-Mar-2023 dwp Add "numProc" parameter to 'upd_ref_seq' operation methods
+#   9-Mar-2023 dwp Lower refChunkSize to 10 (UniProt API having trouble streaming XML responses)
 ##
 __docformat__ = "google en"
 __author__ = "John Westbrook"
@@ -80,7 +81,7 @@ class ExDbWorkflow(object):
             readBackCheck = kwargs.get("readBackCheck", False)
             numProc = int(kwargs.get("numProc", 1))
             chunkSize = int(kwargs.get("chunkSize", 10))
-            refChunkSize = int(kwargs.get("refChunkSize", 100))
+            refChunkSize = int(kwargs.get("refChunkSize", 10))
             documentLimit = int(kwargs.get("documentLimit")) if "documentLimit" in kwargs else None
             loadType = kwargs.get("loadType", "full")  # or replace
             dbType = kwargs.get("dbType", "mongo")
@@ -152,6 +153,7 @@ class ExDbWorkflow(object):
                     minMatchPrimaryPercent=minMatchPrimaryPercent,
                     minMissing=minMissing,
                     refChunkSize=refChunkSize,
+                    numProc=numProc
                 )
                 okS = ok
             elif op == "upd_ref_seq_comp_models":
@@ -205,14 +207,25 @@ class ExDbWorkflow(object):
         return ret
 
     def doReferenceSequenceUpdate(
-        self, databaseName, collectionName, polymerType, fetchLimit=None, useSequenceCache=False, testMode=False, minMatchPrimaryPercent=None, minMissing=0, refChunkSize=50, **kwargs
+        self,
+        databaseName,
+        collectionName,
+        polymerType,
+        fetchLimit=None,
+        useSequenceCache=False,
+        testMode=False,
+        minMatchPrimaryPercent=None,
+        minMissing=0,
+        refChunkSize=10,
+        numProc=2,
+        **kwargs
     ):
         try:
             _ = kwargs
             _ = testMode
             # -------
             rsaP = ReferenceSequenceAnnotationProvider(
-                self.__cfgOb, databaseName, collectionName, polymerType, useCache=useSequenceCache, cachePath=self.__cachePath, maxChunkSize=refChunkSize
+                self.__cfgOb, databaseName, collectionName, polymerType, useCache=useSequenceCache, cachePath=self.__cachePath, maxChunkSize=refChunkSize, numProc=numProc
             )
             ok = rsaP.testCache(minMatchPrimaryPercent=minMatchPrimaryPercent, minMissing=minMissing)
             if ok:

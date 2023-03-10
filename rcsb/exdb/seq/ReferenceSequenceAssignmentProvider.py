@@ -41,7 +41,7 @@ class ReferenceSequenceAssignmentProvider(object):
         polymerType="Protein",
         referenceDatabaseName="UniProt",
         provSource="PDB",
-        maxChunkSize=100,
+        maxChunkSize=10,
         fetchLimit=None,
         **kwargs
     ):
