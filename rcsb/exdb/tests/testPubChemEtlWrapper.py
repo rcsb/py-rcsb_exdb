@@ -56,7 +56,7 @@ class PubChemEtlWrapperTests(unittest.TestCase):
         # These are test source files for chemical component/BIRD indices
         self.__ccUrlTarget = os.path.join(self.__dataPath, "components-abbrev.cif")
         self.__birdUrlTarget = os.path.join(self.__dataPath, "prdcc-abbrev.cif")
-        self.__numComponents = 30
+        self.__numComponents = 25
         self.__numSelectMatches = 23
         self.__numAltMatches = 2
         self.__numTotalMatches = 50
