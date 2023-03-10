@@ -6,7 +6,7 @@
 #
 #  Updates:
 #   2-Mar-2023 dwp Add "numProc" parameter to 'upd_ref_seq' operation methods
-#
+#   9-Mar-2023 dwp Lower refChunkSize to 10 (UniProt API having trouble streaming XML responses)
 ##
 __docformat__ = "google en"
 __author__ = "John Westbrook"

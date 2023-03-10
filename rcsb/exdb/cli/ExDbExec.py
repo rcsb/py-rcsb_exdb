@@ -7,6 +7,7 @@
 #  Updates:
 #   4-Sep-2019 jdw add Tree and Drugbank loaders
 #  14-Feb-2020 jdw change over to ReferenceSequenceAnnotationProvider/Adapter
+#   9-Mar-2023 dwp Lower refChunkSize to 10 (UniProt API having trouble streaming XML responses)
 #
 ##
 __docformat__ = "google en"
