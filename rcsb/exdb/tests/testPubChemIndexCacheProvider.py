@@ -4,7 +4,7 @@
 # Date:    16-Jul-2020
 #
 # Updates:
-#
+#  13-Mar-2023 aae Fix tests after removing obsolete entries from test data
 ##
 """
 Tests for PubChem index cache maintenance operations

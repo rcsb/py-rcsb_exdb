@@ -5,7 +5,7 @@
 #  Workflow wrapper  --  PubChem ETL utilities
 #
 #  Updates:
-#
+#  13-Mar-2023 aae Updates to use multiprocess count
 ##
 __docformat__ = "google en"
 __author__ = "John Westbrook"

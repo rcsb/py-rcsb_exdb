@@ -4,7 +4,8 @@
 # Date:    20-Jul-2020
 #
 # Updates:
-#
+#  13-Mar-2023 aae Updates to use multiprocess count,
+#                  Fix tests after removing obsolete entries from test data
 ##
 """
 Tests for PubChem ETL wrapper methods
