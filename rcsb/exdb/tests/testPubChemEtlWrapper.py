@@ -4,7 +4,7 @@
 # Date:    20-Jul-2020
 #
 # Updates:
-#  13-Mar-2023 aae Updates to use multiprocess count,
+#  13-Mar-2023 aae Updates to use multiprocess count, disable git stash testing,
 #                  Fix tests after removing obsolete entries from test data
 ##
 """
@@ -62,6 +62,10 @@ class PubChemEtlWrapperTests(unittest.TestCase):
         self.__numAltMatches = 2
         self.__numTotalMatches = 50
         #
+        # This tests pushing files to the stash
+        self.__testStashServer = True
+        self.__testStashGit = False
+        #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -98,7 +102,7 @@ class PubChemEtlWrapperTests(unittest.TestCase):
             #
             ok = pcewP.dump(contentType="index")
             self.assertTrue(ok)
-            ok = pcewP.toStash(contentType="index")
+            ok = pcewP.toStash(contentType="index", useStash=self.__testStashServer, useGit=self.__testStashGit)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -126,13 +130,13 @@ class PubChemEtlWrapperTests(unittest.TestCase):
             self.assertTrue(ok)
             ok = pcewP.dump(contentType="data")
             self.assertTrue(ok)
-            ok = pcewP.toStash(contentType="data")
+            ok = pcewP.toStash(contentType="data", useStash=self.__testStashServer, useGit=self.__testStashGit)
             self.assertTrue(ok)
             ok = pcewP.updateIdentifiers()
             self.assertTrue(ok)
             ok = pcewP.dump(contentType="identifiers")
             self.assertTrue(ok)
-            ok = pcewP.toStash(contentType="identifiers")
+            ok = pcewP.toStash(contentType="identifiers", useStash=self.__testStashServer, useGit=self.__testStashGit)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))

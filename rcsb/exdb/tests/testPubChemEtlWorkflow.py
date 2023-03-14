@@ -4,7 +4,7 @@
 # Date:    29-Jul-2020
 #
 # Updates:
-#
+#  13-Mar-2023 aae Disable git stash testing
 ##
 """
 Tests for PubChem ETL workflow methods
@@ -51,6 +51,10 @@ class PubChemEtlWorkflowTests(unittest.TestCase):
         self.__birdUrlTarget = os.path.join(self.__dataPath, "prdcc-abbrev.cif")
         self.__ccFileNamePrefix = "cc-abbrev"
         #
+        # This tests pushing files to the stash
+        self.__testStashServer = True
+        self.__testStashGit = False
+        #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -73,6 +77,8 @@ class PubChemEtlWorkflowTests(unittest.TestCase):
                 ccFileNamePrefix=self.__ccFileNamePrefix,
                 numProc=4,
                 rebuildChemIndices=True,
+                useStash=self.__testStashServer,
+                useGit=self.__testStashGit
             )
             self.assertTrue(ok)
         except Exception as e:
@@ -84,7 +90,7 @@ class PubChemEtlWorkflowTests(unittest.TestCase):
         try:
             #  --
             pcewP = PubChemEtlWorkflow(configPath=self.__configPath, configName=self.__configName, cachePath=self.__cachePath)
-            ok = pcewP.dump()
+            ok = pcewP.dump(useStash=self.__testStashServer, useGit=self.__testStashGit)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -106,7 +112,7 @@ class PubChemEtlWorkflowTests(unittest.TestCase):
         try:
             #  --
             pcewP = PubChemEtlWorkflow(configPath=self.__configPath, configName=self.__configName, cachePath=self.__cachePath)
-            ok = pcewP.updateMatchedData()
+            ok = pcewP.updateMatchedData(useStash=self.__testStashServer, useGit=self.__testStashGit)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
