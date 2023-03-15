@@ -8,6 +8,7 @@
 #  9-May-2020 jdw separate cache behavior with separate option rebuildChemIndices=True/False
 # 16-Jul-2020 jdw separate index and reference data management.
 # 23-Jul-2021 jdw Make PubChemIndexCacheProvider a subclass of StashableBase()
+#  2-Mar-2023 aae Return correct status from Single proc
 #
 ##
 __docformat__ = "google en"
@@ -291,14 +292,15 @@ class PubChemIndexCacheProvider(StashableBase):
         # --
         return numUpd
 
-    def updateMissing(self, expireDays=0, fetchLimit=None, updateUnmatched=True, numProc=12, **kwargs):
+    def updateMissing(self, expireDays=0, fetchLimit=None, updateUnmatched=True, numProcChemComp=8, numProc=2, **kwargs):
         """Update match index from object store
 
         Args:
             expireDays (int): expiration days on match data (default 0 meaning none)
             fetchLimit (int): limit to the number of entry updates performed (None)
             updateUnmatched (bool): Previously unmatched search definitions will be retried on update (default=True)
-            numProc (int): for rebuilding local chemical indices the number processors to apply (default=12)
+            numProcChemComp (int): for rebuilding local ChemComp indices the number processors to apply (default=8)
+            numProc (int): for rebuilding local PubChem indices the number processors to apply (default=2)
 
         Returns:
             bool: True for success or False otherwise
@@ -320,7 +322,7 @@ class PubChemIndexCacheProvider(StashableBase):
         try:
             # ---
             # Get current the indices of source chemical reference data -
-            ok, ccidxP, ccsidxP = self.__rebuildChemCompSourceIndices(numProc, **kwargs)
+            ok, ccidxP, ccsidxP = self.__rebuildChemCompSourceIndices(numProcChemComp, **kwargs)
             if not ok:
                 return matchD
             #
@@ -338,8 +340,8 @@ class PubChemIndexCacheProvider(StashableBase):
             updateIdList = updateIdList[:fetchLimit] if fetchLimit else updateIdList
             #
             if updateIdList:
-                logger.info("Update reference data cache for %d chemical identifers", len(updateIdList))
-                ok, failList = self.__updateReferenceData(updateIdList, searchIdxD, **kwargs)
+                logger.info("Update reference data cache for %d chemical identifiers", len(updateIdList))
+                ok, failList = self.__updateReferenceData(updateIdList, searchIdxD, numProc, **kwargs)
                 logger.info("Update reference data return status is %r missing count %d", ok, len(failList))
             else:
                 logger.info("No reference data updates required")
@@ -498,7 +500,7 @@ class PubChemIndexCacheProvider(StashableBase):
         objD = obEx.getObjects()
         return objD
 
-    def __updateReferenceData(self, idList, searchIdxD, **kwargs):
+    def __updateReferenceData(self, idList, searchIdxD, numProc=2, **kwargs):
         """Launch worker methods to update chemical reference data correspondences.
 
         Args:
@@ -507,7 +509,6 @@ class PubChemIndexCacheProvider(StashableBase):
         Returns:
             (bool, list): status flag, list of unmatched identifiers
         """
-        numProc = 1
         chunkSize = 50
         exportPath = kwargs.get("exportPath", None)
         logger.info("Length starting list is %d", len(idList))
@@ -522,7 +523,7 @@ class PubChemIndexCacheProvider(StashableBase):
         else:
             successList, _, _, _ = rWorker.updateList(idList, "SingleProc", optD, self.__dirPath)
             failList = list(set(idList) - set(successList))
-            ok = len(failList) > 0
+            ok = len(failList) == 0
             logger.info("Single-proc status %r failures %r", ok, len(failList))
         #
         return ok, failList
@@ -602,8 +603,6 @@ class PubChemIndexCacheProvider(StashableBase):
             logSizes = kwargs.get("logSizes", False)
             limitPerceptions = kwargs.get("limitPerceptions", False)
             #
-            # numProc = kwargs.get("numProc", 1)
-            # numProc = self.__numProc
             chunkSize = kwargs.get("chunkSize", 5)
             molLimit = kwargs.get("molLimit", None)
             ccFileNamePrefix = kwargs.get("ccFileNamePrefix", "cc-full")

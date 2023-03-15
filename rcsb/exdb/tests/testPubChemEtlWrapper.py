@@ -4,7 +4,8 @@
 # Date:    20-Jul-2020
 #
 # Updates:
-#
+#  13-Mar-2023 aae Updates to use multiprocess count, disable git stash testing,
+#                  Fix tests after removing obsolete entries from test data
 ##
 """
 Tests for PubChem ETL wrapper methods
@@ -56,10 +57,14 @@ class PubChemEtlWrapperTests(unittest.TestCase):
         # These are test source files for chemical component/BIRD indices
         self.__ccUrlTarget = os.path.join(self.__dataPath, "components-abbrev.cif")
         self.__birdUrlTarget = os.path.join(self.__dataPath, "prdcc-abbrev.cif")
-        self.__numComponents = 30
+        self.__numComponents = 25
         self.__numSelectMatches = 23
         self.__numAltMatches = 2
         self.__numTotalMatches = 50
+        #
+        # This tests pushing files to the stash
+        self.__testStashServer = True
+        self.__testStashGit = False
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -83,7 +88,7 @@ class PubChemEtlWrapperTests(unittest.TestCase):
                 ccFileNamePrefix="cc-abbrev",
                 exportPath=self.__dirPath,
                 rebuildChemIndices=True,
-                numProc=4,
+                numProcChemComp=4,
             )
             self.assertTrue(ok)
             #
@@ -97,7 +102,7 @@ class PubChemEtlWrapperTests(unittest.TestCase):
             #
             ok = pcewP.dump(contentType="index")
             self.assertTrue(ok)
-            ok = pcewP.toStash(contentType="index")
+            ok = pcewP.toStash(contentType="index", useStash=self.__testStashServer, useGit=self.__testStashGit)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -125,13 +130,13 @@ class PubChemEtlWrapperTests(unittest.TestCase):
             self.assertTrue(ok)
             ok = pcewP.dump(contentType="data")
             self.assertTrue(ok)
-            ok = pcewP.toStash(contentType="data")
+            ok = pcewP.toStash(contentType="data", useStash=self.__testStashServer, useGit=self.__testStashGit)
             self.assertTrue(ok)
             ok = pcewP.updateIdentifiers()
             self.assertTrue(ok)
             ok = pcewP.dump(contentType="identifiers")
             self.assertTrue(ok)
-            ok = pcewP.toStash(contentType="identifiers")
+            ok = pcewP.toStash(contentType="identifiers", useStash=self.__testStashServer, useGit=self.__testStashGit)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))

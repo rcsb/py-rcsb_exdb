@@ -4,7 +4,7 @@
 # Date:    16-Jul-2020
 #
 # Updates:
-#
+#  13-Mar-2023 aae Fix tests after removing obsolete entries from test data
 ##
 """
 Tests for PubChem index cache maintenance operations
@@ -66,7 +66,7 @@ class PubChemIndexCacheProviderTests(unittest.TestCase):
         """Test case - search, backup, restore and select PubChem correspondences for reference chemical definitions."""
         try:
             #  -- Update/create mapping index cache ---
-            numObj = 30
+            numObj = 25
             pcicP = PubChemIndexCacheProvider(self.__cfgOb, self.__cachePath)
             pcicP.updateMissing(
                 expireDays=0,

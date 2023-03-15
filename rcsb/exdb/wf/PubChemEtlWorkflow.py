@@ -5,7 +5,7 @@
 #  Workflow wrapper  --  PubChem ETL utilities
 #
 #  Updates:
-#
+#  13-Mar-2023 aae Updates to use multiprocess count, disable git stash testing
 ##
 __docformat__ = "google en"
 __author__ = "John Westbrook"
@@ -47,23 +47,48 @@ class PubChemEtlWorkflow(object):
             logger.setLevel(logging.DEBUG)
         #
 
-    def dump(self):
-        """Dump the current object store of PubChem correspondences and data."""
+    def dump(self, **kwargs):
+        """Dump the current object store of PubChem correspondences and data.
+
+        Args:
+            useStash (bool):  should stash (Buildlocker) be updated? (default: True)
+            useGit (bool):  should stash (GitHub) be updated? (default: True)
+
+        Returns:
+            (bool): True for success or False otherwise
+
+        """
         ok1 = ok2 = ok3 = ok4 = False
         try:
+            useStash = kwargs.get("useStash", True)
+            useGit = kwargs.get("useGit", True)  # Revisit stashing in GitHub as file timestamp will always cause a commit
             #  -- Update local chemical indices and  create PubChem mapping index ---
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
             sTime = time.time()
             logger.info("Dumping index data")
             ok1 = pcewP.dump(contentType="index")
-            ok2 = pcewP.toStash(contentType="index")
             eTime = time.time()
             logger.info("Dumping index data done in (%.4f seconds)", eTime - sTime)
+            if useGit or useStash:
+                sTime = time.time()
+                logger.info("Stashing index data")
+                ok2 = pcewP.toStash(contentType="index", useStash=useStash, useGit=useGit)
+                eTime = time.time()
+                logger.info("Stashing index data done in (%.4f seconds)", eTime - sTime)
+            else:
+                ok2 = True
 
             sTime = time.time()
             logger.info("Dumping reference data")
             ok3 = pcewP.dump(contentType="data")
-            ok4 = pcewP.toStash(contentType="data")
+            if useGit or useStash:
+                sTime = time.time()
+                logger.info("Stashing reference data")
+                ok4 = pcewP.toStash(contentType="data", useStash=useStash, useGit=useGit)
+                eTime = time.time()
+                logger.info("Stashing reference data done in (%.4f seconds)", eTime - sTime)
+            else:
+                ok4 = True
             eTime = time.time()
             logger.info("Dumping data done in (%.4f seconds)", eTime - sTime)
         except Exception as e:
@@ -77,7 +102,7 @@ class PubChemEtlWorkflow(object):
             #  -- Update local chemical indices and  create PubChem mapping index ---
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
             sTime = time.time()
-            ok1 = pcewP.toStash(contentType="index")
+            ok1 = pcewP. toStash(contentType="index")
             eTime = time.time()
             logger.info("Stashing index data done in (%.4f seconds)", eTime - sTime)
 
@@ -122,8 +147,11 @@ class PubChemEtlWorkflow(object):
             birdUrlTarget (str, optional): target url for bird dictionary resource file (cc format) (default: None=all public)
             ccFileNamePrefix (str, optional): index file prefix (default: full)
             rebuildChemIndices (bool, optional): rebuild indices from source (default: False)
-            exportPath(str, optional): path to export raw PubChem search results  (default: None)
-            numProc(int):  number processors to include in multiprocessing mode (default: 12)
+            exportPath (str, optional): path to export raw PubChem search results  (default: None)
+            numProcChemComp (int, optional):  number processors to include in multiprocessing mode (default: 8)
+            numProc (int, optional):  number processors to include in multiprocessing mode (default: 2)
+            useStash (bool, optional):  should stash (Buildlocker) be updated? (default: True)
+            useGit (bool, optional):  should stash (GitHub) be updated? (default: True)
 
         Returns:
             (bool): True for success or False otherwise
@@ -135,9 +163,12 @@ class PubChemEtlWorkflow(object):
             ccUrlTarget = kwargs.get("ccUrlTarget", None)
             birdUrlTarget = kwargs.get("birdUrlTarget", None)
             ccFileNamePrefix = kwargs.get("ccFileNamePrefix", "cc-full")
-            numProc = kwargs.get("numProc", 12)
+            numProcChemComp = kwargs.get("numProcChemComp", 8)
+            numProc = kwargs.get("numProc", 2)
             rebuildChemIndices = kwargs.get("rebuildChemIndices", True)
             exportPath = kwargs.get("exportPath", None)
+            useStash = kwargs.get("useStash", True)
+            useGit = kwargs.get("useGit", True)
             #
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
             ok1 = pcewP.updateIndex(
@@ -146,30 +177,52 @@ class PubChemEtlWorkflow(object):
                 ccFileNamePrefix=ccFileNamePrefix,
                 exportPath=exportPath,
                 rebuildChemIndices=rebuildChemIndices,
+                numProcChemComp=numProcChemComp,
                 numProc=numProc,
             )
             ok2 = pcewP.dump(contentType="index")
-            ok3 = pcewP.toStash(contentType="index")
+            if useGit or useStash:
+                ok3 = pcewP.toStash(contentType="index", useStash=useStash, useGit=useGit)
+            else:
+                ok3 = True
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         #
         return ok1 and ok2 and ok3
 
-    def updateMatchedData(self):
+    def updateMatchedData(self, **kwargs):
         """Update PubChem annotation data for matched correspondences.  Generate and stash
         related identifiers for corresponding components and BIRD chemical definitions.
+
+        Args:
+            numProc(int):  number processors to include in multiprocessing mode (default: 2)
+            useStash(bool):  should stash (Buildlocker) be updated? (default: True)
+            useGit(bool):  should stash (GitHub) be updated? (default: True)
+
+        Returns:
+            (bool): True for success or False otherwise
         """
         try:
             ok1 = ok2 = ok3 = ok4 = ok5 = ok6 = False
             #  --
+            numProc = kwargs.get("numProc", 2)
+            useStash = kwargs.get("useStash", True)
+            useGit = kwargs.get("useGit", True)
+            #
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
-            ok1 = pcewP.updateMatchedData()
+            ok1 = pcewP.updateMatchedData(numProc=numProc)
             ok2 = pcewP.dump(contentType="data")
-            ok3 = pcewP.toStash(contentType="data")
+            if useGit or useStash:
+                ok3 = pcewP.toStash(contentType="data", useStash=useStash, useGit=useGit)
+            else:
+                ok3 = True
             #
             ok4 = pcewP.updateIdentifiers()
             ok5 = pcewP.dump(contentType="identifiers")
-            ok6 = pcewP.toStash(contentType="identifiers")
+            if useGit or useStash:
+                ok6 = pcewP.toStash(contentType="identifiers", useStash=useStash, useGit=useGit)
+            else:
+                ok6 = True
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))

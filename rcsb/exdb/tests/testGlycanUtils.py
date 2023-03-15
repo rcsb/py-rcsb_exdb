@@ -4,6 +4,7 @@
 # Date:    25-May-2021
 #
 # Update:
+#   9-Feb-2023 aae  Fix TOPDIR path
 ##
 """
 Tests for creating glycan accession mapping details.
@@ -22,7 +23,7 @@ from rcsb.exdb.branch.GlycanUtils import GlycanUtils
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-TOPDIR = os.path.dirname(os.path.dirname(HERE))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
