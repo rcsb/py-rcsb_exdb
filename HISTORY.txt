@@ -88,4 +88,4 @@
  9-Jan-2023 V0.93 Configuration changes to support tox 4
  9-Mar-2023 V0.94 Update ExDbWorkflow to make use of multiple processors for 'upd_ref_seq' operation;
                   Lower refChunkSize to 10 for requests to UniProt API
-13-Mar-2023 V0.95
+13-Mar-2023 V0.95 Updates to PubChem workflow to use multiprocess count, disable git stash testing, remove obsolete entries from test data
