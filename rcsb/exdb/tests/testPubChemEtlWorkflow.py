@@ -75,7 +75,7 @@ class PubChemEtlWorkflowTests(unittest.TestCase):
                 ccUrlTarget=self.__ccUrlTarget,
                 birdUrlTarget=self.__birdUrlTarget,
                 ccFileNamePrefix=self.__ccFileNamePrefix,
-                numProc=4,
+                numProcChemComp=4,
                 rebuildChemIndices=True,
                 useStash=self.__testStashServer,
                 useGit=self.__testStashGit

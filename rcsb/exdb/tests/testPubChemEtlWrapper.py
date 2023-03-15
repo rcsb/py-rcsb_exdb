@@ -126,7 +126,7 @@ class PubChemEtlWrapperTests(unittest.TestCase):
             cidList = pcewP.getMatches()
             logger.info("cidList (%d)", len(cidList))
             self.assertGreaterEqual(len(cidList), self.__numTotalMatches - 2)
-            ok = pcewP.updateMatchedData(numProc=4)
+            ok = pcewP.updateMatchedData()
             self.assertTrue(ok)
             ok = pcewP.dump(contentType="data")
             self.assertTrue(ok)
