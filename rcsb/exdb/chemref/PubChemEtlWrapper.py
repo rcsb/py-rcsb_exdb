@@ -4,7 +4,7 @@
 #
 #
 # Updates:
-#
+#  14-Mar-2023 aae Updates to use multiprocess count
 #
 ##
 __docformat__ = "google en"
@@ -80,6 +80,8 @@ class PubChemEtlWrapper(object):
 
         Args:
             contentType (str): target content to stash (data|index|identifiers)
+            useStash (bool):  should stash (Buildlocker) be updated? (default: True)
+            useGit (bool):  should stash (GitHub) be updated? (default: True)
         Returns:
             (bool): True for success or False otherwise
         """
@@ -117,8 +119,8 @@ class PubChemEtlWrapper(object):
             rebuildChemIndices (bool, optional): rebuild indices from source (default: False)
             fetchLimit (int, optional): maximum number of definitions to process (default: None)
             exportPath(str, optional): path to export raw PubChem search results  (default: None)
-            numProcChem(int):  number processors to include in multiprocessing mode (default: 12)
-            numProc(int):  number processors to include in multiprocessing mode (default: 1)
+            numProcChemComp (int, optional):  number processors to include in multiprocessing mode for ChemComp indices (default: 8)
+            numProc (int, optional):  number processors to include in multiprocessing mode for PubChem (default: 2)
 
             Returns:
                 (bool): True for success or False otherwise
@@ -132,8 +134,8 @@ class PubChemEtlWrapper(object):
             fetchLimit = kwargs.get("fetchLimit", None)
             exportPath = kwargs.get("exportPath", None)
             expireDays = kwargs.get("expireDays", 0)
-            numProcChem = kwargs.get("numProcChem", 12)
-            numProc = kwargs.get("numProc", 1)
+            numProcChemComp = kwargs.get("numProcChemComp", 8)
+            numProc = kwargs.get("numProc", 2)
 
             #  -- Update/create mapping index cache  ---
             ok = self.__pcicP.updateMissing(
@@ -145,7 +147,7 @@ class PubChemEtlWrapper(object):
                 exportPath=exportPath,
                 rebuildChemIndices=rebuildChemIndices,
                 fetchLimit=fetchLimit,
-                numProcChem=numProcChem,
+                numProcChemComp=numProcChemComp,
                 numProc=numProc,
             )
         except Exception as e:
@@ -177,7 +179,7 @@ class PubChemEtlWrapper(object):
         logger.debug("mapD (%d) extraMapD (%d) %r", len(mapD), len(extraMapD), extraMapD)
         return mapD, extraMapD
 
-    def updateData(self, pcidList, doExport=False, numProc=1):
+    def updateData(self, pcidList, doExport=False, numProc=2):
         """Update PubChem reference data for the input list of compound identifiers.
 
         Args:
@@ -196,7 +198,7 @@ class PubChemEtlWrapper(object):
             logger.exception("Failing with %s", str(e))
         return ok
 
-    def updateMatchedData(self, exportRaw=False, numProc=1):
+    def updateMatchedData(self, exportRaw=False, numProc=2):
         """Update PubChem reference data using matched compound identifiers in the current index.
 
         Returns:

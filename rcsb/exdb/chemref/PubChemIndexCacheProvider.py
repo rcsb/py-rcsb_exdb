@@ -292,15 +292,15 @@ class PubChemIndexCacheProvider(StashableBase):
         # --
         return numUpd
 
-    def updateMissing(self, expireDays=0, fetchLimit=None, updateUnmatched=True, numProcChem=12, numProc=1, **kwargs):
+    def updateMissing(self, expireDays=0, fetchLimit=None, updateUnmatched=True, numProcChemComp=8, numProc=2, **kwargs):
         """Update match index from object store
 
         Args:
             expireDays (int): expiration days on match data (default 0 meaning none)
             fetchLimit (int): limit to the number of entry updates performed (None)
             updateUnmatched (bool): Previously unmatched search definitions will be retried on update (default=True)
-            numProcChem (int): for rebuilding local chemical indices the number processors to apply (default=12)
-            numProc (int): for rebuilding local PubChem indices the number processors to apply (default=1)
+            numProcChemComp (int): for rebuilding local ChemComp indices the number processors to apply (default=8)
+            numProc (int): for rebuilding local PubChem indices the number processors to apply (default=2)
 
         Returns:
             bool: True for success or False otherwise
@@ -322,7 +322,7 @@ class PubChemIndexCacheProvider(StashableBase):
         try:
             # ---
             # Get current the indices of source chemical reference data -
-            ok, ccidxP, ccsidxP = self.__rebuildChemCompSourceIndices(numProcChem, **kwargs)
+            ok, ccidxP, ccsidxP = self.__rebuildChemCompSourceIndices(numProcChemComp, **kwargs)
             if not ok:
                 return matchD
             #
@@ -500,7 +500,7 @@ class PubChemIndexCacheProvider(StashableBase):
         objD = obEx.getObjects()
         return objD
 
-    def __updateReferenceData(self, idList, searchIdxD, numProc=1, **kwargs):
+    def __updateReferenceData(self, idList, searchIdxD, numProc=2, **kwargs):
         """Launch worker methods to update chemical reference data correspondences.
 
         Args:
@@ -603,8 +603,6 @@ class PubChemIndexCacheProvider(StashableBase):
             logSizes = kwargs.get("logSizes", False)
             limitPerceptions = kwargs.get("limitPerceptions", False)
             #
-            # numProc = kwargs.get("numProc", 1)
-            # numProc = self.__numProc
             chunkSize = kwargs.get("chunkSize", 5)
             molLimit = kwargs.get("molLimit", None)
             ccFileNamePrefix = kwargs.get("ccFileNamePrefix", "cc-full")

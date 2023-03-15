@@ -8,6 +8,7 @@
 #  9-May-2020 jdw separate cache behavior with separate option rebuildChemIndices=True/False
 # 16-Jul-2020 jdw separate index and reference data management.
 # 23-Jul-2021 jdw Make PubChemDataCacheProvider a subclass of StashableBase()
+# 15-Mar-2023 aae Update default numProc to 2
 #
 ##
 __docformat__ = "google en"
@@ -228,12 +229,12 @@ class PubChemDataCacheProvider(StashableBase):
         # --
         return numUpd
 
-    def updateMissing(self, idList, exportPath=None, numProc=1, chunkSize=5):
+    def updateMissing(self, idList, exportPath=None, numProc=2, chunkSize=5):
         """Fetch and load reference data for any missing PubChem ID codes in the input list.
 
         Args:
             idList (list): PubChem ID codes
-            numProc (int, optional): number of processor to use. Defaults to 1.
+            numProc (int, optional): number of processor to use. Defaults to 2.
             chunkSize (int, optional): chunk size between data store updates. Defaults to 5.
             exportPath (str, optional): store raw fetched data in this path. Defaults to None.
 
@@ -252,13 +253,13 @@ class PubChemDataCacheProvider(StashableBase):
 
         return ok, failList
 
-    def load(self, idList, exportPath=None, numProc=1, chunkSize=5):
+    def load(self, idList, exportPath=None, numProc=2, chunkSize=5):
         """Fetch and load reference data for the input list of PubChem compound codes.
 
         Args:
             idList (list): PubChem ID codes
             exportPath (str, optional): store raw fetched data in this path. Defaults to None.
-            numProc (int, optional): number of processor to use. Defaults to 1.
+            numProc (int, optional): number of processor to use. Defaults to 2.
             chunkSize (int, optional): chunk size between data store updates. Defaults to 5.
 
 

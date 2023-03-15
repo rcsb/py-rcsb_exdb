@@ -51,8 +51,8 @@ class PubChemEtlWorkflow(object):
         """Dump the current object store of PubChem correspondences and data.
 
         Args:
-            useStash(bool):  should stash (Buildlocker) be updated? (default: True)
-            useGit(bool):  should stash (GitHub) be updated? (default: True)
+            useStash (bool):  should stash (Buildlocker) be updated? (default: True)
+            useGit (bool):  should stash (GitHub) be updated? (default: True)
 
         Returns:
             (bool): True for success or False otherwise
@@ -61,7 +61,7 @@ class PubChemEtlWorkflow(object):
         ok1 = ok2 = ok3 = ok4 = False
         try:
             useStash = kwargs.get("useStash", True)
-            useGit = kwargs.get("useGit", True)
+            useGit = kwargs.get("useGit", True)  # Revisit stashing in GitHub as file timestamp will always cause a commit
             #  -- Update local chemical indices and  create PubChem mapping index ---
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
             sTime = time.time()
@@ -102,7 +102,7 @@ class PubChemEtlWorkflow(object):
             #  -- Update local chemical indices and  create PubChem mapping index ---
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
             sTime = time.time()
-            ok1 = pcewP.toStash(contentType="index")
+            ok1 = pcewP. toStash(contentType="index")
             eTime = time.time()
             logger.info("Stashing index data done in (%.4f seconds)", eTime - sTime)
 
@@ -147,11 +147,11 @@ class PubChemEtlWorkflow(object):
             birdUrlTarget (str, optional): target url for bird dictionary resource file (cc format) (default: None=all public)
             ccFileNamePrefix (str, optional): index file prefix (default: full)
             rebuildChemIndices (bool, optional): rebuild indices from source (default: False)
-            exportPath(str, optional): path to export raw PubChem search results  (default: None)
-            numProcChem(int):  number processors to include in multiprocessing mode (default: 12)
-            numProc(int):  number processors to include in multiprocessing mode (default: 1)
-            useStash(bool):  should stash (Buildlocker) be updated? (default: True)
-            useGit(bool):  should stash (GitHub) be updated? (default: True)
+            exportPath (str, optional): path to export raw PubChem search results  (default: None)
+            numProcChemComp (int, optional):  number processors to include in multiprocessing mode (default: 8)
+            numProc (int, optional):  number processors to include in multiprocessing mode (default: 2)
+            useStash (bool, optional):  should stash (Buildlocker) be updated? (default: True)
+            useGit (bool, optional):  should stash (GitHub) be updated? (default: True)
 
         Returns:
             (bool): True for success or False otherwise
@@ -163,8 +163,8 @@ class PubChemEtlWorkflow(object):
             ccUrlTarget = kwargs.get("ccUrlTarget", None)
             birdUrlTarget = kwargs.get("birdUrlTarget", None)
             ccFileNamePrefix = kwargs.get("ccFileNamePrefix", "cc-full")
-            numProcChem = kwargs.get("numProcChem", 12)
-            numProc = kwargs.get("numProc", 1)
+            numProcChemComp = kwargs.get("numProcChemComp", 8)
+            numProc = kwargs.get("numProc", 2)
             rebuildChemIndices = kwargs.get("rebuildChemIndices", True)
             exportPath = kwargs.get("exportPath", None)
             useStash = kwargs.get("useStash", True)
@@ -177,7 +177,7 @@ class PubChemEtlWorkflow(object):
                 ccFileNamePrefix=ccFileNamePrefix,
                 exportPath=exportPath,
                 rebuildChemIndices=rebuildChemIndices,
-                numProcChem=numProcChem,
+                numProcChemComp=numProcChemComp,
                 numProc=numProc,
             )
             ok2 = pcewP.dump(contentType="index")
@@ -195,7 +195,7 @@ class PubChemEtlWorkflow(object):
         related identifiers for corresponding components and BIRD chemical definitions.
 
         Args:
-            numProc(int):  number processors to include in multiprocessing mode (default: 12)
+            numProc(int):  number processors to include in multiprocessing mode (default: 2)
             useStash(bool):  should stash (Buildlocker) be updated? (default: True)
             useGit(bool):  should stash (GitHub) be updated? (default: True)
 
@@ -205,7 +205,7 @@ class PubChemEtlWorkflow(object):
         try:
             ok1 = ok2 = ok3 = ok4 = ok5 = ok6 = False
             #  --
-            numProc = kwargs.get("numProc", 12)
+            numProc = kwargs.get("numProc", 2)
             useStash = kwargs.get("useStash", True)
             useGit = kwargs.get("useGit", True)
             #
