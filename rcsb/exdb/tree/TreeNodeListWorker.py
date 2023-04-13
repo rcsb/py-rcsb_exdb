@@ -175,7 +175,7 @@ class TreeNodeListWorker(object):
                 ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
                 self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ---- CARD
-            cou = CARDTargetOntologyProvider(cachePath=self.__cachePath, useCache=useCache)
+            cou = CARDTargetOntologyProvider(cachePath=self.__cachePath, useCache=False)
             nL = cou.getTreeNodeList()
             logger.info("Starting load of EC node tree length %d", len(nL))
             if doLoad:
