@@ -6,7 +6,8 @@
 #
 # Updates:
 #  9-Sep-2019 jdw add AtcProvider() and ChemrefExtractor() for ATC tree.
-# JDW TODO TEST
+# 12-Apr-2023 dwp add CARD ontology tree
+#
 ##
 __docformat__ = "google en"
 __author__ = "John Westbrook"
@@ -23,6 +24,7 @@ from rcsb.exdb.seq.AnnotationExtractor import AnnotationExtractor
 from rcsb.exdb.seq.TaxonomyExtractor import TaxonomyExtractor
 from rcsb.utils.chemref.AtcProvider import AtcProvider
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
+from rcsb.utils.targets.CARDTargetOntologyProvider import CARDTargetOntologyProvider
 from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
 from rcsb.utils.struct.CathClassificationProvider import CathClassificationProvider
 from rcsb.utils.struct.EcodClassificationProvider import EcodClassificationProvider
@@ -170,6 +172,14 @@ class TreeNodeListWorker(object):
             logger.info("Starting load of EC node tree length %d", len(nL))
             if doLoad:
                 collectionName = "tree_ec_node_list"
+                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+                self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            # ---- CARD
+            cou = CARDTargetOntologyProvider(cachePath=self.__cachePath, useCache=False)
+            nL = cou.getTreeNodeList()
+            logger.info("Starting load of EC node tree length %d", len(nL))
+            if doLoad:
+                collectionName = "tree_card_node_list"
                 ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
                 self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ---- Taxonomy
