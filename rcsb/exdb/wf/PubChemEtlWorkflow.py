@@ -168,7 +168,7 @@ class PubChemEtlWorkflow(object):
             rebuildChemIndices = kwargs.get("rebuildChemIndices", True)
             exportPath = kwargs.get("exportPath", None)
             useStash = kwargs.get("useStash", True)
-            useGit = kwargs.get("useGit", True)
+            useGit = kwargs.get("useGit", False)
             #
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
             ok1 = pcewP.updateIndex(
@@ -207,7 +207,7 @@ class PubChemEtlWorkflow(object):
             #  --
             numProc = kwargs.get("numProc", 2)
             useStash = kwargs.get("useStash", True)
-            useGit = kwargs.get("useGit", True)
+            useGit = kwargs.get("useGit", False)
             #
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
             ok1 = pcewP.updateMatchedData(numProc=numProc)

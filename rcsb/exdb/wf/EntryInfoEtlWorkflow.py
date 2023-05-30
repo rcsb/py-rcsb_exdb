@@ -59,7 +59,7 @@ class EntryInfoEtlWorkflow(object):
             eiP.update(self.__cfgOb, fmt="json", indent=3)
             #
             if backup:
-                ok = eiP.backup(self.__cfgOb, self.__configName, self.__stashRemotePrefix, useGit=True, useStash=True)
+                ok = eiP.backup(self.__cfgOb, self.__configName, self.__stashRemotePrefix, useGit=False, useStash=True)
                 logger.info("Backup entry-level annotations (%r)", ok)
             else:
                 ok = True

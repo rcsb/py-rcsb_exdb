@@ -46,7 +46,7 @@ class GlycanEtlWorkflow(object):
             logger.setLevel(logging.DEBUG)
         #
 
-    def updateMatchedIndex(self, backup=True):
+    def updateMatchedIndex(self, backup=True, useGit=True):
         """Update Glycan correspondence index.
 
         Returns:
@@ -64,7 +64,7 @@ class GlycanEtlWorkflow(object):
             logger.info("Matched glycan identifiers (%d)", len(riD))
             #
             if backup:
-                ok2 = gP.backup(self.__cfgOb, self.__configName, self.__stashRemotePrefix, useGit=True, useStash=True)
+                ok2 = gP.backup(self.__cfgOb, self.__configName, self.__stashRemotePrefix, useGit=False, useStash=True)
                 logger.info("Backup matched glycan identifiers (%r)", ok2)
             else:
                 ok2 = True
