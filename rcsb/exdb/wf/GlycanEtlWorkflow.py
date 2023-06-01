@@ -46,7 +46,7 @@ class GlycanEtlWorkflow(object):
             logger.setLevel(logging.DEBUG)
         #
 
-    def updateMatchedIndex(self, backup=True, useGit=True):
+    def updateMatchedIndex(self, backup=True):
         """Update Glycan correspondence index.
 
         Returns:
