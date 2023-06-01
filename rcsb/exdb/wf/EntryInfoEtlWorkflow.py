@@ -5,6 +5,7 @@
 #  Workflow wrapper  --  Entry-level annotations extracted from ExDB
 #
 #  Updates:
+#   1-Jun-2023 aae Don't back up resources to GitHub during cache update workflows
 #
 ##
 __docformat__ = "google en"
