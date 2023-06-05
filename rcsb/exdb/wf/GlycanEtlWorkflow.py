@@ -5,6 +5,7 @@
 #  Workflow wrapper  --  Glycan ETL utilities
 #
 #  Updates:
+#   1-Jun-2023 aae Don't back up resources to GitHub during cache update workflows
 #
 ##
 __docformat__ = "google en"
@@ -64,7 +65,7 @@ class GlycanEtlWorkflow(object):
             logger.info("Matched glycan identifiers (%d)", len(riD))
             #
             if backup:
-                ok2 = gP.backup(self.__cfgOb, self.__configName, self.__stashRemotePrefix, useGit=True, useStash=True)
+                ok2 = gP.backup(self.__cfgOb, self.__configName, self.__stashRemotePrefix, useGit=False, useStash=True)
                 logger.info("Backup matched glycan identifiers (%r)", ok2)
             else:
                 ok2 = True
