@@ -194,7 +194,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                     logger.debug("Mapping glycoprotein for %r", unpId)
                     glygenDL.append(
                         {
-                            "provenance_source": "PDB",
+                            "provenance_source": "PDB",  # This should be GlyGen
                             "annotation_id": unpId,
                             "name": "Glycoprotein",
                             "type": "GlyGen",
