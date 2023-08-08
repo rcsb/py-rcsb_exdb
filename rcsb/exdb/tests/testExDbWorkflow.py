@@ -58,6 +58,7 @@ class ExDbWorkflowTests(unittest.TestCase):
             "providerTypeExclude": self.__excludeType,
             "restoreUseGit": True,
             "restoreUseStash": False,
+            "useFilteredLists": True,
         }
         self.__loadCommonD = {"readBackCheck": True, "numProc": 2, "chunkSize": 5, "refChunkSize": 5, "loadType": "full"}
         #
