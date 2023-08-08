@@ -7,7 +7,7 @@
 # Updates:
 #  9-Sep-2019 jdw add AtcProvider() and ChemrefExtractor() for ATC tree.
 # 12-Apr-2023 dwp add CARD ontology tree
-#  8-Aug-2023 dwp Load full (unfiltered) taxonomy tree node list, and stop loading GO tree (will be loaded in DW instead) 
+#  8-Aug-2023 dwp Load full (unfiltered) taxonomy tree node list, and stop loading GO tree (will be loaded in DW instead)
 #
 ##
 __docformat__ = "google en"
