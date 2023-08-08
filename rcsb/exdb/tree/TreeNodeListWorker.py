@@ -196,7 +196,7 @@ class TreeNodeListWorker(object):
                 for taxId in tL:
                     fD.update({k: True for k in tU.getLineage(taxId)})
                 logger.info("Taxon filter dictionary length %d", len(fD))
-                logger.debug("fD %r" % sorted(fD))
+                logger.debug("fD %r", sorted(fD))
                 #
                 nL = tU.exportNodeList(filterD=fD)
             else:
