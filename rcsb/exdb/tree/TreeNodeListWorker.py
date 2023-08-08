@@ -7,6 +7,7 @@
 # Updates:
 #  9-Sep-2019 jdw add AtcProvider() and ChemrefExtractor() for ATC tree.
 # 12-Apr-2023 dwp add CARD ontology tree
+#  8-Aug-2023 dwp Load full (unfiltered) taxonomy tree node list, and stop loading GO tree (will be loaded in DW instead)
 #
 ##
 __docformat__ = "google en"
@@ -20,17 +21,17 @@ import os.path
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.exdb.chemref.ChemRefExtractor import ChemRefExtractor
-from rcsb.exdb.seq.AnnotationExtractor import AnnotationExtractor
-from rcsb.exdb.seq.TaxonomyExtractor import TaxonomyExtractor
 from rcsb.utils.chemref.AtcProvider import AtcProvider
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
 from rcsb.utils.targets.CARDTargetOntologyProvider import CARDTargetOntologyProvider
-from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
 from rcsb.utils.struct.CathClassificationProvider import CathClassificationProvider
 from rcsb.utils.struct.EcodClassificationProvider import EcodClassificationProvider
 from rcsb.utils.struct.ScopClassificationProvider import ScopClassificationProvider
 from rcsb.utils.struct.Scop2ClassificationProvider import Scop2ClassificationProvider
 from rcsb.utils.taxonomy.TaxonomyProvider import TaxonomyProvider
+from rcsb.exdb.seq.TaxonomyExtractor import TaxonomyExtractor
+# from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
+# from rcsb.exdb.seq.AnnotationExtractor import AnnotationExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 class TreeNodeListWorker(object):
     """Prepare and load repository holdings and repository update data."""
 
-    def __init__(self, cfgOb, cachePath, numProc=1, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False, useCache=False):
+    def __init__(self, cfgOb, cachePath, numProc=1, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False, useCache=False, useFilteredLists=False):
         self.__cfgOb = cfgOb
         self.__cachePath = os.path.abspath(cachePath)
         self.__readBackCheck = readBackCheck
@@ -50,6 +51,7 @@ class TreeNodeListWorker(object):
         self.__verbose = verbose
         self.__statusList = []
         self.__useCache = useCache
+        self.__useFilteredLists = useFilteredLists
 
     def __updateStatus(self, updateId, databaseName, collectionName, status, startTimestamp):
         try:
@@ -122,19 +124,21 @@ class TreeNodeListWorker(object):
             # collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
-            # --- GO
-            goP = GeneOntologyProvider(goDirPath=os.path.join(self.__cachePath, "go"), useCache=useCache)
-            ok = goP.testCache()
-            anEx = AnnotationExtractor(self.__cfgOb)
-            goIdL = anEx.getUniqueIdentifiers("GO")
-            logger.info("Unique GO assignments %d", len(goIdL))
-            nL = goP.exportTreeNodeList(goIdL)
-            logger.info("GO tree node list length %d", len(nL))
-            if doLoad:
-                collectionName = "tree_go_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
-                self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-                # ---- CATH
+            #
+            # --- GO - TURNED OFF 08 Aug 2023 dwp (tree is now loaded in DW)
+            # goP = GeneOntologyProvider(goDirPath=os.path.join(self.__cachePath, "go"), useCache=useCache)
+            # ok = goP.testCache()
+            # anEx = AnnotationExtractor(self.__cfgOb)
+            # goIdL = anEx.getUniqueIdentifiers("GO")
+            # logger.info("Unique GO assignments %d", len(goIdL))
+            # nL = goP.exportTreeNodeList(goIdL)
+            # logger.info("GO tree node list length %d", len(nL))
+            # if doLoad:
+            #     collectionName = "tree_go_node_list"
+            #     ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+            #     self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            #
+            # ---- CATH
             ccu = CathClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
             nL = ccu.getTreeNodeList()
             logger.info("Starting load SCOP node tree length %d", len(nL))
@@ -183,19 +187,23 @@ class TreeNodeListWorker(object):
                 ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
                 self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ---- Taxonomy
-            # Get the taxon coverage in the current data set -
-            epe = TaxonomyExtractor(self.__cfgOb)
-            tL = epe.getUniqueTaxons()
-            logger.info("Taxon coverage length %d", len(tL))
-            #
             tU = TaxonomyProvider(cachePath=self.__cachePath, useCache=useCache)
-            fD = {1}
-            for taxId in tL:
-                fD.update({k: True for k in tU.getLineage(taxId)})
-            logger.info("Taxon filter dictionary length %d", len(fD))
-            # logger.info("fD %r" % sorted(fD))
-            #
-            nL = tU.exportNodeList(filterD=fD)
+            if self.__useFilteredLists:
+                # Get the taxon coverage in the current data set -
+                epe = TaxonomyExtractor(self.__cfgOb)
+                tL = epe.getUniqueTaxons()
+                logger.info("Taxon coverage length %d", len(tL))
+                #
+                fD = {1}
+                for taxId in tL:
+                    fD.update({k: True for k in tU.getLineage(taxId)})
+                logger.info("Taxon filter dictionary length %d", len(fD))
+                logger.debug("fD %r", sorted(fD))
+                #
+                nL = tU.exportNodeList(filterD=fD)
+            else:
+                # Get the full taxon node list without filtering
+                nL = tU.exportNodeList()
             self.__checkTaxonNodeList(nL)
             logger.info("Starting load of taxonomy node tree length %d", len(nL))
             if doLoad:

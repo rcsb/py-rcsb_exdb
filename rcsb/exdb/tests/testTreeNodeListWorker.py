@@ -63,6 +63,7 @@ class TreeNodeListWorkerTests(unittest.TestCase):
         self.__debugFlag = False
         self.__loadType = "full"
         self.__useCache = True
+        self.__useFilteredLists = True
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -88,6 +89,7 @@ class TreeNodeListWorkerTests(unittest.TestCase):
                 verbose=self.__debugFlag,
                 readBackCheck=self.__readBackCheck,
                 useCache=self.__useCache,
+                useFilteredLists=self.__useFilteredLists,
             )
             #
             ok = rhw.load(updateId, loadType=self.__loadType, doLoad=self.__doLoad)

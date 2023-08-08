@@ -59,7 +59,7 @@ class ExDbWorkflowTests(unittest.TestCase):
             "restoreUseGit": True,
             "restoreUseStash": False,
         }
-        self.__loadCommonD = {"readBackCheck": True, "numProc": 2, "chunkSize": 5, "refChunkSize": 5, "loadType": "full"}
+        self.__loadCommonD = {"readBackCheck": True, "numProc": 2, "chunkSize": 5, "refChunkSize": 5, "loadType": "full", "useFilteredLists": True}
         #
         # These are test source files for chemical component/BIRD indices
         ccUrlTarget = os.path.join(self.__dataPath, "components-abbrev.cif")

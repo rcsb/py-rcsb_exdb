@@ -64,8 +64,8 @@ class PdbxLoaderFixture(unittest.TestCase):
         self.__failedFilePath = os.path.join(HERE, "test-output", "failed-list.txt")
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__readBackCheck = True
-        self.__numProc = 2
-        self.__chunkSize = 10
+        self.__numProc = 1
+        self.__chunkSize = 5
         self.__fileLimit = 38
         self.__documentStyle = "rowwise_by_name_with_cardinality"
         #
@@ -172,7 +172,7 @@ class PdbxLoaderFixture(unittest.TestCase):
             {
                 "databaseName": "pdbx_core",
                 "collectionNameList": None,
-                "loadType": "full",
+                "loadType": "replace",
                 "mergeContentTypes": ["vrpt"],
                 "validationLevel": "min",
                 "inputIdCodeList": self.__pdbIdList
@@ -228,7 +228,7 @@ class PdbxLoaderFixture(unittest.TestCase):
                 fileLimit=kwargs.get("fileLimit", self.__fileLimit),
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
-                maxStepLength=2000,
+                maxStepLength=1000,
                 useSchemaCache=True,
                 rebuildSchemaFlag=False,
             )
