@@ -7,7 +7,7 @@
 # Updates:
 #  9-Sep-2019 jdw add AtcProvider() and ChemrefExtractor() for ATC tree.
 # 12-Apr-2023 dwp add CARD ontology tree
-#  8-Aug-2023 dwp Load full (unfiltered) taxonomy tree node list
+#  8-Aug-2023 dwp Load full (unfiltered) taxonomy tree node list, and stop loading GO tree (will be loaded in DW instead) 
 #
 ##
 __docformat__ = "google en"
@@ -21,17 +21,17 @@ import os.path
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.exdb.chemref.ChemRefExtractor import ChemRefExtractor
-from rcsb.exdb.seq.AnnotationExtractor import AnnotationExtractor
 from rcsb.utils.chemref.AtcProvider import AtcProvider
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
 from rcsb.utils.targets.CARDTargetOntologyProvider import CARDTargetOntologyProvider
-from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
 from rcsb.utils.struct.CathClassificationProvider import CathClassificationProvider
 from rcsb.utils.struct.EcodClassificationProvider import EcodClassificationProvider
 from rcsb.utils.struct.ScopClassificationProvider import ScopClassificationProvider
 from rcsb.utils.struct.Scop2ClassificationProvider import Scop2ClassificationProvider
 from rcsb.utils.taxonomy.TaxonomyProvider import TaxonomyProvider
 from rcsb.exdb.seq.TaxonomyExtractor import TaxonomyExtractor
+# from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
+# from rcsb.exdb.seq.AnnotationExtractor import AnnotationExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -124,19 +124,21 @@ class TreeNodeListWorker(object):
             # collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
-            # --- GO
-            goP = GeneOntologyProvider(goDirPath=os.path.join(self.__cachePath, "go"), useCache=useCache)
-            ok = goP.testCache()
-            anEx = AnnotationExtractor(self.__cfgOb)
-            goIdL = anEx.getUniqueIdentifiers("GO")
-            logger.info("Unique GO assignments %d", len(goIdL))
-            nL = goP.exportTreeNodeList(goIdL)
-            logger.info("GO tree node list length %d", len(nL))
-            if doLoad:
-                collectionName = "tree_go_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
-                self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-                # ---- CATH
+            #
+            # --- GO - TURNED OFF 08 Aug 2023 dwp (tree is now loaded in DW)
+            # goP = GeneOntologyProvider(goDirPath=os.path.join(self.__cachePath, "go"), useCache=useCache)
+            # ok = goP.testCache()
+            # anEx = AnnotationExtractor(self.__cfgOb)
+            # goIdL = anEx.getUniqueIdentifiers("GO")
+            # logger.info("Unique GO assignments %d", len(goIdL))
+            # nL = goP.exportTreeNodeList(goIdL)
+            # logger.info("GO tree node list length %d", len(nL))
+            # if doLoad:
+            #     collectionName = "tree_go_node_list"
+            #     ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+            #     self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            #
+            # ---- CATH
             ccu = CathClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
             nL = ccu.getTreeNodeList()
             logger.info("Starting load SCOP node tree length %d", len(nL))

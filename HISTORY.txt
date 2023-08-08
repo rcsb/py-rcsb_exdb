@@ -92,4 +92,4 @@
 12-Apr-2023 V0.96 Add CARD ontology data to tree builder
  1-Jun-2023 V0.97 Don't back up resources to GitHub during cache update workflows
  8-Aug-2023 V0.98 Reduce memory and cpu footprint for Azure test cases;
-                  Load full (unfiltered) taxonomy tree node list
+                  Load full (unfiltered) taxonomy tree node list, and stop loading GO tree
