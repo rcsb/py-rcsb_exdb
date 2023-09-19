@@ -93,3 +93,5 @@
  1-Jun-2023 V0.97 Don't back up resources to GitHub during cache update workflows
  8-Aug-2023 V0.98 Reduce memory and cpu footprint for Azure test cases;
                   Load full (unfiltered) taxonomy tree node list, and stop loading GO tree
+19-Sep-2023 V0.99 Add reload method to ChemRefMappingProvider and LigandNeighborMappingProvider;
+                  Add documentation to reference sequence providers
