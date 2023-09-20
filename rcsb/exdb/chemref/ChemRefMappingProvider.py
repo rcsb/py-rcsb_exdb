@@ -89,6 +89,10 @@ class ChemRefMappingProvider(StashableBase):
     def __getMappingDataPath(self):
         return os.path.join(self.__dirPath, "chemref-mapping-data.json")
 
+    def reload(self):
+        self.__mapD = self.__reload(self.__dirPath, useCache=True)
+        return True
+
     def __reload(self, dirPath, useCache):
         startTime = time.time()
         fD = {}

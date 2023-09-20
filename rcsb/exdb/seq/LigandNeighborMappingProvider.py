@@ -60,6 +60,9 @@ class LigandNeighborMappingProvider(StashableBase):
         except Exception:
             return []
 
+    def reload(self):
+        self.__mapD = self.__reload(self.__dirPath, useCache=True)
+
     def __reload(self, dirPath, useCache):
         startTime = time.time()
         retD = {}

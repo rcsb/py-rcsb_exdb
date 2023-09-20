@@ -156,6 +156,7 @@ class PolymerEntityExtractor(object):
                             uD["refDbName"] = tD["reference_database_name"]
                             uD["provSource"] = tD["provenance_source"]
                             if tD["reference_database_accession"] in unpD:
+                                # This adds {"accession": rId, "taxId": taxId, "scientific_name": sn, "gene": gn, "name": pn, "sequence": sequence}
                                 uD.update(unpD[tD["reference_database_accession"]])
                             aL = []
                             for qD in tD["aligned_regions"]:

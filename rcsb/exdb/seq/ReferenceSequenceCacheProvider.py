@@ -196,20 +196,39 @@ class ReferenceSequenceCacheProvider(object):
         matchD = {}
         refD = {}
         failList = []
+        #
+        # assignRefD: Dict of all entities of polymerType "Protein" (or other), with associated container_identifiers and other info as corresponding values
         assignRefD = self.__getPolymerReferenceSequenceAssignments(databaseName, collectionName, polymerType, fetchLimit)
         logger.info("Polymer reference sequence assignments %d (assignRefD)", len(assignRefD))
+        #
+        # refIdMapD: Dict of all *unique* UniProt Ids of entities that have:
+        #    "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.provenance_source":"PDB",
+        #    "rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_name":"UniProt",
+        #    "entity_poly.rcsb_entity_polymer_type":"Protein"
+        #  Values are the list of entities that have those UniProt IDs
+        #  i.e. refIdMapD[<database_accession>] = [entity_key1, entity_key2,...]
+        # This will usually only contain several hundred to a few thousand IDs
         refIdMapD, _ = self.__getAssignmentMap(assignRefD)
         logger.info("Reference ID assignemnt map length %d (refIdMapD)", len(refIdMapD))
-        # refIdD[<database_accession>] = [entity_key1, entity_key2,...]
+        #
+        # List of all entry IDs for entities in assignRefD (will contain duplicates for entries with >1 entity)
         entryIdL = [rcsbId[:4] for rcsbId in assignRefD]
+        #
+        # List of *unique* UniProt IDs from SIFTS for all protein (or, "polymerType") entries currently in ExDB
         siftsUniProtL = self.__ssP.getEntryUniqueIdentifiers(entryIdL, idType="UNPID") if self.__ssP else []
         logger.info("Incorporating all %d SIFTS accessions for %d entities", len(siftsUniProtL), len(entryIdL))
+        #
+        # unpIdList: List of all *unique* UniProt IDs combined from 'refIdMapD' and 'siftsUniProtL'
+        #            Since not everything will be covered by SIFTS, this will be slightly more than siftsUniProtL
         unpIdList = sorted(set(list(refIdMapD.keys()) + siftsUniProtL))
         logger.info("UniProt ID list length %d (unpIdList)", len(unpIdList))
         #
+        # cacheUnpIdList: List of UniProt IDs from uniprot_exdb.reference_match, from today backwards
         cacheUnpIdList = self.__getReferenceDataIds(expireDays=0)
         logger.info("Using %d cached reference sequences", len(cacheUnpIdList))
         #
+        # updateUnpIdList: List of the *delta* UniProt IDs between what's possible based on entity collections (unpIdList)
+        #                  and what's already in uniprot_exdb.reference_match (cacheUnpIdList)
         updateUnpIdList = sorted(set(unpIdList) - set(cacheUnpIdList))
         logger.info("UniProt list lengths (unique): set(unpIdList) %d - set(cacheUnpIdList) %d", len(set(unpIdList)), len(set(cacheUnpIdList)))
         #

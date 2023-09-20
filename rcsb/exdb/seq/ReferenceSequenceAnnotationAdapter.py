@@ -51,6 +51,19 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
             return ok1 and ok2, obj
 
     def __filterFeatures(self, obj):
+        """Uses data from uniprot_exdb.reference_entry to populate the following data at the pdbx_core_polymer_entity collection:
+            rcsb_polymer_entity_annotation:
+                - GO (data from UniProt + lineage info from GO source)
+                - InterPro (data from UniProt)
+                - Pfam (is possible but not currently enabled)
+                - GlyGen
+            rcsb_enzyme_class_combined
+                - EC (data from UniProt)
+            rcsb_ec_lineage
+                - EC (data from EC source)
+            rcsb_gene_name
+                - Gene/taxonomy data from UniProt
+        """
         ok = True
         try:
             if not ("rcsb_polymer_entity_container_identifiers" in obj and "rcsb_id" in obj):
@@ -98,9 +111,15 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
             geneLookupD = {}
             geneFilterD = defaultdict(int)
             resourceFilterD = defaultdict(int)
+            # Loop over all UniProt IDs from `rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_accession`
             for unpId in unpIdS:
                 uD = self.__refD[unpId] if unpId in self.__refD else None
+                # uD represents a document from uniprot_exdb.reference_entry
                 if not uD:
+                    # This occurs when the UniProt IDs from:
+                    #   rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_accession
+                    # are not in:
+                    #   uniprot_exdb.reference_entry
                     logger.info("%s no reference data for unexpected UniProt accession %r", entityKey, unpId)
                     continue
                 if "gene" in uD and "taxonomy_id" in uD:
@@ -175,7 +194,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                     logger.debug("Mapping glycoprotein for %r", unpId)
                     glygenDL.append(
                         {
-                            "provenance_source": "PDB",
+                            "provenance_source": "PDB",  # This should be GlyGen
                             "annotation_id": unpId,
                             "name": "Glycoprotein",
                             "type": "GlyGen",
@@ -189,6 +208,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
             #
             # ------------
             # Filter existing annotations identifiers
+            # (remove any pre-existing UniProt and GlyGen annotations, so that most recent ones gathered above can be added)
             if peaDL:
                 qL = []
                 for peaD in peaDL:
@@ -211,7 +231,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
             #
             # --------------  Add gene names -----------------
             #
-            numSource = len(soDL)
+            numSource = len(soDL)  # number of items originally present in rcsb_entity_source_organism
             logger.debug("%s unpGeneDL %r", entityKey, unpGeneDL)
             for ii, soD in enumerate(soDL):
                 if "ncbi_taxonomy_id" not in soD:
@@ -313,10 +333,18 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
             if ersDL:
                 retDL = []
                 dupD = {}
+                # Loop over all identifier docs in `rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers`
                 for ersD in ersDL:
-                    #  Check currency of reference assignments made by entities in provSourceL (e.g. in this case only PDB)
+                    # Check currency of reference assignments made by entities in provSourceL (e.g. in this case only PDB)
                     isMatchedRefDb, isMatchedAltDb, updErsD = self.__reMapAccessions(entityKey, ersD, referenceDatabaseName, taxIdL, provSourceL)
-                    #
+                    # Possible results:
+                    # '4XVA_1' isMatchedRefDb False isMatchedAltDb False updErsD {'database_name': 'UniProt', 'database_accession': 'P00431', 'provenance_source': 'SIFTS'}
+                    #     - Most are this
+                    #     - '4XBI_1' another example updErsD {'database_name': 'UniProt', 'database_accession': 'Q8IB03', 'provenance_source': 'SIFTS'}
+                    # '8IVK_1' isMatchedRefDb True isMatchedAltDb False updErsD {'database_name': 'UniProt', 'database_accession': 'C3SKF0', 'provenance_source': 'PDB'}
+                    #     - Not super common
+                    # '1W3M_1' isMatchedRefDb False isMatchedAltDb True updErsD {'database_name': 'NORINE', 'database_accession': 'NOR00763', 'provenance_source': 'PDB'}
+                    #     - Not super common
                     logger.debug("%r isMatchedRefDb %r isMatchedAltDb %r updErsD %r", entityKey, isMatchedRefDb, isMatchedAltDb, updErsD)
 
                     if (isMatchedRefDb or isMatchedAltDb) and updErsD["database_accession"] not in dupD:
@@ -332,6 +360,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
                             retDL.append(siftsAccD)
                         if not siftsAccDL:
                             logger.debug("No alternative SIFTS accession mapping for %s", entityKey)
+                            # No alternative SIFTS accession mapping for 1W3M_1
 
                 if retDL:
                     logger.debug("%s retDL %r", entityKey, retDL)
@@ -419,6 +448,7 @@ class ReferenceSequenceAnnotationAdapter(ObjectAdapterBase):
             isMatchedAltDb = False
         elif rsiD["database_name"] == referenceDatabaseName and rsiD["provenance_source"] in provSourceL:
             try:
+                # self.__matchD represents uniprot_exdb.reference_match
                 if rId in self.__matchD and self.__matchD[rId]["matched"] in ["primary"]:
                     # no change
                     isMatchedRefDb = True
