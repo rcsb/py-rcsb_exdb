@@ -6,6 +6,7 @@
 #
 #
 # Updates:
+#  9-Jan-2024 dwp Turn off use of uniprot_exdb DB for enriching protein entity details file (data not used)
 #
 ##
 __docformat__ = "google en"
@@ -16,7 +17,6 @@ __license__ = "Apache 2.0"
 import logging
 import os
 
-from rcsb.exdb.seq.UniProtExtractor import UniProtExtractor
 from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
@@ -56,9 +56,6 @@ class PolymerEntityExtractor(object):
         missingSrcD = {}
         rD = {}
         try:
-            unpEx = UniProtExtractor(self.__cfgOb)
-            unpD = unpEx.getReferenceSequenceDetails()
-            #
             obEx = ObjectExtractor(
                 self.__cfgOb,
                 databaseName="pdbx_core",
@@ -155,9 +152,13 @@ class PolymerEntityExtractor(object):
                             uD["refDbId"] = tD["reference_database_accession"]
                             uD["refDbName"] = tD["reference_database_name"]
                             uD["provSource"] = tD["provenance_source"]
-                            if tD["reference_database_accession"] in unpD:
-                                # This adds {"accession": rId, "taxId": taxId, "scientific_name": sn, "gene": gn, "name": pn, "sequence": sequence}
-                                uD.update(unpD[tD["reference_database_accession"]])
+                            #
+                            # Skip the below step now that uniprot_exdb DB is no longer being updated in weekly workflow.
+                            # The data added here isn't used by subsequent tasks. It simply provides
+                            # additional information in the pdbprent-details.json file (under "alignmentL")
+                            # if tD["reference_database_accession"] in unpD:
+                            #     # This adds {"accession": rId, "taxId": taxId, "scientific_name": sn, "gene": gn, "name": pn, "sequence": sequence}
+                            #     uD.update(unpD[tD["reference_database_accession"]])
                             aL = []
                             for qD in tD["aligned_regions"]:
                                 if qD["entity_beg_seq_id"] + qD["length"] - 1 > seqLen:
@@ -223,44 +224,44 @@ class PolymerEntityExtractor(object):
 
         Example:
             "5H7D_1": {
-                    "alignmentL": [
-                        {
-                            "refDbId": "P42588",
-                            "refDbName": "UniProt",
-                            "provSource": "PDB",
-                            "accession": "P42588",
-                            "taxId": 83333,
-                            "scientific_name": "Escherichia coli (strain K12)",
-                            "gene": "patA",
-                            "name": "PATase",
-                            "alignList": [
-                            {
-                                "srcId": "1",
-                                "entitySeqBeg": 5,
-                                "refSeqBeg": 7,
-                                "length": 447
-                            }
-                            ]
-                        },
-                        {
-                            "refDbId": "P38507",
-                            "refDbName": "UniProt",
-                            "provSource": "PDB",
-                            "accession": "P38507",
-                            "taxId": 1280,
-                            "scientific_name": "Staphylococcus aureus",
-                            "gene": "spa",
-                            "name": "IgG-binding protein A",
-                            "alignList": [
-                            {
-                                "srcId": "2",
-                                "entitySeqBeg": 452,
-                                entitySeqBeg"220,
-                                "length": 48
-                            }
-                            ]
-                        }
-                    ],
+                    # "alignmentL": [
+                    #     {
+                    #         "refDbId": "P42588",
+                    #         "refDbName": "UniProt",
+                    #         "provSource": "PDB",
+                    #         "accession": "P42588",
+                    #         "taxId": 83333,
+                    #         "scientific_name": "Escherichia coli (strain K12)",
+                    #         "gene": "patA",
+                    #         "name": "PATase",
+                    #         "alignList": [
+                    #         {
+                    #             "srcId": "1",
+                    #             "entitySeqBeg": 5,
+                    #             "refSeqBeg": 7,
+                    #             "length": 447
+                    #         }
+                    #         ]
+                    #     },
+                    #     {
+                    #         "refDbId": "P38507",
+                    #         "refDbName": "UniProt",
+                    #         "provSource": "PDB",
+                    #         "accession": "P38507",
+                    #         "taxId": 1280,
+                    #         "scientific_name": "Staphylococcus aureus",
+                    #         "gene": "spa",
+                    #         "name": "IgG-binding protein A",
+                    #         "alignList": [
+                    #         {
+                    #             "srcId": "2",
+                    #             "entitySeqBeg": 452,
+                    #             entitySeqBeg"220,
+                    #             "length": 48
+                    #         }
+                    #         ]
+                    #     }
+                    # ],
                     "sourceOrgL": [
                         {
                             "srcId": "1",
@@ -300,7 +301,7 @@ class PolymerEntityExtractor(object):
                     seqEnd = int(sD["entitySeqEnd"])
                     seqLen = 1 + (seqEnd - seqBeg)
                     # orgName = sD["orgName"]
-                    cD = {"sequence": seq[seqBeg - 1 : seqEnd], "entityId": eId, "srcId": srcId, "seqBeg": seqBeg, "seqEnd": seqEnd, "seqLen": seqLen, "taxId": taxId}
+                    cD = {"sequence": seq[seqBeg - 1: seqEnd], "entityId": eId, "srcId": srcId, "seqBeg": seqBeg, "seqEnd": seqEnd, "seqLen": seqLen, "taxId": taxId}
                     seqId = ""
                     cL = []
                     for k, v in cD.items():

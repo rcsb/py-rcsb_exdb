@@ -95,3 +95,5 @@
                   Load full (unfiltered) taxonomy tree node list, and stop loading GO tree
 19-Sep-2023 V0.99 Add reload method to ChemRefMappingProvider and LigandNeighborMappingProvider;
                   Add documentation to reference sequence providers
+ 9-Jan-2024 V1.00 Update PolymerEntityExtractor to turn off usage of uniprot_exdb as source data;
+                  This package update also coincides with the turning off of uniprot_exdb data loading during the weekly workflow
