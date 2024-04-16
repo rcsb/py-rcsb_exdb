@@ -65,7 +65,7 @@ class PdbxLoaderFixture(unittest.TestCase):
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__readBackCheck = True
         self.__numProc = 1
-        self.__chunkSize = 1
+        self.__chunkSize = 2
         self.__fileLimit = 38
         self.__documentStyle = "rowwise_by_name_with_cardinality"
         #
