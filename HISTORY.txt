@@ -97,3 +97,4 @@
                   Add documentation to reference sequence providers
  9-Jan-2024 V1.00 Update PolymerEntityExtractor to turn off usage of uniprot_exdb as source data;
                   This package update also coincides with the turning off of uniprot_exdb data loading during the weekly workflow
+16-Apr-2024 V1.01 Update unit tests and setuptools config
