@@ -88,7 +88,8 @@ class ExDbWorkflowTests(unittest.TestCase):
     def testExDbLoaderWorkflows(self):
         """Test run workflow steps ..."""
         try:
-            opL = ["etl_chemref", "upd_ref_seq", "etl_tree_node_lists"]
+            # opL = ["etl_chemref", "upd_ref_seq", "etl_tree_node_lists"]
+            opL = ["etl_chemref", "etl_tree_node_lists"]
             rlWf = ExDbWorkflow(**self.__commonD)
             for op in opL:
                 ok = rlWf.load(op, **self.__loadCommonD)

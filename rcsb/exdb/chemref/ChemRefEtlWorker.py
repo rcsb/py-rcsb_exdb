@@ -29,13 +29,14 @@ logger = logging.getLogger(__name__)
 class ChemRefEtlWorker(object):
     """Prepare and load chemical reference data collections."""
 
-    def __init__(self, cfgOb, cachePath, useCache=True, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
+    def __init__(self, cfgOb, cachePath, useCache=True, numProc=2, chunkSize=10, maxStepLength=2000, readBackCheck=False, documentLimit=None, verbose=False):
         self.__cfgOb = cfgOb
         self.__cachePath = cachePath
         self.__useCache = useCache
         self.__readBackCheck = readBackCheck
         self.__numProc = numProc
         self.__chunkSize = chunkSize
+        self.__maxStepLength = maxStepLength
         self.__documentLimit = documentLimit
         #
         self.__resourceName = "MONGO_DB"
@@ -95,6 +96,7 @@ class ChemRefEtlWorker(object):
                 self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,
+                maxStepLength=self.__maxStepLength,
                 documentLimit=self.__documentLimit,
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,

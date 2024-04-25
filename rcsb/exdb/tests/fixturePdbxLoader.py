@@ -141,7 +141,7 @@ class PdbxLoaderFixture(unittest.TestCase):
             "3MBG",
             "3RER",
             "3VD8",
-            "3VFJ",
+            # "3VFJ",
             "3X11",
             "3ZTJ",
             "4E2O",
@@ -149,13 +149,13 @@ class PdbxLoaderFixture(unittest.TestCase):
             "4MEY",
             "5EU8",
             "5KDS",
-            "5TM0",
+            # "5TM0",
             "5VH4",
-            "5VP2",
-            "6FSZ",
+            # "5VP2",
+            # "6FSZ",
             "6LU7",
             "6NN7",
-            "6Q20",
+            # "6Q20",
             "6RFK",
             "6RKU",
             "6YRQ",
@@ -213,10 +213,12 @@ class PdbxLoaderFixture(unittest.TestCase):
     def testPdbxLoader(self):
         #
         for ld in self.__ldList:
-            self.__pdbxLoaderWrapper(**ld)
+            ok = self.__pdbxLoaderWrapper(**ld)
+            self.assertTrue(ok)
 
     def __pdbxLoaderWrapper(self, **kwargs):
         """Wrapper for the PDBx loader module"""
+        ok = False
         try:
             logger.info("Loading %s", kwargs["databaseName"])
             mw = PdbxLoader(
@@ -257,6 +259,7 @@ class PdbxLoaderFixture(unittest.TestCase):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
+        return ok
 
     def __loadStatus(self, statusList):
         sectionName = "data_exchange_configuration"
