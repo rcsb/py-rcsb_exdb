@@ -283,7 +283,8 @@ class ExDbWorkflow(object):
             documentLimit = kwargs.get("documentLimit", None)
             documentLimit = int(documentLimit) if documentLimit else None
             dbType = kwargs.get("dbType", "mongo")
-            incrementalUpdate = kwargs.get("incrementalUpdate", False)
+            rebuildAllNeighborInteractions = kwargs.get("rebuildAllNeighborInteractions", False)
+            incrementalUpdate = not rebuildAllNeighborInteractions
             ccFileNamePrefix = kwargs.get("ccFileNamePrefix", "cc-full")
             ccUrlTarget = kwargs.get("ccUrlTarget", None)
             birdUrlTarget = kwargs.get("birdUrlTarget", None)
@@ -375,7 +376,8 @@ class ExDbWorkflow(object):
                     ccUrlTarget=ccUrlTarget,
                     birdUrlTarget=birdUrlTarget,
                     ccFileNamePrefix=ccFileNamePrefix,
-                    numProc=numProc,
+                    # numProc=numProc,  # Leave at default of 2, due to throttling at PubChem
+                    # chunkSize=chunkSize,  # need to propagate this through
                 )
                 logger.info("updateMatchedIndex status %r", ok)
                 #

@@ -196,7 +196,7 @@ class PubChemUpdateWorker(object):
 
     def __chunker(self, iList, chunkSize):
         chunkSize = max(1, chunkSize)
-        return (iList[i : i + chunkSize] for i in range(0, len(iList), chunkSize))
+        return (iList[i: i + chunkSize] for i in range(0, len(iList), chunkSize))
 
 
 class PubChemIndexCacheProvider(StashableBase):
