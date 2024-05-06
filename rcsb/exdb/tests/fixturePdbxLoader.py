@@ -141,7 +141,7 @@ class PdbxLoaderFixture(unittest.TestCase):
             "3MBG",
             "3RER",
             "3VD8",
-            # "3VFJ",
+            "3VFJ",
             "3X11",
             "3ZTJ",
             "4E2O",

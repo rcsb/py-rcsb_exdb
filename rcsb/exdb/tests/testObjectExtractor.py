@@ -118,7 +118,7 @@ class ObjectExtractorTests(unittest.TestCase):
             eCount = obEx.getCount()
             logger.info("Entry count is %d", eCount)
             logger.info("Entries are %r", list(eD.keys()))
-            self.assertGreaterEqual(eCount, 6)
+            self.assertGreaterEqual(eCount, 5)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()

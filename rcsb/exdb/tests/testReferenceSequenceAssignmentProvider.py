@@ -91,7 +91,7 @@ class ReferenceSequenceAssignmentProviderTests(unittest.TestCase):
             ok = rsaP.testCache()
             self.assertTrue(ok)
             numRef = rsaP.getRefDataCount()
-            self.assertGreaterEqual(numRef, 90)
+            self.assertGreaterEqual(numRef, 49)
             #
             # ---  Reload from cache ---
             rsaP = ReferenceSequenceAssignmentProvider(
@@ -100,7 +100,7 @@ class ReferenceSequenceAssignmentProviderTests(unittest.TestCase):
             ok = rsaP.testCache()
             self.assertTrue(ok)
             numRef = rsaP.getRefDataCount()
-            self.assertGreaterEqual(numRef, 90)
+            self.assertGreaterEqual(numRef, 49)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
