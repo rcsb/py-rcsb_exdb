@@ -371,7 +371,7 @@ class ExDbWorkflow(object):
                     cachePath=self.__cachePath,
                 )
                 logger.info("Starting workflow PubChemEtlWorkflow.updateMatchedIndex()")
-                ok = pcewP.updateMatchedIndex(
+                ok1 = pcewP.updateMatchedIndex(
                     rebuildChemIndices=rebuildChemIndices,
                     ccUrlTarget=ccUrlTarget,
                     birdUrlTarget=birdUrlTarget,
@@ -379,11 +379,13 @@ class ExDbWorkflow(object):
                     # numProc=numProc,  # Leave at default of 2, due to throttling at PubChem
                     # chunkSize=chunkSize,  # need to propagate this through
                 )
-                logger.info("updateMatchedIndex status %r", ok)
+                logger.info("updateMatchedIndex status %r", ok1)
                 #
                 logger.info("Starting workflow PubChemEtlWorkflow.updateMatchedData()")
-                ok = pcewP.updateMatchedData(numProc=numProc) and ok
-                logger.info("updateMatchedData status %r", ok)
+                ok2 = pcewP.updateMatchedData(numProc=numProc)
+                logger.info("updateMatchedData status %r", ok2)
+                #
+                ok = ok1 and ok2
                 #
                 if not ok:
                     logger.error("UpdatePubChem FAILED with status %s", ok)

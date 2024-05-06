@@ -181,9 +181,12 @@ class PubChemEtlWorkflow(object):
                 numProcChemComp=numProcChemComp,
                 numProc=numProc,
             )
+            logger.info("updateIndex completed with status %r", ok1)
             ok2 = pcewP.dump(contentType="index")
+            logger.info("dump completed with status %r", ok2)
             if useGit or useStash:
                 ok3 = pcewP.toStash(contentType="index", useStash=useStash, useGit=useGit)
+                logger.info("toStash completed with status %r", ok3)
             else:
                 ok3 = True
         except Exception as e:
@@ -212,16 +215,22 @@ class PubChemEtlWorkflow(object):
             #
             pcewP = PubChemEtlWrapper(self.__cfgOb, self.__cachePath, stashRemotePrefix=self.__stashRemotePrefix)
             ok1 = pcewP.updateMatchedData(numProc=numProc)
+            logger.info("PubChemEtlWrapper.updateMatchedData completed with status %r", ok1)
             ok2 = pcewP.dump(contentType="data")
+            logger.info("PubChemEtlWrapper.dump 'data' completed with status %r", ok2)
             if useGit or useStash:
                 ok3 = pcewP.toStash(contentType="data", useStash=useStash, useGit=useGit)
+                logger.info("PubChemEtlWrapper.toStash 'data' completed with status %r", ok3)
             else:
                 ok3 = True
             #
             ok4 = pcewP.updateIdentifiers()
+            logger.info("PubChemEtlWrapper.updateIdentifiers completed with status %r", ok4)
             ok5 = pcewP.dump(contentType="identifiers")
+            logger.info("PubChemEtlWrapper.dump 'identifiers' completed with status %r", ok5)
             if useGit or useStash:
                 ok6 = pcewP.toStash(contentType="identifiers", useStash=useStash, useGit=useGit)
+                logger.info("PubChemEtlWrapper.toStash 'identifiers' completed with status %r", ok6)
             else:
                 ok6 = True
             #
