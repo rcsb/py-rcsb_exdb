@@ -108,7 +108,7 @@ def main():
     exWf = ExDbWorkflow(**commonD)
     if op in ["etl_chemref", "etl_uniprot_core", "etl_tree_node_lists", "upd_ref_seq"]:
         okR = exWf.load(op, **loadD)
-    if op in ["upd_neighbor_interactions", "upd_uniprot_taxonomy", "upd_targets_cofactors", "upd_pubchem", "upd_entry_info", "upd_glycan_idx", "upd_resource_stash"]:
+    elif op in ["upd_neighbor_interactions", "upd_uniprot_taxonomy", "upd_targets_cofactors", "upd_pubchem", "upd_entry_info", "upd_glycan_idx", "upd_resource_stash"]:
         okR = exWf.buildExdbResource(op, **loadD)
     else:
         logger.error("Unsupported op %r", op)

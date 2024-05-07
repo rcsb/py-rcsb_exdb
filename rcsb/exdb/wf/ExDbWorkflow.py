@@ -310,9 +310,6 @@ class ExDbWorkflow(object):
                 logger.info("UpdateNeighborInteraction status %r", ok)
                 ok = niWf.backup() and ok
                 logger.info("UpdateNeighborInteraction backup status %r", ok)
-                if not ok:
-                    logger.error("UpdateNeighborInteraction FAILED with status %s", ok)
-                    raise ValueError("UpdateNeighborInteraction FAILED. Check the loader log for details.")
             #
             elif op == "upd_uniprot_taxonomy":
                 logger.info("Starting workflow ProteinTargetSequenceExecutionWorkflow (full)")
@@ -326,9 +323,6 @@ class ExDbWorkflow(object):
                 logger.info("cacheTaxonomy status %r", ok)
                 ok = ptsWf.updateUniProtTaxonomy() and ok
                 logger.info("updateUniProtTaxonomy status %r", ok)
-                if not ok:
-                    logger.error("UpdateUniProtTaxonomyCache FAILED with status %s", ok)
-                    raise ValueError("UpdateUniProtTaxonomyCache FAILED. Check the loader log for details.")
             #
             elif op == "upd_targets_cofactors":
                 logger.info("Starting UpdateTargetsCofactors")
@@ -357,9 +351,6 @@ class ExDbWorkflow(object):
                 ok = ptsWf.buildCofactorData() and ok
                 logger.info("buildCofactorData status %r", ok)
                 ptsWf.resourceCheck()
-                if not ok:
-                    logger.error("UpdateTargetsCofactors FAILED with status %s", ok)
-                    raise ValueError("UpdateTargetsCofactors FAILED. Check the loader log for details.")
             #
             elif op == "upd_pubchem":
                 #  -- Update local chemical indices and  create PubChem mapping index ---
@@ -384,12 +375,7 @@ class ExDbWorkflow(object):
                 logger.info("Starting workflow PubChemEtlWorkflow.updateMatchedData()")
                 ok2 = pcewP.updateMatchedData(numProc=numProc)
                 logger.info("updateMatchedData status %r", ok2)
-                #
                 ok = ok1 and ok2
-                #
-                if not ok:
-                    logger.error("UpdatePubChem FAILED with status %s", ok)
-                    raise ValueError("UpdatePubChem FAILED. Check the loader log for details.")
             #
             elif op == "upd_entry_info":
                 logger.info("Starting workflow EntryInfoEtlWorkflow.update()")
@@ -400,10 +386,6 @@ class ExDbWorkflow(object):
                     cachePath=self.__cachePath,
                 )
                 ok = ewf.update()
-                logger.info("UpdateEntryInfo status %r", ok)
-                if not ok:
-                    logger.error("UpdateEntryInfo FAILED with status %s", ok)
-                    raise ValueError("UpdateEntryInfo FAILED. Check the loader log for details.")
             #
             elif op == "upd_glycan_idx":
                 logger.info("Starting workflow GlycanEtlWorkflow.updateMatchedIndex()")
@@ -414,10 +396,6 @@ class ExDbWorkflow(object):
                     cachePath=self.__cachePath,
                 )
                 ok = gwf.updateMatchedIndex()
-                logger.info("UpdateGlycanIndex status %r", ok)
-                if not ok:
-                    logger.error("UpdateGlycanIndex FAILED with status %s", ok)
-                    raise ValueError("UpdateGlycanIndex FAILED. Check the loader log for details.")
             #
             elif op == "upd_resource_stash":
                 logger.info("Starting workflow DictMethodResourceCacheWorkflow.buildResourceCache()")
@@ -428,10 +406,10 @@ class ExDbWorkflow(object):
                     cachePath=self.__cachePath,
                 )
                 ok = dmWf.buildResourceCache()
-                logger.info("UpdateDictMethodResources status %r", ok)
-                if not ok:
-                    logger.error("UpdateDictMethodResources FAILED with status %s", ok)
-                    raise ValueError("UpdateDictMethodResources FAILED. Check the loader log for details.")
         #
         logger.info("Completed operation %r with status %r\n", op, ok)
+        if not ok:
+            logger.error("%r FAILED with status %s", op, ok)
+            raise ValueError("%r FAILED. Check the loader log for details." % op)
+
         return ok

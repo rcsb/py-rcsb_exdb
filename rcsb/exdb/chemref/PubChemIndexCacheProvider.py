@@ -319,6 +319,7 @@ class PubChemIndexCacheProvider(StashableBase):
         #
         matchD = {}
         matchedIdList = []
+        ok = False
         try:
             # ---
             # Get current the indices of source chemical reference data -
@@ -346,7 +347,10 @@ class PubChemIndexCacheProvider(StashableBase):
             else:
                 logger.info("No reference data updates required")
             # --
-            return ok
+            if not ok:
+                logger.warning("updateMissing completed with status %r failures %r", ok, len(failList))
+            #
+            return True
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return ok
@@ -569,8 +573,10 @@ class PubChemIndexCacheProvider(StashableBase):
         """Rebuild source indices of chemical component definitions."""
         logger.info("Rebuilding chemical definition index.")
         ok1, ccidxP = self.__buildChemCompIndex(**kwargs)
+        logger.info("__buildChemCompIndex completed with status %r", ok1)
         logger.info("Rebuilding chemical search indices.")
         ok2, ccsidxP = self.__buildChemCompSearchIndex(numProc, **kwargs)
+        logger.info("__buildChemCompSearchIndex completed with status %r", ok2)
         return ok1 & ok2, ccidxP, ccsidxP
 
     def __buildChemCompIndex(self, **kwargs):
