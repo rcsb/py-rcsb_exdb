@@ -8,187 +8,204 @@
 #   4-Sep-2019 jdw add Tree and Drugbank loaders
 #  14-Feb-2020 jdw change over to ReferenceSequenceAnnotationProvider/Adapter
 #   9-Mar-2023 dwp Lower refChunkSize to 10 (UniProt API having trouble streaming XML responses)
-#
+#  25-Apr-2024 dwp Add arguments and logic to support CLI usage from weekly-update workflow;
+#                  Add support for logging output to a specific file
 ##
 __docformat__ = "google en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-import argparse
-import logging
 import os
 import sys
+import argparse
+import logging
 
-from rcsb.db.mongo.DocumentLoader import DocumentLoader
-from rcsb.db.utils.TimeUtil import TimeUtil
-from rcsb.exdb.chemref.ChemRefEtlWorker import ChemRefEtlWorker
-from rcsb.exdb.seq.ReferenceSequenceAnnotationAdapter import ReferenceSequenceAnnotationAdapter
-from rcsb.exdb.seq.ReferenceSequenceAnnotationProvider import ReferenceSequenceAnnotationProvider
-from rcsb.exdb.seq.UniProtCoreEtlWorker import UniProtCoreEtlWorker
-from rcsb.exdb.tree.TreeNodeListWorker import TreeNodeListWorker
-from rcsb.exdb.utils.ObjectTransformer import ObjectTransformer
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
+from rcsb.exdb.wf.ExDbWorkflow import ExDbWorkflow
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
+# logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s", stream=sys.stdout)
 logger = logging.getLogger()
-
-
-def loadStatus(statusList, cfgOb, cachePath, readBackCheck=True):
-    sectionName = "data_exchange_configuration"
-    dl = DocumentLoader(cfgOb, cachePath, "MONGO_DB", numProc=2, chunkSize=2, documentLimit=None, verbose=False, readBackCheck=readBackCheck)
-    #
-    databaseName = cfgOb.get("DATABASE_NAME", sectionName=sectionName)
-    collectionName = cfgOb.get("COLLECTION_UPDATE_STATUS", sectionName=sectionName)
-    ok = dl.load(databaseName, collectionName, loadType="append", documentList=statusList, indexAttributeList=["update_id", "database_name", "object_name"], keyNames=None)
-    return ok
-
-
-def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
-    """Generate and cache resource dependencies."""
-    ret = False
-    try:
-        rp = DictMethodResourceProvider(cfgOb, configName=configName, cachePath=cachePath)
-        ret = rp.cacheResources(useCache=not rebuildCache)
-    except Exception as e:
-        logger.exception("Failing with %s", str(e))
-    return ret
-
-
-def doReferenceSequenceUpdate(cfgOb, databaseName, collectionName, polymerType, cachePath, useCache, fetchLimit=None, refChunkSize=10):
-    try:
-        #  -- create cache ---
-        rsaP = ReferenceSequenceAnnotationProvider(
-            cfgOb, databaseName, collectionName, polymerType, maxChunkSize=refChunkSize, useCache=useCache, cachePath=cachePath, fetchLimit=fetchLimit, siftsAbbreviated="TEST"
-        )
-        ok = rsaP.testCache()
-        if not ok:
-            logger.error("Cache construction fails %s", ok)
-            return False
-        logger.info("Cached reference data count is %d", rsaP.getRefDataCount())
-        rsa = ReferenceSequenceAnnotationAdapter(rsaP)
-        obTr = ObjectTransformer(cfgOb, objectAdapter=rsa)
-        ok = obTr.doTransform(databaseName=databaseName, collectionName=collectionName, fetchLimit=fetchLimit, selectionQuery={"entity_poly.rcsb_entity_polymer_type": polymerType})
-        return ok
-    except Exception as e:
-        logger.exception("Failing with %s", str(e))
 
 
 def main():
     parser = argparse.ArgumentParser()
     #
-    defaultConfigName = "site_info_configuration"
-    parser.add_argument("--data_set_id", default=None, help="Data set identifier (default= 2019_14 for current week)")
-    parser.add_argument("--full", default=True, action="store_true", help="Fresh full load in a new tables/collections (Default)")
-    parser.add_argument("--etl_chemref", default=False, action="store_true", help="ETL integrated chemical reference data")
-    parser.add_argument("--etl_uniprot_core", default=False, action="store_true", help="ETL UniProt core reference data")
-    parser.add_argument("--etl_tree_node_lists", default=False, action="store_true", help="ETL tree node lists")
-    parser.add_argument("--upd_ref_seq", default=False, action="store_true", help="Update reference sequence assignments")
+    parser.add_argument(
+        "--op",
+        default=None,
+        required=True,
+        help="Loading operation to perform",
+        choices=[
+            "etl_chemref",  # ETL integrated chemical reference data
+            "etl_uniprot_core",  # ETL UniProt core reference data
+            "etl_tree_node_lists",  # ETL tree node lists
+            "upd_ref_seq",  # Update reference sequence assignments
+            "upd_neighbor_interactions",
+            "upd_uniprot_taxonomy",
+            "upd_targets_cofactors",
+            "upd_pubchem",
+            "upd_entry_info",
+            "upd_glycan_idx",
+            "upd_resource_stash",
+        ]
+    )
+    parser.add_argument(
+        "--load_type",
+        default="full",
+        help="Type of load ('full' for complete and fresh single-worker load, 'replace' for incremental and multi-worker load)",
+        choices=["full", "replace"],
+    )
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
-    parser.add_argument("--config_name", default=defaultConfigName, help="Configuration section name")
-    parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
-    parser.add_argument("--read_back_check", default=False, action="store_true", help="Perform read back check on all documents")
+    parser.add_argument("--config_name", default="site_info_remote_configuration", help="Configuration section name")
+    parser.add_argument("--cache_path", default=None, help="Cache path for resource files")
     parser.add_argument("--num_proc", default=2, help="Number of processes to execute (default=2)")
     parser.add_argument("--chunk_size", default=10, help="Number of files loaded per process")
+    parser.add_argument("--max_step_length", default=500, help="Maximum subList size (default=500)")
+    parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
     parser.add_argument("--document_limit", default=None, help="Load document limit for testing")
+    #
+    parser.add_argument("--rebuild_cache", default=False, action="store_true", help="Rebuild cached resource files")
+    parser.add_argument("--rebuild_sequence_cache", default=False, action="store_true", help="Rebuild cached resource files for reference sequence updates")
+    parser.add_argument("--provider_type_exclude", default=None, help="Resource provider types to exclude")
+    parser.add_argument("--use_filtered_tax_list", default=False, action="store_true", help="Use filtered list for taxonomy tree loading")
+    parser.add_argument("--disable_read_back_check", default=False, action="store_true", help="Disable read back check on all documents")
     parser.add_argument("--debug", default=False, action="store_true", help="Turn on verbose logging")
     parser.add_argument("--mock", default=False, action="store_true", help="Use MOCK repository configuration for testing")
-    parser.add_argument("--cache_path", default=None, help="Top cache path for external and local resource files")
-    parser.add_argument("--rebuild_cache", default=False, action="store_true", help="Rebuild cached files from remote resources")
-    # parser.add_argument("--test_req_seq_cache", default=False, action="store_true", help="Test reference sequence cached files")
+    parser.add_argument("--log_file_path", default=None, help="Path to runtime log file output.")
     #
+    # Arguments specific for op == 'upd_ref_seq'
+    parser.add_argument("--ref_chunk_size", default=10, help="Max chunk size for reference sequence updates (for op 'upd_ref_seq')")
+    parser.add_argument("--min_missing", default=0, help="Minimum number of allowed missing reference sequences (for op 'upd_ref_seq')")
+    parser.add_argument("--min_match_primary_percent", default=None, help="Minimum reference sequence match percentage (for op 'upd_ref_seq')")
+    parser.add_argument("--test_mode", default=False, action="store_true", help="Test mode for reference sequence updates (for op 'upd_ref_seq')")
+    #
+    # Arguments buildExdbResources
+    parser.add_argument("--rebuild_all_neighbor_interactions", default=False, action="store_true", help="Rebuild all neighbor interactions from scratch (default is incrementally)")
+    parser.add_argument("--cc_file_prefix", default="cc-full", help="File name discriminator for index sets")
+    parser.add_argument("--cc_url_target", default=None, help="target url for chemical component dictionary resource file (default: None=all public)")
+    parser.add_argument("--bird_url_target", default=None, help="target url for bird dictionary resource file (cc format) (default: None=all public)")
     #
     args = parser.parse_args()
     #
+    try:
+        op, commonD, loadD = processArguments(args)
+    except Exception as err:
+        logger.exception("Argument processing problem %s", str(err))
+        raise ValueError("Argument processing problem") from err
+    #
+    #
+    # Log input arguments
+    loadLogD = {k: v for d in [commonD, loadD] for k, v in d.items() if k != "inputIdCodeList"}
+    logger.info("running load op %r on loadLogD %r:", op, loadLogD)
+    #
+    # Run the operation
+    okR = False
+    exWf = ExDbWorkflow(**commonD)
+    if op in ["etl_chemref", "etl_uniprot_core", "etl_tree_node_lists", "upd_ref_seq"]:
+        okR = exWf.load(op, **loadD)
+    elif op in ["upd_neighbor_interactions", "upd_uniprot_taxonomy", "upd_targets_cofactors", "upd_pubchem", "upd_entry_info", "upd_glycan_idx", "upd_resource_stash"]:
+        okR = exWf.buildExdbResource(op, **loadD)
+    else:
+        logger.error("Unsupported op %r", op)
+    #
+    logger.info("Operation %r completed with status %r", op, okR)
+    #
+    if not okR:
+        logger.error("Operation %r failed with status %r", op, okR)
+        raise ValueError("Operation %r failed" % op)
+
+
+def processArguments(args):
+    # Logging details
+    logFilePath = args.log_file_path
     debugFlag = args.debug
     if debugFlag:
         logger.setLevel(logging.DEBUG)
-    # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
-    #                                       Configuration Details
+    else:
+        logger.setLevel(logging.INFO)
+    if logFilePath:
+        logDir = os.path.dirname(logFilePath)
+        if not os.path.isdir(logDir):
+            os.makedirs(logDir)
+        handler = logging.FileHandler(logFilePath, mode="a")
+        if debugFlag:
+            handler.setLevel(logging.DEBUG)
+        else:
+            handler.setLevel(logging.INFO)
+        formatter = logging.Formatter("%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    #
+    # Configuration details
     configPath = args.config_path
     configName = args.config_name
-    rebuildCache = args.rebuild_cache
-    useCache = not args.rebuild_cache
-
-    if not configPath:
-        configPath = os.getenv("DBLOAD_CONFIG_PATH", None)
-    try:
-        if os.access(configPath, os.R_OK):
-            os.environ["DBLOAD_CONFIG_PATH"] = configPath
-            logger.info("Using configuation path %s (%s)", configPath, configName)
-        else:
-            logger.error("Missing or access issue with config file %r", configPath)
-            exit(1)
-        mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data") if args.mock else None
-        cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
-    except Exception as e:
-        logger.error("Missing or access issue with config file %r with %s", configPath, str(e))
-        exit(1)
-
+    if not (configPath and configName):
+        logger.error("Config path and/or name not provided: %r, %r", configPath, configName)
+        raise ValueError("Config path and/or name not provided: %r, %r" % (configPath, configName))
+    mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data") if args.mock else None
+    logger.info("Using configuration file %r (section %r)", configPath, configName)
+    cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
+    cfgObTmp = cfgOb.exportConfig()
+    logger.info("Length of config object (%r)", len(cfgObTmp))
+    if len(cfgObTmp) == 0:
+        logger.error("Missing or access issue for config file %r", configPath)
+        raise ValueError("Missing or access issue for config file %r" % configPath)
+    else:
+        del cfgObTmp
     #
-    try:
-        readBackCheck = args.read_back_check
-        tU = TimeUtil()
-        dataSetId = args.data_set_id if args.data_set_id else tU.getCurrentWeekSignature()
-        numProc = int(args.num_proc)
-        chunkSize = int(args.chunk_size)
-        documentLimit = int(args.document_limit) if args.document_limit else None
-        loadType = "full" if args.full else "replace"
-        cachePath = args.cache_path if args.cache_path else "."
-
-        if args.db_type != "mongo":
-            logger.error("Unsupported database server type %s", args.db_type)
-    except Exception as e:
-        logger.exception("Argument processing problem %s", str(e))
-        parser.print_help(sys.stderr)
-        exit(1)
-    # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
-    ##
-    #  Rebuild or check resource cache
-    okS = True
-    ok = buildResourceCache(cfgOb, configName, cachePath, rebuildCache=rebuildCache)
-    if not ok:
-        logger.error("Cache rebuild or check failure (rebuild %r) %r", rebuildCache, cachePath)
-        exit(1)
-    # if not useCache:
-    #    buildResourceCache(cfgOb, configName, cachePath, rebuildCache=True)
+    # Do any additional argument checking
+    op = args.op
+    if not op:
+        raise ValueError("Must supply a value to '--op' argument")
     #
-    if args.db_type == "mongo":
-        if args.etl_tree_node_lists:
-            rhw = TreeNodeListWorker(
-                cfgOb, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, useCache=useCache
-            )
-            ok = rhw.load(dataSetId, loadType=loadType)
-            okS = loadStatus(rhw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
+    cachePath = args.cache_path if args.cache_path else "."
+    cachePath = os.path.abspath(cachePath)
 
-        if args.etl_chemref:
-            crw = ChemRefEtlWorker(
-                cfgOb, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, useCache=useCache
-            )
-            ok = crw.load(dataSetId, extResource="DrugBank", loadType=loadType)
-            okS = loadStatus(crw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
+    if args.db_type != "mongo":
+        logger.error("Unsupported database type %r (must be 'mongo')", args.db_type)
+        raise ValueError("Unsupported database type %r (must be 'mongo')" % args.db_type)
 
-        if args.etl_uniprot_core:
-            crw = UniProtCoreEtlWorker(
-                cfgOb, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, useCache=useCache
-            )
-            ok = crw.load(dataSetId, extResource="UniProt", loadType=loadType)
-            okS = loadStatus(crw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
+    # Now collect arguments into dictionaries
+    commonD = {
+        "configPath": configPath,
+        "configName": configName,
+        "cachePath": cachePath,
+        "mockTopPath": mockTopPath,
+        "debugFlag": debugFlag,
+        "rebuildCache": args.rebuild_cache,
+        "providerTypeExclude": args.provider_type_exclude,
+    }
+    loadD = {
+        "loadType": args.load_type,
+        "numProc": int(args.num_proc),
+        "chunkSize": int(args.chunk_size),
+        "maxStepLength": int(args.max_step_length),
+        "dbType": args.db_type,
+        "documentLimit": int(args.document_limit) if args.document_limit else None,
+        "readBackCheck": not args.disable_read_back_check,
+        "rebuildSequenceCache": args.rebuild_sequence_cache,
+        "useFilteredLists": args.use_filtered_tax_list,
+        "refChunkSize": int(args.ref_chunk_size),
+        "minMissing": int(args.min_missing),
+        "minMatchPrimaryPercent": float(args.min_match_primary_percent) if args.min_match_primary_percent else None,
+        "testMode": args.test_mode,
+        "rebuildAllNeighborInteractions": args.rebuild_all_neighbor_interactions,
+        "ccFileNamePrefix": args.cc_file_prefix,
+        "ccUrlTarget": args.cc_url_target,
+        "birdUrlTarget": args.bird_url_target,
+    }
 
-        if args.upd_ref_seq:
-            databaseName = "pdbx_core"
-            collectionName = "pdbx_core_polymer_entity"
-            polymerType = "Protein"
-            ok = doReferenceSequenceUpdate(cfgOb, databaseName, collectionName, polymerType, cachePath, useCache, fetchLimit=documentLimit, refChunkSize=10)
-            okS = ok
-        #
-        logger.info("Operation completed with status %r " % ok and okS)
+    return op, commonD, loadD
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.exception("Run failed %s", str(e))
+        sys.exit(1)

@@ -14,4 +14,5 @@ rcsb.utils.seq >= 0.63
 rcsb.utils.struct >= 0.37
 rcsb.utils.taxonomy >= 0.39
 rcsb.utils.dictionary >= 0.71
+rcsb.workflow >= 0.42
 statistics; python_version < "3.0"

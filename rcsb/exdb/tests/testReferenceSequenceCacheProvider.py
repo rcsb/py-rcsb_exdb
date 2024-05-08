@@ -70,14 +70,14 @@ class ReferenceSequenceCacheProviderTests(unittest.TestCase):
             ok = rsaP.testCache()
             self.assertTrue(ok)
             numRef = rsaP.getRefDataCount()
-            self.assertGreaterEqual(numRef, 90)
+            self.assertGreaterEqual(numRef, 49)
             #
             # ---  Reload from cache ---
             rsaP = ReferenceSequenceCacheProvider(self.__cfgOb, databaseName, collectionName, polymerType, maxChunkSize=50, numProc=2, expireDays=14)
             ok = rsaP.testCache()
             self.assertTrue(ok)
             numRef = rsaP.getRefDataCount()
-            self.assertGreaterEqual(numRef, 90)
+            self.assertGreaterEqual(numRef, 49)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()

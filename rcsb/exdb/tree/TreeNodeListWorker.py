@@ -39,12 +39,13 @@ logger = logging.getLogger(__name__)
 class TreeNodeListWorker(object):
     """Prepare and load repository holdings and repository update data."""
 
-    def __init__(self, cfgOb, cachePath, numProc=1, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False, useCache=False, useFilteredLists=False):
+    def __init__(self, cfgOb, cachePath, numProc=1, chunkSize=10, maxStepLength=4000, readBackCheck=False, documentLimit=None, verbose=False, useCache=False, useFilteredLists=False):
         self.__cfgOb = cfgOb
         self.__cachePath = os.path.abspath(cachePath)
         self.__readBackCheck = readBackCheck
         self.__numProc = numProc
         self.__chunkSize = chunkSize
+        self.__maxStepLength = maxStepLength
         self.__documentLimit = documentLimit
         self.__resourceName = "MONGO_DB"
         self.__filterType = "assign-dates"
@@ -115,6 +116,7 @@ class TreeNodeListWorker(object):
                 self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,
+                maxStepLength=self.__maxStepLength,
                 documentLimit=self.__documentLimit,
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
