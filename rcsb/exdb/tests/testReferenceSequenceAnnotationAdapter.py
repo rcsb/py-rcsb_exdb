@@ -60,7 +60,7 @@ class ReferenceSequenceAnnotationAdapterTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    @unittest.skip("Disable test - no longer using in production, and fails too frequently with 'Bad xml text' when fetching from UniProt")
+    # @unittest.skip("Disable test - no longer using in production, and fails too frequently with 'Bad xml text' when fetching from UniProt")
     def testAnnotationAdapter(self):
         """Test case - create and read cache reference sequences assignments and related data."""
         try:
@@ -71,13 +71,13 @@ class ReferenceSequenceAnnotationAdapterTests(unittest.TestCase):
             rsaP = ReferenceSequenceAnnotationProvider(
                 self.__cfgOb, databaseName, collectionName, polymerType, fetchLimit=self.__fetchLimit, siftsAbbreviated="TEST", cachePath=self.__cachePath, useCache=True
             )
-            ok = rsaP.testCache()
+            ok = rsaP.testCache(minMissing=10)
             self.assertTrue(ok)
             numRef1 = rsaP.getRefDataCount()
             #
             # ---  Reload from cache ---
             rsaP = ReferenceSequenceAnnotationProvider(self.__cfgOb, databaseName, collectionName, polymerType, cachePath=self.__cachePath, useCache=True)
-            ok = rsaP.testCache()
+            ok = rsaP.testCache(minMissing=10)
             self.assertTrue(ok)
             numRef2 = rsaP.getRefDataCount()
             self.assertEqual(numRef1, numRef2)
