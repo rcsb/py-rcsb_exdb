@@ -54,7 +54,7 @@ class ExDbWorkflow(object):
         # Rebuild cache (default False)
         rebuildCache = kwargs.get("rebuildCache", False)
         self.__useCache = not rebuildCache
-        providerTypeExclude = kwargs.get("providerTypeExclude", None)
+        providerTypeExcludeL = kwargs.get("providerTypeExcludeL", None)
         restoreUseGit = kwargs.get("restoreUseGit", True)
         restoreUseStash = kwargs.get("restoreUseStash", True)
         self.__cacheStatus = True
@@ -62,7 +62,7 @@ class ExDbWorkflow(object):
             logger.info("Rebuilding cache %r", rebuildCache)
             self.__cacheStatus = self.buildResourceCache(
                 rebuildCache=rebuildCache,
-                providerTypeExclude=providerTypeExclude,
+                providerTypeExcludeL=providerTypeExcludeL,
                 restoreUseStash=restoreUseStash,
                 restoreUseGit=restoreUseGit,
             )
@@ -204,7 +204,7 @@ class ExDbWorkflow(object):
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def buildResourceCache(self, rebuildCache=False, providerTypeExclude=None, restoreUseStash=True, restoreUseGit=True):
+    def buildResourceCache(self, rebuildCache=False, providerTypeExcludeL=None, restoreUseStash=True, restoreUseGit=True):
         """Generate and cache resource dependencies."""
         ret = False
         try:
@@ -223,7 +223,7 @@ class ExDbWorkflow(object):
                 cachePath=self.__cachePath,
                 restoreUseStash=restoreUseStash,
                 restoreUseGit=restoreUseGit,
-                providerTypeExclude=providerTypeExclude,
+                providerTypeExcludeL=providerTypeExcludeL,
             )
             ret = rP.cacheResources(useCache=useCache, doBackup=False)
             logger.info("useCache %r cache reload status (%r)", useCache, ret)

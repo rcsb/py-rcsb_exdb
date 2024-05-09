@@ -71,7 +71,7 @@ def main():
     #
     parser.add_argument("--rebuild_cache", default=False, action="store_true", help="Rebuild cached resource files")
     parser.add_argument("--rebuild_sequence_cache", default=False, action="store_true", help="Rebuild cached resource files for reference sequence updates")
-    parser.add_argument("--provider_type_exclude", default=None, help="Resource provider types to exclude")
+    parser.add_argument("--provider_types_exclude", default=None, help="Resource provider types to exclude")
     parser.add_argument("--use_filtered_tax_list", default=False, action="store_true", help="Use filtered list for taxonomy tree loading")
     parser.add_argument("--disable_read_back_check", default=False, action="store_true", help="Disable read back check on all documents")
     parser.add_argument("--debug", default=False, action="store_true", help="Turn on verbose logging")
@@ -178,7 +178,7 @@ def processArguments(args):
         "mockTopPath": mockTopPath,
         "debugFlag": debugFlag,
         "rebuildCache": args.rebuild_cache,
-        "providerTypeExclude": args.provider_type_exclude,
+        "providerTypeExcludeL": args.provider_types_exclude,
     }
     loadD = {
         "loadType": args.load_type,

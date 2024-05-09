@@ -42,7 +42,7 @@ class ExDbWorkflowTests(unittest.TestCase):
 
     def setUp(self):
         self.__isMac = platform.system() == "Darwin"
-        self.__excludeType = None if self.__isMac else "optional"
+        self.__excludeTypeL = None if self.__isMac else ["optional"]
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(mockTopPath, "config", "dbload-setup-example.yml")
         configName = "site_info_configuration"
@@ -55,7 +55,7 @@ class ExDbWorkflowTests(unittest.TestCase):
             "configName": configName,
             "cachePath": cachePath,
             "rebuildCache": False,
-            "providerTypeExclude": self.__excludeType,
+            "providerTypeExcludeL": self.__excludeTypeL,
             "restoreUseGit": True,
             "restoreUseStash": False,
         }

@@ -99,3 +99,4 @@
                   This package update also coincides with the turning off of uniprot_exdb data loading during the weekly workflow
  6-May-2024 V1.1  Update ExDbExec CLI and ExDbWorkflow to support CLI usage from weekly-update workflow;
                   Update unit tests and setuptools config
+ 9-May-2024 V1.2  Adjust provider type exclusion input to accept a list of types

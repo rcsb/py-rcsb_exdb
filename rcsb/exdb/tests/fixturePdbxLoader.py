@@ -48,7 +48,7 @@ class PdbxLoaderFixture(unittest.TestCase):
         #
         #
         self.__isMac = platform.system() == "Darwin"
-        self.__excludeType = None if self.__isMac else "optional"
+        self.__excludeTypeL = None if self.__isMac else ["optional"]
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
         # configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example-local.yml")
@@ -249,7 +249,7 @@ class PdbxLoaderFixture(unittest.TestCase):
                 validationLevel=kwargs["validationLevel"],
                 mergeContentTypes=kwargs["mergeContentTypes"],
                 useNameFlag=False,
-                providerTypeExclude=self.__excludeType,
+                providerTypeExcludeL=self.__excludeTypeL,
                 restoreUseGit=True,
                 restoreUseStash=False,
             )
