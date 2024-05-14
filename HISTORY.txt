@@ -100,3 +100,4 @@
  6-May-2024 V1.1  Update ExDbExec CLI and ExDbWorkflow to support CLI usage from weekly-update workflow;
                   Update unit tests and setuptools config
  9-May-2024 V1.2  Adjust provider type exclusion input to accept a list of types
+13-May-2024 V1.21 Update requirements; fix linting

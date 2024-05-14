@@ -95,6 +95,7 @@ class UniProtCoreEtlWorker(object):
             #
             dList = indexL = []
             databaseName = collectionName = collectionVersion = None
+            addValues = {}
             #
             if extResource == "UniProt":
                 databaseName = "uniprot_core"
@@ -114,7 +115,6 @@ class UniProtCoreEtlWorker(object):
                 collectionVersion = cDL[0]["VERSION"]
                 indexL = self.__docHelper.getDocumentIndexAttributes(collectionName, "primary")
                 logger.info("Database %r collection %r version %r index attributes %r", databaseName, collectionName, collectionVersion, indexL)
-                addValues = {}
             else:
                 logger.error("Unsupported external resource %r", extResource)
             #

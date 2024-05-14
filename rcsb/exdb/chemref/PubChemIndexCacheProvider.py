@@ -64,6 +64,8 @@ class PubChemUpdateWorker(object):
             (list): list of ChemicalIdentifier() objects corresponding to the input chemical component.
         """
         chemIdList = []
+        idType = None
+        descr = None
         if ccId in self.__lookupD:
             for sD in self.__lookupD[ccId]:
                 if "inchi-key" in sD:

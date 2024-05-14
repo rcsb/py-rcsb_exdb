@@ -78,6 +78,7 @@ class ObjectValidator(object):
 
         ok = self.__transform(databaseName, collectionName, docSelectList)
         #
+        okS = True
         if updateId:
             okS = self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
         return ok and okS
