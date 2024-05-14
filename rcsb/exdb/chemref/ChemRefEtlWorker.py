@@ -65,6 +65,7 @@ class ChemRefEtlWorker(object):
             self.__statusList = []
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
+            addValues = {}
             #
             if extResource == "DrugBank":
                 databaseName = "drugbank_core"
@@ -85,10 +86,10 @@ class ChemRefEtlWorker(object):
                 indexL = sD.getDocumentIndex(collectionName, "primary")
                 logger.info("Database %r collection %r index attributes %r", databaseName, collectionName, indexL)
                 #
-                collectionVersion = sD.getCollectionVersion(collectionName)
-                addValues = {"_schema_version": collectionVersion}
-                #
-                addValues = {}
+                # For some reason, 'addValues' was being overwritten with an empty dict (https://github.com/rcsb/py-rcsb_exdb/commit/26bd79e9a2fffc97c034b4116dece9248d1c1f39)
+                # Will need to review this -- do we want to add the schema version values or not? (Also, see similar logic in UniProtCoreEtlWorker.py)
+                # collectionVersion = sD.getCollectionVersion(collectionName)
+                # addValues = {"_schema_version": collectionVersion}
             #
             dl = DocumentLoader(
                 self.__cfgOb,
