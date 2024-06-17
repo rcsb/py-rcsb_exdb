@@ -102,7 +102,7 @@ class ObjectExtractorTests(unittest.TestCase):
         """Test case - extract entries subject to date restriction"""
         try:
             tU = TimeUtil()
-            tS = tU.getTimestamp(useUtc=True, before={"days": 365 * 5})
+            tS = tU.getTimestamp(useUtc=True, before={"days": 365 * 7})
             tD = tU.getDateTimeObj(tS)
             obEx = ObjectExtractor(
                 self.__cfgOb,
