@@ -16,9 +16,9 @@ RUN apt-get update \
     && apt-get install -y build-essential=12.* pkg-config=1.8.* default-libmysqlclient-dev=1.1.*
 
 # Install the required Python packages
-RUN pip install --no-cache-dir --user -r /app/requirements.txt \
+RUN pip install --no-cache-dir --upgrade "pip>=23.0.0" "setuptools>=40.8.0" "wheel>=0.43.0" \
+    && pip install --no-cache-dir --user -r /app/requirements.txt \
     && pip install --no-cache-dir pymongo==3.12.0
-# pip install --no-cache-dir --upgrade pip setuptools wheel \
 
 # Specify the command to run on container start
 # CMD ["python", "script.py"]
