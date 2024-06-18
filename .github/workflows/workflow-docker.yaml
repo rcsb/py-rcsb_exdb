@@ -21,11 +21,6 @@ on:
     #  │ │ │ │ │
     #  * * * * *
     - cron: "0 20 * * THU"
-  #
-  # COMMENT OUT PUSH TRIGGER BELOW WHEN DONE TESTING
-  push:
-    branches:
-      - "dev-docker**"
 
 jobs:
   run-workflow:
