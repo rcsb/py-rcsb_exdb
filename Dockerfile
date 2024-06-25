@@ -7,6 +7,9 @@ FROM python:3.9-slim
 # Set the working directory inside the container
 WORKDIR /app
 ENV PATH=$PATH:/root/.local/bin
+    OE_LICENSE=/opt/etl-scratch/config/oe_license.txt
+    NLTK_DATA=/opt/etl-scratch/data/nltk_data
+    CONFIG_SUPPORT_TOKEN_ENV=73ea2e9b2964758418f04d0a5dad069674467bbadb78f7c0558b57ed302d1e92
 
 # Copy requirements file
 COPY ./requirements.txt /app/requirements.txt
