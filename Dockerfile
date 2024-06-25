@@ -6,6 +6,7 @@ FROM python:3.9-slim
 
 # Set the working directory inside the container
 WORKDIR /app
+ENV PATH=$PATH:/root/.local/bin
 
 # Copy requirements file
 COPY ./requirements.txt /app/requirements.txt
