@@ -17,6 +17,12 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential=12.* pkg-config=1.8.* default-libmysqlclient-dev=1.1.* \
     && rm -rf /var/lib/apt/lists/*
 
+# Install mmseqs2
+RUN curl -L "https://github.com/soedinglab/MMseqs2/releases/download/13-45111/mmseqs-linux-avx2.tar.gz" > /opt/mmseqs-static-avx2.tar.gz \
+    mkdir /opt/mmseqs2 \
+    tar -zxvf /opt/mmseqs-static-avx2.tar.gz -C /opt/mmseqs2 --strip-components=1 \
+    ln -s /opt/mmseqs2/bin/mmseqs /usr/local/bin/mmseqs
+
 # Install the required Python packages
 RUN pip install --no-cache-dir --upgrade "pip>=23.0.0" "setuptools>=40.8.0" "wheel>=0.43.0" \
     && pip install --no-cache-dir --user -r /app/requirements.txt \
