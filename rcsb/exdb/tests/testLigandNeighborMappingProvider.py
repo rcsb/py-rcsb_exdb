@@ -69,7 +69,9 @@ class LigandNeighborMappingProviderTests(unittest.TestCase):
             ok = crmP.testCache(minCount=2)
             self.assertTrue(ok)
             nL = crmP.getLigandNeighbors("3VFJ_2")
+            logger.info("ligand neighbor list nL %r", nL)
             self.assertGreaterEqual(len(nL), 4)
+            self.assertGreater(len(nL[0]), 1)
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))

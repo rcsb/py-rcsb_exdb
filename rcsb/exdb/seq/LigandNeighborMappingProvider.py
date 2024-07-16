@@ -56,7 +56,7 @@ class LigandNeighborMappingProvider(StashableBase):
             list: [chem_comp_id, ... ]
         """
         try:
-            return list(set([t[0] for t in self.__mapD["mapping"][rcsbEntityId.upper()]]))
+            return list(set([t for t in self.__mapD["mapping"][rcsbEntityId.upper()]]))
         except Exception:
             return []
 

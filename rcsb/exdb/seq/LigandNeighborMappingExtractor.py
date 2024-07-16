@@ -72,7 +72,7 @@ class LigandNeighborMappingExtractor(object):
                     ky = entryId + "_" + entityId
                     for lnD in peiD["rcsb_ligand_neighbors"] if "rcsb_ligand_neighbors" in peiD else []:
                         if "ligand_comp_id" in lnD:
-                            rD.setdefault(ky, set()).add((lnD["ligand_comp_id"]))
+                            rD.setdefault(ky, set()).add(lnD["ligand_comp_id"])
                         else:
                             logger.warning("%s %s missing details lnD %r", entryId, entityId, lnD)
                 except Exception as e:
