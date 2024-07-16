@@ -5,6 +5,7 @@
 # Utilities to extract ligand neighbor mapping details from the exchange collections.
 #
 # Updates:
+#  17-Jul-2024 dwp Stop fetching and including rcsb_ligand_neighbors.ligand_is_bound, since no longer populating that field
 #
 ##
 __docformat__ = "google en"
@@ -58,7 +59,6 @@ class LigandNeighborMappingExtractor(object):
                     "rcsb_polymer_entity_instance_container_identifiers.entity_id",
                     "rcsb_polymer_entity_instance_container_identifiers.asym_id",
                     "rcsb_ligand_neighbors.ligand_comp_id",
-                    "rcsb_ligand_neighbors.ligand_is_bound",
                 ],
             )
             eCount = obEx.getCount()
@@ -71,8 +71,8 @@ class LigandNeighborMappingExtractor(object):
                     entityId = peiD["rcsb_polymer_entity_instance_container_identifiers"]["entity_id"]
                     ky = entryId + "_" + entityId
                     for lnD in peiD["rcsb_ligand_neighbors"] if "rcsb_ligand_neighbors" in peiD else []:
-                        if "ligand_comp_id" in lnD and "ligand_is_bound" in lnD:
-                            rD.setdefault(ky, set()).add((lnD["ligand_comp_id"], lnD["ligand_is_bound"]))
+                        if "ligand_comp_id" in lnD:
+                            rD.setdefault(ky, set()).add((lnD["ligand_comp_id"]))
                         else:
                             logger.warning("%s %s missing details lnD %r", entryId, entityId, lnD)
                 except Exception as e:
