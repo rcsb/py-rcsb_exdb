@@ -101,3 +101,4 @@
                   Update unit tests and setuptools config
  9-May-2024 V1.2  Adjust provider type exclusion input to accept a list of types
 13-May-2024 V1.21 Update requirements; fix linting
+17-Jul-2024 V1.22 Adjust LigandNeighborMappingExtractor
