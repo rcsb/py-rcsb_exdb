@@ -274,7 +274,16 @@ class ExDbWorkflow(object):
         logger.info("Starting operation %r\n", op)
         #
         # argument processing
-        if op not in ["upd_neighbor_interactions", "upd_uniprot_taxonomy", "upd_targets_cofactors", "upd_pubchem", "upd_entry_info", "upd_glycan_idx", "upd_resource_stash"]:
+        if op not in [
+            "upd_neighbor_interactions",
+            "upd_uniprot_taxonomy",
+            "upd_targets_cofactors",
+            "load_target_cofactors",
+            "upd_pubchem",
+            "upd_entry_info",
+            "upd_glycan_idx",
+            "upd_resource_stash",
+        ]:
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
@@ -350,6 +359,18 @@ class ExDbWorkflow(object):
                 logger.info("buildActivityData status %r", ok)
                 ok = ptsWf.buildCofactorData() and ok
                 logger.info("buildCofactorData status %r", ok)
+                ptsWf.resourceCheck()
+            #
+            elif op == "load_target_cofactors":
+                logger.info("Starting LoadTargetsCofactors")
+                ptsWf = ProteinTargetSequenceExecutionWorkflow(
+                    configPath=self.__configPath,
+                    mockTopPath=self.__mockTopPath,
+                    configName=self.__configName,
+                    cachePath=self.__cachePath,
+                )
+                ok = ptsWf.loadTargetCofactorData()
+                logger.info("loadTargetCofactorData status %r", ok)
                 ptsWf.resourceCheck()
             #
             elif op == "upd_pubchem":
