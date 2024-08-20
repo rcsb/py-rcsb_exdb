@@ -10,6 +10,7 @@
 #   9-Mar-2023 dwp Lower refChunkSize to 10 (UniProt API having trouble streaming XML responses)
 #  25-Apr-2024 dwp Add arguments and logic to support CLI usage from weekly-update workflow;
 #                  Add support for logging output to a specific file
+#  20-Aug-2024 dwp Add load_target_cofactors operation; change name of upd_targets_cofactors to upd_targets
 ##
 __docformat__ = "google en"
 __author__ = "John Westbrook"
@@ -46,7 +47,7 @@ def main():
             "upd_ref_seq",  # Update reference sequence assignments
             "upd_neighbor_interactions",
             "upd_uniprot_taxonomy",
-            "upd_targets_cofactors",
+            "upd_targets",
             "load_target_cofactors",
             "upd_pubchem",
             "upd_entry_info",
@@ -112,7 +113,7 @@ def main():
     elif op in [
         "upd_neighbor_interactions",
         "upd_uniprot_taxonomy",
-        "upd_targets_cofactors",
+        "upd_targets",
         "load_target_cofactors",
         "upd_pubchem",
         "upd_entry_info",
