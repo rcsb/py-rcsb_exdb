@@ -8,6 +8,7 @@
 #   2-Mar-2023 dwp Add "numProc" parameter to 'upd_ref_seq' operation methods
 #   9-Mar-2023 dwp Lower refChunkSize to 10 (UniProt API having trouble streaming XML responses)
 #  25-Apr-2024 dwp Add arguments and methods to support CLI usage from weekly-update workflow
+#  20-Aug-2024 dwp Add LoadTargetCofactors step; change name of UpdateTargetsCofactors step to UpdateTargetsData
 ##
 __docformat__ = "google en"
 __author__ = "John Westbrook"
@@ -274,7 +275,16 @@ class ExDbWorkflow(object):
         logger.info("Starting operation %r\n", op)
         #
         # argument processing
-        if op not in ["upd_neighbor_interactions", "upd_uniprot_taxonomy", "upd_targets_cofactors", "upd_pubchem", "upd_entry_info", "upd_glycan_idx", "upd_resource_stash"]:
+        if op not in [
+            "upd_neighbor_interactions",
+            "upd_uniprot_taxonomy",
+            "upd_targets",
+            "load_target_cofactors",
+            "upd_pubchem",
+            "upd_entry_info",
+            "upd_glycan_idx",
+            "upd_resource_stash",
+        ]:
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
@@ -324,8 +334,8 @@ class ExDbWorkflow(object):
                 ok = ptsWf.updateUniProtTaxonomy() and ok
                 logger.info("updateUniProtTaxonomy status %r", ok)
             #
-            elif op == "upd_targets_cofactors":
-                logger.info("Starting UpdateTargetsCofactors")
+            elif op == "upd_targets":
+                logger.info("Starting UpdateTargetsData")
                 ptsWf = ProteinTargetSequenceExecutionWorkflow(
                     configPath=self.__configPath,
                     mockTopPath=self.__mockTopPath,
@@ -350,6 +360,18 @@ class ExDbWorkflow(object):
                 logger.info("buildActivityData status %r", ok)
                 ok = ptsWf.buildCofactorData() and ok
                 logger.info("buildCofactorData status %r", ok)
+                ptsWf.resourceCheck()
+            #
+            elif op == "load_target_cofactors":
+                logger.info("Starting LoadTargetCofactors")
+                ptsWf = ProteinTargetSequenceExecutionWorkflow(
+                    configPath=self.__configPath,
+                    mockTopPath=self.__mockTopPath,
+                    configName=self.__configName,
+                    cachePath=self.__cachePath,
+                )
+                ok = ptsWf.loadTargetCofactorData()
+                logger.info("loadTargetCofactorData status %r", ok)
                 ptsWf.resourceCheck()
             #
             elif op == "upd_pubchem":
