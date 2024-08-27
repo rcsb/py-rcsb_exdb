@@ -8,6 +8,7 @@
 #  9-Sep-2019 jdw add AtcProvider() and ChemrefExtractor() for ATC tree.
 # 12-Apr-2023 dwp add CARD ontology tree
 #  8-Aug-2023 dwp Load full (unfiltered) taxonomy tree node list, and stop loading GO tree (will be loaded in DW instead)
+# 27-Aug-2024 dwp Update CARD ontology tree loading
 #
 ##
 __docformat__ = "google en"
@@ -181,13 +182,30 @@ class TreeNodeListWorker(object):
                 ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
                 self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ---- CARD
-            cou = CARDTargetOntologyProvider(cachePath=self.__cachePath, useCache=False)
-            nL = cou.getTreeNodeList()
-            logger.info("Starting load of EC node tree length %d", len(nL))
-            if doLoad:
-                collectionName = "tree_card_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
-                self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            okCou = True
+            cou = CARDTargetOntologyProvider(cachePath=self.__cachePath, useCache=useCache)
+            if not cou.testCache():
+                ok = cou.buildOntologyData()
+                cou.reload()
+                if not (ok and cou.testCache()):
+                    logger.error("Skipping load of CARD Target Ontology tree data because it is missing.")
+                    okCou = False
+            if okCou:
+                nL = cou.getTreeNodeList()
+                logger.info("Starting load of CARD ontology node tree length %d", len(nL))
+                if doLoad:
+                    collectionName = "tree_card_node_list"
+                    ok = dl.load(
+                        databaseName,
+                        collectionName,
+                        loadType=loadType,
+                        documentList=nL,
+                        indexAttributeList=["update_id"],
+                        keyNames=None,
+                        addValues=addValues,
+                        schemaLevel=None
+                    )
+                    self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ---- Taxonomy
             tU = TaxonomyProvider(cachePath=self.__cachePath, useCache=useCache)
             if self.__useFilteredLists:
