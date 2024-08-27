@@ -195,7 +195,16 @@ class TreeNodeListWorker(object):
                 logger.info("Starting load of CARD ontology node tree length %d", len(nL))
                 if doLoad:
                     collectionName = "tree_card_node_list"
-                    ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+                    ok = dl.load(
+                        databaseName,
+                        collectionName,
+                        loadType=loadType,
+                        documentList=nL,
+                        indexAttributeList=["update_id"],
+                        keyNames=None,
+                        addValues=addValues,
+                        schemaLevel=None
+                    )
                     self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ---- Taxonomy
             tU = TaxonomyProvider(cachePath=self.__cachePath, useCache=useCache)
