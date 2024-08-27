@@ -103,3 +103,4 @@
 13-May-2024 V1.21 Update requirements; fix linting
 17-Jul-2024 V1.22 Adjust LigandNeighborMappingExtractor
 20-Aug-2024 V1.23 Add support for target cofactor data loading
+27-Aug-2024 V1.24 Update tree loading for CARD ontology data
