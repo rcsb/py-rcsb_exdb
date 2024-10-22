@@ -25,6 +25,8 @@ from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceP
 from rcsb.utils.dictionary.DictMethodResourceCacheWorkflow import DictMethodResourceCacheWorkflow
 from rcsb.utils.dictionary.NeighborInteractionWorkflow import NeighborInteractionWorkflow
 from rcsb.workflow.targets.ProteinTargetSequenceExecutionWorkflow import ProteinTargetSequenceExecutionWorkflow
+from rcsb.workflow.chem.ChemCompImageWorkflow import ChemCompImageWorkflow
+from rcsb.workflow.chem.ChemCompFileWorkflow import ChemCompFileWorkflow
 from rcsb.exdb.chemref.ChemRefEtlWorker import ChemRefEtlWorker
 from rcsb.exdb.seq.ReferenceSequenceAnnotationAdapter import ReferenceSequenceAnnotationAdapter
 from rcsb.exdb.seq.ReferenceSequenceAnnotationProvider import ReferenceSequenceAnnotationProvider
@@ -270,6 +272,88 @@ class ExDbWorkflow(object):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False
+
+    def generateCcdFiles(self, op, **kwargs):
+        logger.info("Starting operation %r\n", op)
+        #
+        # argument processing
+        if op not in [
+            "ccd_img_gen",
+            "ccd_file_gen",
+        ]:
+            logger.error("Unsupported operation %r - exiting", op)
+            return False
+        try:
+            ccOutputPath = kwargs.get("ccOutputPath", None)
+            ccCachePath = kwargs.get("ccCachePath", None)
+            licenseFilePath = kwargs.get("licenseFilePath", None)
+            ccUrlTarget = kwargs.get("ccUrlTarget", None)
+            birdUrlTarget = kwargs.get("birdUrlTarget", None)
+            #
+        except Exception as e:
+            logger.exception("Argument or configuration processing failing with %s", str(e))
+            return False
+        #
+        ok = False
+        if op == "ccd_img_gen":
+            logger.info("Generating CCD 2D images ...")
+            cciWf = ChemCompImageWorkflow(
+                imagePath=ccOutputPath,
+                cachePath=ccCachePath,
+                licenseFilePath=licenseFilePath,
+                ccUrlTarget=ccUrlTarget,
+                birdUrlTarget=birdUrlTarget,
+            )
+            ok = cciWf.testCache()
+            logger.info("CCD image generation setup status %r", ok)
+            #
+            ok = cciWf.makeImages() and ok  # haven't tested if makeImages always returns True in production
+            logger.info("CCD image generation status %r", ok)
+        #
+        elif op == "ccd_file_gen":
+            logger.info("Generating SDF and Mol2 files from CCD...")
+            # CCD ideal coordinates
+            ccfWf = ChemCompFileWorkflow(
+                fileDirPath=ccOutputPath,
+                cachePath=ccCachePath,
+                licenseFilePath=licenseFilePath,
+                ccUrlTarget=ccUrlTarget,
+                birdUrlTarget=birdUrlTarget,
+                molBuildType="ideal-xyz"
+            )
+            ok1 = ccfWf.testCache()
+            logger.info("CCD ideal coordinates generation setup status %r", ok1)
+            #
+            ok1 = ccfWf.makeFiles(fmt="sdf") and ok1  # haven't tested if makeFiles always returns True in production
+            logger.info("CCD ideal file sdf generation status %r", ok1)
+            ok1 = ccfWf.makeFiles(fmt="mol2") and ok1  # haven't tested if makeFiles always returns True in production
+            logger.info("CCD ideal file mol2 generation status %r", ok1)
+
+            # CCD model coordinates
+            ccfWf = ChemCompFileWorkflow(
+                fileDirPath=ccOutputPath,
+                cachePath=ccCachePath,
+                licenseFilePath=licenseFilePath,
+                ccUrlTarget=ccUrlTarget,
+                birdUrlTarget=birdUrlTarget,
+                molBuildType="model-xyz"
+            )
+            ok2 = ccfWf.testCache()
+            logger.info("CCD model coordinates generation setup status %r", ok2)
+            #
+            ok2 = ccfWf.makeFiles(fmt="sdf") and ok2
+            logger.info("CCD model file sdf generation status %r", ok2)
+            ok2 = ccfWf.makeFiles(fmt="mol2") and ok2
+            logger.info("CCD model file mol2 generation status %r", ok2)
+            #
+            ok = ok1 and ok2
+        #
+        logger.info("Completed operation %r with status %r\n", op, ok)
+        if not ok:
+            logger.error("%r FAILED with status %s", op, ok)
+            raise ValueError("%r FAILED. Check the loader log for details." % op)
+
+        return ok
 
     def buildExdbResource(self, op, **kwargs):
         logger.info("Starting operation %r\n", op)

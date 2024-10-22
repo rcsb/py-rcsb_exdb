@@ -11,6 +11,8 @@
 #  25-Apr-2024 dwp Add arguments and logic to support CLI usage from weekly-update workflow;
 #                  Add support for logging output to a specific file
 #  20-Aug-2024 dwp Add load_target_cofactors operation; change name of upd_targets_cofactors to upd_targets
+#  22-Oct-2024 dwp Add ccd_img_gen and ccd_file_gen operations
+#                  (latter will only be used briefly, as will stop generating SDF and Mol2 files in Dec 2024)
 ##
 __docformat__ = "google en"
 __author__ = "John Westbrook"
@@ -53,6 +55,8 @@ def main():
             "upd_entry_info",
             "upd_glycan_idx",
             "upd_resource_stash",
+            "ccd_img_gen",
+            "ccd_file_gen",
         ]
     )
     parser.add_argument(
@@ -85,6 +89,11 @@ def main():
     parser.add_argument("--min_missing", default=0, help="Minimum number of allowed missing reference sequences (for op 'upd_ref_seq')")
     parser.add_argument("--min_match_primary_percent", default=None, help="Minimum reference sequence match percentage (for op 'upd_ref_seq')")
     parser.add_argument("--test_mode", default=False, action="store_true", help="Test mode for reference sequence updates (for op 'upd_ref_seq')")
+    #
+    # Arguments specific for op == 'ccd_img_gen' or 'ccd_file_gen'
+    parser.add_argument("--cc_output_path", default=None, help="The base local directory path where chemical component files (image, coordinates) are written (for op 'ccd_img_gen')")
+    parser.add_argument("--cc_cache_path", default=None, help="The base local directory path where chemical component cache data are written (for op 'ccd_img_gen')")
+    parser.add_argument("--oe_license_path", default=None, help="Path to OpenEye license file")
     #
     # Arguments buildExdbResources
     parser.add_argument("--rebuild_all_neighbor_interactions", default=False, action="store_true", help="Rebuild all neighbor interactions from scratch (default is incrementally)")
@@ -121,6 +130,11 @@ def main():
         "upd_resource_stash",
     ]:
         okR = exWf.buildExdbResource(op, **loadD)
+    elif op in [
+        "ccd_img_gen",
+        "ccd_file_gen",
+    ]:
+        okR = exWf.generateCcdFiles(op, **loadD)
     else:
         logger.error("Unsupported op %r", op)
     #
@@ -209,6 +223,9 @@ def processArguments(args):
         "ccFileNamePrefix": args.cc_file_prefix,
         "ccUrlTarget": args.cc_url_target,
         "birdUrlTarget": args.bird_url_target,
+        "ccOutputPath": args.cc_output_path,
+        "ccCachePath": args.cc_cache_path,
+        "licenseFilePath": args.oe_license_path,
     }
 
     return op, commonD, loadD

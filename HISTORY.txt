@@ -104,3 +104,5 @@
 17-Jul-2024 V1.22 Adjust LigandNeighborMappingExtractor
 20-Aug-2024 V1.23 Add support for target cofactor data loading
 27-Aug-2024 V1.24 Update tree loading for CARD ontology data
+22-Oct-2024 V1.25 Add CLI for CCD image and file generation;
+                  Update CI/CD to python 3.10
