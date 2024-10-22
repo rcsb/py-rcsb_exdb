@@ -307,7 +307,7 @@ class ExDbWorkflow(object):
             ok = cciWf.testCache()
             logger.info("CCD image generation setup status %r", ok)
             #
-            ok = cciWf.makeImages() and ok  # haven't tested if makeImages always returns True in production
+            ok = cciWf.makeImages() and ok
             logger.info("CCD image generation status %r", ok)
         #
         elif op == "ccd_file_gen":
@@ -324,9 +324,9 @@ class ExDbWorkflow(object):
             ok1 = ccfWf.testCache()
             logger.info("CCD ideal coordinates generation setup status %r", ok1)
             #
-            ok1 = ccfWf.makeFiles(fmt="sdf") and ok1  # haven't tested if makeFiles always returns True in production
+            ok1 = ccfWf.makeFiles(fmt="sdf") and ok1
             logger.info("CCD ideal file sdf generation status %r", ok1)
-            ok1 = ccfWf.makeFiles(fmt="mol2") and ok1  # haven't tested if makeFiles always returns True in production
+            ok1 = ccfWf.makeFiles(fmt="mol2") and ok1
             logger.info("CCD ideal file mol2 generation status %r", ok1)
 
             # CCD model coordinates
