@@ -106,3 +106,5 @@
 27-Aug-2024 V1.24 Update tree loading for CARD ontology data
 22-Oct-2024 V1.25 Add CLI for CCD image and file generation;
                   Update CI/CD to python 3.10
+10-Dec-2024 V1.26 Update PolymerEntityExtractor to sort extracted sequence data;
+                  Update Azure pipelines to run on latest macOS and ubuntu version
