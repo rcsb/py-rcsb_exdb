@@ -7,6 +7,8 @@
 #
 # Updates:
 #  9-Jan-2024 dwp Turn off use of uniprot_exdb DB for enriching protein entity details file (data not used)
+# 10-Dec-2024 dwp Sort extracted polymer entity sequence data by entity ID (alphabetically), to ensure consistent
+#                 ordering between coasts (order of sequence data influences results of mmseqs2 sequence searching)
 #
 ##
 __docformat__ = "google en"
@@ -16,6 +18,7 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+from collections import OrderedDict
 
 from rcsb.exdb.utils.ObjectExtractor import ObjectExtractor
 from rcsb.utils.io.MarshalUtil import MarshalUtil
@@ -175,9 +178,12 @@ class PolymerEntityExtractor(object):
                     pass
                 rD[rId] = {"alignmentL": uDL, "sourceOrgL": sL, "partCount": partCount, "taxCount": taxCount, "sequence": seqS, "seqLen": seqLen}
 
+            # Sort the dict in alphabetical order (by entity ID key) to ensure consistent/reproducible treatment by mmseqs2
+            sortedD = OrderedDict((k, rD.pop(k)) for k in sorted(rD))
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
-        return rD, missingSrcD
+        return sortedD, missingSrcD
 
     def __getSourcePart(self, entityId, sourceOrgL, entityBeg, seqLen):
         """Return the source part containing the input entity range -
