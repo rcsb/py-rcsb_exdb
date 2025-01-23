@@ -9,6 +9,7 @@
 # 12-Apr-2023 dwp add CARD ontology tree
 #  8-Aug-2023 dwp Load full (unfiltered) taxonomy tree node list, and stop loading GO tree (will be loaded in DW instead)
 # 27-Aug-2024 dwp Update CARD ontology tree loading
+# 23-Jan-2025 dwp Change indexed field from 'update_id' to 'id'
 #
 ##
 __docformat__ = "google en"
@@ -138,7 +139,7 @@ class TreeNodeListWorker(object):
             # logger.info("GO tree node list length %d", len(nL))
             # if doLoad:
             #     collectionName = "tree_go_node_list"
-            #     ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+            #     ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
             #     self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
             # ---- CATH
@@ -147,7 +148,7 @@ class TreeNodeListWorker(object):
             logger.info("Starting load SCOP node tree length %d", len(nL))
             if doLoad:
                 collectionName = "tree_cath_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
                 self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ---- SCOP
             scu = ScopClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
@@ -155,7 +156,7 @@ class TreeNodeListWorker(object):
             logger.info("Starting load SCOP node tree length %d", len(nL))
             if doLoad:
                 collectionName = "tree_scop_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
                 self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # --- SCOP2
             scu = Scop2ClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
@@ -163,7 +164,7 @@ class TreeNodeListWorker(object):
             logger.info("Starting load SCOP2 node tree length %d", len(nL))
             if doLoad:
                 collectionName = "tree_scop2_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
                 self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ---- Ecod
             ecu = EcodClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
@@ -171,7 +172,7 @@ class TreeNodeListWorker(object):
             logger.info("Starting load ECOD node tree length %d", len(nL))
             if doLoad:
                 collectionName = "tree_ecod_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
                 self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ---- EC
             edbu = EnzymeDatabaseProvider(cachePath=self.__cachePath, useCache=useCache)
@@ -179,7 +180,7 @@ class TreeNodeListWorker(object):
             logger.info("Starting load of EC node tree length %d", len(nL))
             if doLoad:
                 collectionName = "tree_ec_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
                 self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             # ---- CARD
             okCou = True
@@ -200,7 +201,7 @@ class TreeNodeListWorker(object):
                         collectionName,
                         loadType=loadType,
                         documentList=nL,
-                        indexAttributeList=["update_id"],
+                        indexAttributeList=["id"],
                         keyNames=None,
                         addValues=addValues,
                         schemaLevel=None
@@ -229,7 +230,7 @@ class TreeNodeListWorker(object):
             if doLoad:
                 collectionName = "tree_taxonomy_node_list"
                 logger.debug("Taxonomy nodes (%d) %r", len(nL), nL[:5])
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
                 self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             logger.info("Tree loading operations completed.")
             #
@@ -241,7 +242,7 @@ class TreeNodeListWorker(object):
             nL = atcP.getTreeNodeList(filterD=atcFilterD)
             collectionName = "tree_atc_node_list"
             logger.debug("ATC node list length %d %r", len(nL), nL[:5])
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues, schemaLevel=None)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
             # ---
