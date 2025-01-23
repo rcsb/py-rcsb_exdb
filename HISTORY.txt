@@ -108,3 +108,4 @@
                   Update CI/CD to python 3.10
 10-Dec-2024 V1.26 Update PolymerEntityExtractor to sort extracted sequence data;
                   Update Azure pipelines to run on latest macOS and ubuntu version
+23-Jan-2025 V1.27 Update TreeNodeListWorker to index 'id' field
