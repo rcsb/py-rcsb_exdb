@@ -56,7 +56,7 @@ setup(
     },
     #
     test_suite="rcsb.exdb.tests",
-    tests_require=["tox"],
+    tests_require=["tox", "rcsb.utils.citation >= 0.22"],
     #
     # Not configured ...
     extras_require={"dev": ["check-manifest"], "test": ["coverage"]},
