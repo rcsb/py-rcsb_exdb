@@ -47,7 +47,6 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
     ],
-    entry_points={"console_scripts": ["exdb_exec_cli=rcsb.exdb.cli.ExDbExec:main"]},
     #
     install_requires=packagesRequired[1:],
     packages=find_packages(exclude=["rcsb.mock-data", "rcsb.exdb.tests-anal", "rcsb.exdb.tests-*", "tests.*"]),
@@ -57,7 +56,7 @@ setup(
     },
     #
     test_suite="rcsb.exdb.tests",
-    tests_require=["tox"],
+    tests_require=["tox", "rcsb.utils.citation >= 0.22"],
     #
     # Not configured ...
     extras_require={"dev": ["check-manifest"], "test": ["coverage"]},

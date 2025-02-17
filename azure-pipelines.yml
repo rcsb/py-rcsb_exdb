@@ -5,13 +5,12 @@
 #       9-Jul-2019 jdw add publish jobs
 #      16-Oct-2024 dwp update to python 3.10
 #
-#       Only running py310 tasks with mysql and mongodb ----
+#       Only running py310 tasks with mongodb ----
 #
 name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
 
 trigger:
   - master
-  - dev-*
 
 pr:
   - master
@@ -31,7 +30,7 @@ jobs:
         tox: "format_pep8",
         python: "3.10",
         os: "linux",
-        fixtures: "mysql,mongodb",
+        fixtures: "mongodb",
       }
   - template: azure-template-tox-job.yml
     parameters:
@@ -39,7 +38,7 @@ jobs:
         tox: "lint_pylint",
         python: "3.10",
         os: "linux",
-        fixtures: "mysql,mongodb",
+        fixtures: "mongodb",
       }
   - template: azure-template-tox-job.yml
     parameters:
@@ -47,12 +46,12 @@ jobs:
         tox: "test_coverage",
         python: "3.10",
         os: "linux",
-        fixtures: "mysql,mongodb",
+        fixtures: "mongodb",
       }
     #
   - template: azure-template-tox-job.yml
     parameters:
-      { tox: "py310", python: "3.10", os: "linux", fixtures: "mysql,mongodb" }
+      { tox: "py310", python: "3.10", os: "linux", fixtures: "mongodb" }
   - template: azure-template-publish-job.yml
     parameters: { tox: "py310", python: "3.10", os: "linux" }
   #
