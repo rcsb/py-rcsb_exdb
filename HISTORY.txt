@@ -110,3 +110,4 @@
                   Update Azure pipelines to run on latest macOS and ubuntu version
 23-Jan-2025 V1.27 Update TreeNodeListWorker to index 'id' field
 11-Feb-2025 V1.28 Move ExDB CLI code (workflow, exec, and tests) and Dockerfile to rcsb.workflow to avoid circular imports
+ 8-Apr-2025 V1.29 Add more logging to PubChemIndexCacheProvider and increase default numProc

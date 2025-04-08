@@ -165,7 +165,7 @@ class PubChemEtlWorkflow(object):
             birdUrlTarget = kwargs.get("birdUrlTarget", None)
             ccFileNamePrefix = kwargs.get("ccFileNamePrefix", "cc-full")
             numProcChemComp = kwargs.get("numProcChemComp", 8)
-            numProc = kwargs.get("numProc", 2)
+            numProc = kwargs.get("numProc", 4)
             rebuildChemIndices = kwargs.get("rebuildChemIndices", True)
             exportPath = kwargs.get("exportPath", None)
             useStash = kwargs.get("useStash", True)
@@ -209,7 +209,7 @@ class PubChemEtlWorkflow(object):
         try:
             ok1 = ok2 = ok3 = ok4 = ok5 = ok6 = False
             #  --
-            numProc = kwargs.get("numProc", 2)
+            numProc = kwargs.get("numProc", 4)
             useStash = kwargs.get("useStash", True)
             useGit = kwargs.get("useGit", False)
             #

@@ -9,6 +9,7 @@
 # 16-Jul-2020 jdw separate index and reference data management.
 # 23-Jul-2021 jdw Make PubChemIndexCacheProvider a subclass of StashableBase()
 #  2-Mar-2023 aae Return correct status from Single proc
+#  8-Apr-2025 dwp Let MultiProc handle chunking; add more logging to debug slowness on west coast
 #
 ##
 __docformat__ = "google en"
@@ -100,84 +101,82 @@ class PubChemUpdateWorker(object):
            #
         """
         _ = workingDir
-        chunkSize = optionsD.get("chunkSize", 50)
         matchIdOnly = optionsD.get("matchIdOnly", True)
         # Path to store raw request data -
         exportPath = optionsD.get("exportPath", None)
         #
         successList = []
-        retList1 = []
-        retList2 = []
         diagList = []
-        emptyList = []
+        failList = []
+        retList = []
         #
         try:
+            startTime = time.time()
             tU = TimeUtil()
-            ccIdList = dataList
-            numChunks = len(list(self.__chunker(ccIdList, chunkSize)))
-            logger.info("%s search starting for %d reference definitions (in chunks of length %d)", procName, len(ccIdList), chunkSize)
-            for ii, ccIdChunk in enumerate(self.__chunker(ccIdList, chunkSize), 1):
-                logger.info("%s starting chunk for %d of %d", procName, ii, numChunks)
-                # tDL = []
-                tIdxDL = []
-                timeS = tU.getDateTimeObj(tU.getTimestamp())
-                for ccId in ccIdChunk:
-                    # Get various forms from the search index -
-                    chemIdList = self.__genChemIdList(ccId)
-                    tIdxD = {"rcsb_id": ccId, "rcsb_last_update": timeS}
+            ccIdList = dataList  # len(dataList) should be of size chunkSize
+            logger.info("%s search starting for %d reference definitions (matchIdOnly %r exportPath %r)", procName, len(ccIdList), matchIdOnly, exportPath)
+            tIdxDL = []
+            timeS = tU.getDateTimeObj(tU.getTimestamp())
+            for ccId in ccIdList:
+                # Get various forms from the search index -
+                chemIdList = self.__genChemIdList(ccId)
+                tIdxD = {"rcsb_id": ccId, "rcsb_last_update": timeS}
+                #
+                mL = []
+                for chemId in chemIdList:
+                    stA = time.time()
+                    ok, refDL = self.__pcU.assemble(chemId, exportPath=exportPath, matchIdOnly=matchIdOnly)
                     #
-                    mL = []
-                    for chemId in chemIdList:
-                        stA = time.time()
-                        ok, refDL = self.__pcU.assemble(chemId, exportPath=exportPath, matchIdOnly=matchIdOnly)
-                        #
-                        if not ok:
-                            etA = time.time()
-                            logger.debug("Failing %s search source %s for %s (%.4f secs)", chemId.identifierType, chemId.identifierSource, chemId.idCode, etA - stA)
-
-                        #
-                        if ok and refDL:
-                            for tD in refDL:
-                                pcId = tD["cid"]
-                                inchiKey = (
-                                    self.__searchIdxD[chemId.indexName]["inchi-key"]
-                                    if chemId.indexName in self.__searchIdxD and "inchi-key" in self.__searchIdxD[chemId.indexName]
-                                    else None
-                                )
-                                smiles = (
-                                    self.__searchIdxD[chemId.indexName]["smiles"] if chemId.indexName in self.__searchIdxD and "smiles" in self.__searchIdxD[chemId.indexName] else None
-                                )
-                                mL.append(
-                                    {
-                                        "matched_id": pcId,
-                                        "search_id_type": chemId.identifierType,
-                                        "search_id_source": chemId.identifierSource,
-                                        "source_index_name": chemId.indexName,
-                                        "source_smiles": smiles,
-                                        "source_inchikey": inchiKey,
-                                    }
-                                )
-                                # tD.update({"rcsb_id": pcId, "rcsb_last_update": timeS})
-                                # tDL.append(tD)
+                    if not ok:
+                        etA = time.time()
+                        logger.debug("Failing %s search source %s for %s (%.4f secs)", chemId.identifierType, chemId.identifierSource, chemId.idCode, etA - stA)
                     #
-                    if mL:
-                        tIdxD["matched_ids"] = mL
-                        successList.append(ccId)
-                    else:
-                        logger.info("No match result for any form of %s", ccId)
-                    #
-                    tIdxDL.append(tIdxD)
-                # --
-                startTimeL = time.time()
-                logger.info("Saving chunk %d (len=%d)", ii, len(ccIdChunk))
-                self.__updateObjectStore(self.__databaseName, self.__matchIndexCollectionName, tIdxDL)
-                endTimeL = time.time()
-                logger.info("Saved chunk %d (len=%d) in %.3f secs", ii, len(ccIdChunk), endTimeL - startTimeL)
+                    if ok and refDL:
+                        for tD in refDL:
+                            pcId = tD["cid"]
+                            inchiKey = (
+                                self.__searchIdxD[chemId.indexName]["inchi-key"]
+                                if chemId.indexName in self.__searchIdxD and "inchi-key" in self.__searchIdxD[chemId.indexName]
+                                else None
+                            )
+                            smiles = (
+                                self.__searchIdxD[chemId.indexName]["smiles"] if chemId.indexName in self.__searchIdxD and "smiles" in self.__searchIdxD[chemId.indexName] else None
+                            )
+                            mL.append(
+                                {
+                                    "matched_id": pcId,
+                                    "search_id_type": chemId.identifierType,
+                                    "search_id_source": chemId.identifierSource,
+                                    "source_index_name": chemId.indexName,
+                                    "source_smiles": smiles,
+                                    "source_inchikey": inchiKey,
+                                }
+                            )
+                #
+                if mL:
+                    tIdxD["matched_ids"] = mL
+                    successList.append(ccId)
+                else:
+                    logger.info("No match result for any form of %s", ccId)
+                #
+                tIdxDL.append(tIdxD)
+            # --
+            failList = sorted(set(dataList) - set(successList))
+            if failList:
+                logger.info("%s returns %d definitions with failures: %r", procName, len(failList), failList)
+            # --
+            endTime = time.time()
+            logger.info("%s completed updateList len %r duration %.3f secs", procName, len(ccIdList), endTime - startTime)
+            startTimeL = time.time()
+            logger.info("Saving dataList (len=%d)", len(ccIdList))
+            self.__updateObjectStore(self.__databaseName, self.__matchIndexCollectionName, tIdxDL)
+            endTimeL = time.time()
+            logger.info("Saved chunk (len=%d) in %.3f secs", len(ccIdList), endTimeL - startTimeL)
         except Exception as e:
             logger.exception("Failing %s for %d data items %s", procName, len(dataList), str(e))
-        logger.info("%s dataList length %d success length %d rst1 %d rst2 %d", procName, len(dataList), len(successList), len(retList1), len(retList2))
+        logger.info("%s dataList length %d success length %d retList %d", procName, len(dataList), len(successList), len(retList))
         #
-        return successList, emptyList, emptyList, diagList
+        return successList, retList, diagList
 
     def __updateObjectStore(self, databaseName, collectionName, objDL):
         updateDL = []
@@ -195,10 +194,6 @@ class PubChemUpdateWorker(object):
         obUpd = ObjectUpdater(self.__cfgOb)
         ok = obUpd.createCollection(databaseName, collectionName, indexAttributeNames=indexAttributeNames, checkExists=True, bsonSchema=None)
         return ok
-
-    def __chunker(self, iList, chunkSize):
-        chunkSize = max(1, chunkSize)
-        return (iList[i: i + chunkSize] for i in range(0, len(iList), chunkSize))
 
 
 class PubChemIndexCacheProvider(StashableBase):
@@ -515,7 +510,7 @@ class PubChemIndexCacheProvider(StashableBase):
         Returns:
             (bool, list): status flag, list of unmatched identifiers
         """
-        chunkSize = 50
+        chunkSize = 10
         exportPath = kwargs.get("exportPath", None)
         logger.info("Length starting list is %d", len(idList))
         optD = {"chunkSize": chunkSize, "exportPath": exportPath, "matchIdOnly": True}
@@ -524,13 +519,19 @@ class PubChemIndexCacheProvider(StashableBase):
             mpu = MultiProcUtil(verbose=True)
             mpu.setOptions(optD)
             mpu.set(workerObj=rWorker, workerMethod="updateList")
-            ok, failList, resultList, _ = mpu.runMulti(dataList=idList, numProc=numProc, numResults=2, chunkSize=chunkSize)
-            logger.info("Multi-proc %r failures %r result lengths %r %r", ok, len(failList), len(resultList[0]), len(resultList[1]))
+            ok, failList, resultList, _ = mpu.runMulti(dataList=idList, numProc=numProc, numResults=1, chunkSize=chunkSize)
+            logger.info("Multi-proc %r failures %r result lengths %r", ok, len(failList), len(resultList[0]))
         else:
-            successList, _, _, _ = rWorker.updateList(idList, "SingleProc", optD, self.__dirPath)
+            successList, _, _ = rWorker.updateList(idList, "SingleProc", optD, self.__dirPath)
             failList = list(set(idList) - set(successList))
             ok = len(failList) == 0
             logger.info("Single-proc status %r failures %r", ok, len(failList))
+        #
+        if len(failList) > 0:
+            if len(failList) <= 100:
+                logger.info("failList: %r", failList)
+            else:
+                logger.info("failList[:100]: %r", failList[:100])
         #
         return ok, failList
 
