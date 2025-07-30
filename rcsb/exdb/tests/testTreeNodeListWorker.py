@@ -1,5 +1,5 @@
 ##
-# File:    TreeNodeListWorkerTests.py
+# File:    testTreeNodeListWorker.py
 # Author:  J. Westbrook
 # Date:    23-Apr-2019
 #

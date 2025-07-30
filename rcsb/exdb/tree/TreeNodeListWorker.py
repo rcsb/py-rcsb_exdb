@@ -32,8 +32,6 @@ from rcsb.utils.struct.ScopClassificationProvider import ScopClassificationProvi
 from rcsb.utils.struct.Scop2ClassificationProvider import Scop2ClassificationProvider
 from rcsb.utils.taxonomy.TaxonomyProvider import TaxonomyProvider
 from rcsb.exdb.seq.TaxonomyExtractor import TaxonomyExtractor
-# from rcsb.utils.go.GeneOntologyProvider import GeneOntologyProvider
-# from rcsb.exdb.seq.AnnotationExtractor import AnnotationExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -73,39 +71,34 @@ class TreeNodeListWorker(object):
     def load(self, updateId, loadType="full", doLoad=True):
         """Load tree node lists and status data -
 
+        # TODO: UPDATE BELOW SETTINGS IN ASSETS CONFIG AND MAKE USE OF HERE ONCE SCHEMA FILES ARE READY):
+        # Also TODO: Update default maxsteplength and chunksize for this task in weekly-update-code to be 8000 and 200
+
         Relevant configuration options:
 
         tree_node_lists_configuration:
-            DATABASE_NAME: tree_node_lists
-            DATABASE_VERSION_STRING: v5
-            COLLECTION_VERSION_STRING: 1.0.0
-            COLLECTION_TAXONOMY: tree_taxonomy_node_list
-            COLLECTION_ENZYME: tree_ec_node_list
-            COLLECTION_SCOP: tree_scop_node_list
-            COLLECTION_CATH: tree_cath_node_list
-
+            DATABASE_NAME: dw
+            COLLECTION_VERSION_STRING: 2.1.0
+            COLLECTION_NAME_LIST:
+                - tree_taxonomy
+                - tree_ec
+                - tree_scop
+                - tree_scop2
+                - tree_cath
+                - tree_atc
+                - tree_card
+                - tree_ecod
+                - tree_go
+            COLLECTION_INDICES:
+                - INDEX_NAME: primary
+                ATTRIBUTE_NAMES:
+                    - id
+                - INDEX_NAME: index_2
+                ATTRIBUTE_NAMES:
+                    - parents
         """
         try:
             useCache = self.__useCache
-            #
-            # if not useCache:
-            #    cDL = ["domains_struct", "NCBI", "ec", "go", "atc"]
-            #    for cD in cDL:
-            #        try:
-            #            cfp = os.path.join(self.__cachePath, cD)
-            #            os.makedirs(cfp, 0o755)
-            #        except Exception:
-            #            pass
-            #        #
-            #        try:
-            #            cfp = os.path.join(self.__cachePath, cD)
-            #            fpL = glob.glob(os.path.join(cfp, "*"))
-            #            if fpL:
-            #                for fp in fpL:
-            #                    os.remove(fp)
-            #        except Exception:
-            #            pass
-            #
             #
             logger.info("Starting with cache path %r (useCache=%r)", self.__cachePath, useCache)
             #
@@ -124,129 +117,39 @@ class TreeNodeListWorker(object):
                 readBackCheck=self.__readBackCheck,
             )
             #
-            databaseName = "tree_node_lists"
+            sectionName = "tree_node_lists_configuration"
+            databaseNameMongo = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
+            collectionNameList = self.__cfgOb.get("COLLECTION_NAME_LIST", sectionName=sectionName)
+            collectionIndexList = self.__cfgOb.get("COLLECTION_INDICES", sectionName=sectionName)
+            # databaseName 'dw'
+            # collectionNameList ['tree_taxonomy', 'tree_ec', 'tree_scop', 'tree_scop2', 'tree_cath', 'tree_atc', 'tree_card', 'tree_ecod', 'tree_go']
+            # collectionIndexList [{'INDEX_NAME': 'primary', 'ATTRIBUTE_NAMES': ['id']}, {'INDEX_NAME': 'index_2', 'ATTRIBUTE_NAMES': ['parents']}]
+
             # collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
-            #
-            # --- GO - TURNED OFF 08 Aug 2023 dwp (tree is now loaded in DW)
-            # goP = GeneOntologyProvider(goDirPath=os.path.join(self.__cachePath, "go"), useCache=useCache)
-            # ok = goP.testCache()
-            # anEx = AnnotationExtractor(self.__cfgOb)
-            # goIdL = anEx.getUniqueIdentifiers("GO")
-            # logger.info("Unique GO assignments %d", len(goIdL))
-            # nL = goP.exportTreeNodeList(goIdL)
-            # logger.info("GO tree node list length %d", len(nL))
-            # if doLoad:
-            #     collectionName = "tree_go_node_list"
-            #     ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
-            #     self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            #
-            # ---- CATH
-            ccu = CathClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
-            nL = ccu.getTreeNodeList()
-            logger.info("Starting load SCOP node tree length %d", len(nL))
-            if doLoad:
-                collectionName = "tree_cath_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
-                self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            # ---- SCOP
-            scu = ScopClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
-            nL = scu.getTreeNodeList()
-            logger.info("Starting load SCOP node tree length %d", len(nL))
-            if doLoad:
-                collectionName = "tree_scop_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
-                self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            # --- SCOP2
-            scu = Scop2ClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
-            nL = scu.getTreeNodeList()
-            logger.info("Starting load SCOP2 node tree length %d", len(nL))
-            if doLoad:
-                collectionName = "tree_scop2_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
-                self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            # ---- Ecod
-            ecu = EcodClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
-            nL = ecu.getTreeNodeList()
-            logger.info("Starting load ECOD node tree length %d", len(nL))
-            if doLoad:
-                collectionName = "tree_ecod_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
-                self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            # ---- EC
-            edbu = EnzymeDatabaseProvider(cachePath=self.__cachePath, useCache=useCache)
-            nL = edbu.getTreeNodeList()
-            logger.info("Starting load of EC node tree length %d", len(nL))
-            if doLoad:
-                collectionName = "tree_ec_node_list"
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
-                self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            # ---- CARD
-            okCou = True
-            cou = CARDTargetOntologyProvider(cachePath=self.__cachePath, useCache=useCache)
-            if not cou.testCache():
-                ok = cou.buildOntologyData()
-                cou.reload()
-                if not (ok and cou.testCache()):
-                    logger.error("Skipping load of CARD Target Ontology tree data because it is missing.")
-                    okCou = False
-            if okCou:
-                nL = cou.getTreeNodeList()
-                logger.info("Starting load of CARD ontology node tree length %d", len(nL))
-                if doLoad:
-                    collectionName = "tree_card_node_list"
+
+            ok = True
+            for collectionName in collectionNameList:
+                nL = self.__getTreeDocList(collectionName, useCache)
+                if nL and doLoad:
                     ok = dl.load(
-                        databaseName,
+                        databaseNameMongo,
                         collectionName,
                         loadType=loadType,
                         documentList=nL,
-                        indexAttributeList=["id"],
                         keyNames=None,
                         addValues=addValues,
-                        schemaLevel=None
-                    )
-                    self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            # ---- Taxonomy
-            tU = TaxonomyProvider(cachePath=self.__cachePath, useCache=useCache)
-            if self.__useFilteredLists:
-                # Get the taxon coverage in the current data set -
-                epe = TaxonomyExtractor(self.__cfgOb)
-                tL = epe.getUniqueTaxons()
-                logger.info("Taxon coverage length %d", len(tL))
-                #
-                fD = {1}
-                for taxId in tL:
-                    fD.update({k: True for k in tU.getLineage(taxId)})
-                logger.info("Taxon filter dictionary length %d", len(fD))
-                logger.debug("fD %r", sorted(fD))
-                #
-                nL = tU.exportNodeList(filterD=fD)
-            else:
-                # Get the full taxon node list without filtering
-                nL = tU.exportNodeList()
-            self.__checkTaxonNodeList(nL)
-            logger.info("Starting load of taxonomy node tree length %d", len(nL))
-            if doLoad:
-                collectionName = "tree_taxonomy_node_list"
-                logger.debug("Taxonomy nodes (%d) %r", len(nL), nL[:5])
-                ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
-                self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            logger.info("Tree loading operations completed.")
-            #
-            # ---  ATC
-            crEx = ChemRefExtractor(self.__cfgOb)
-            atcFilterD = crEx.getChemCompAccessionMapping("ATC")
-            logger.info("Length of ATC filter %d", len(atcFilterD))
-            atcP = AtcProvider(cachePath=self.__cachePath, useCache=useCache)
-            nL = atcP.getTreeNodeList(filterD=atcFilterD)
-            collectionName = "tree_atc_node_list"
-            logger.debug("ATC node list length %d %r", len(nL), nL[:5])
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["id"], keyNames=None, addValues=addValues, schemaLevel=None)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            #
+                        schemaLevel=None,
+                        indexDL=collectionIndexList
+                    ) and ok
+                    self.__updateStatus(updateId, databaseNameMongo, collectionName, ok, statusStartTimestamp)
+                logger.info(
+                    "Completed load of tree node list for database %r, collection %r, len(nL) %r (status %r)",
+                    databaseNameMongo, collectionName, len(nL), ok
+                )
             # ---
-            logger.info("Completed tree node list loading operations.\n")
+            logger.info("Completed tree node list loading operations with loadType %r (status %r)", loadType, ok)
             return True
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -266,3 +169,62 @@ class TreeNodeListWorker(object):
 
     def getLoadStatus(self):
         return self.__statusList
+
+    def __getTreeDocList(self, collectionName, useCache):
+        nL = []
+        if collectionName.lower() == "tree_cath":
+            ccu = CathClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
+            nL = ccu.getTreeNodeList()
+        elif collectionName.lower() == "tree_scop2":
+            scu2 = Scop2ClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
+            nL = scu2.getTreeNodeList()
+        elif collectionName.lower() == "tree_scop":
+            scu = ScopClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
+            nL = scu.getTreeNodeList()
+        elif collectionName.lower() == "tree_ecod":
+            ecu = EcodClassificationProvider(cachePath=self.__cachePath, useCache=useCache)
+            nL = ecu.getTreeNodeList()
+        elif collectionName.lower() == "tree_ec":
+            edbu = EnzymeDatabaseProvider(cachePath=self.__cachePath, useCache=useCache)
+            nL = edbu.getTreeNodeList()
+        elif collectionName.lower() == "tree_card":
+            okCou = True
+            cou = CARDTargetOntologyProvider(cachePath=self.__cachePath, useCache=useCache)
+            if not cou.testCache():
+                ok = cou.buildOntologyData()
+                cou.reload()
+                if not (ok and cou.testCache()):
+                    logger.error("Skipping load of CARD Target Ontology tree data because it is missing.")
+                    okCou = False
+            if okCou:
+                nL = cou.getTreeNodeList()
+        elif collectionName.lower() == "tree_taxonomy":
+            tU = TaxonomyProvider(cachePath=self.__cachePath, useCache=useCache)
+            if self.__useFilteredLists:
+                # Get the taxon coverage in the current data set -
+                epe = TaxonomyExtractor(self.__cfgOb)
+                tL = epe.getUniqueTaxons()
+                logger.info("Taxon coverage length %d", len(tL))
+                #
+                fD = {1}
+                for taxId in tL:
+                    fD.update({k: True for k in tU.getLineage(taxId)})
+                logger.info("Taxon filter dictionary length %d", len(fD))
+                logger.debug("fD %r", sorted(fD))
+                #
+                nL = tU.exportNodeList(filterD=fD)
+            else:
+                # Get the full taxon node list without filtering
+                nL = tU.exportNodeList()
+            self.__checkTaxonNodeList(nL)
+        elif collectionName.lower() == "tree_atc":
+            crEx = ChemRefExtractor(self.__cfgOb)
+            atcFilterD = crEx.getChemCompAccessionMapping("ATC")
+            logger.info("Length of ATC filter %d", len(atcFilterD))
+            atcP = AtcProvider(cachePath=self.__cachePath, useCache=useCache)
+            nL = atcP.getTreeNodeList(filterD=atcFilterD)
+        else:
+            logger.error("Unsupported tree node collection %r", collectionName)
+        #
+        logger.info("Gathered tree nodes for loading collection %s (length %d)", collectionName, len(nL))
+        return nL
