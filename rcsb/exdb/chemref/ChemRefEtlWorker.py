@@ -7,7 +7,8 @@
 # Updates:
 #  9-Dec-2018  jdw add validation methods
 #  3-Sep-2019  jdw move to rcsb.exdb.chemref
-# 30-Jul-2025  dwp change "drugbank_core" to "core_drugbank" (as part of transition to DW)
+#  7-Aug-2025  dwp change target DB and collection from "drugbank_core" to "dw" and "core_drugbank" (as part of transition to DW);
+#                  make use of configuration file for loading drugbank collection and setting indexed fields
 #
 ##
 __docformat__ = "google en"
@@ -67,10 +68,10 @@ class ChemRefEtlWorker(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
             addValues = {}
-            schemaGroupName = "core_drugbank"
+            collectionGroupName = "core_drugbank"
             #
             if extResource == "DrugBank":
-                databaseNameMongo = self.__schP.getDatabaseMongoName(schemaGroupName=schemaGroupName)
+                databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
                 configName = self.__cfgOb.getDefaultSectionName()
                 user = self.__cfgOb.get("_DRUGBANK_AUTH_USERNAME", sectionName=configName)
                 pw = self.__cfgOb.get("_DRUGBANK_AUTH_PASSWORD", sectionName=configName)
@@ -83,7 +84,7 @@ class ChemRefEtlWorker(object):
                 #
                 logger.info("Resource %r extracted mapped document length %d", extResource, len(dList))
                 logger.debug("Objects %r", dList[:2])
-                _, _, collectionList, docIndexD = self.__schP.getSchemaInfo(schemaGroupName=schemaGroupName)
+                _, _, collectionList, docIndexD = self.__schP.getSchemaInfo(collectionGroupName=collectionGroupName)
                 collectionName = collectionList[0] if collectionList else "unassigned"
                 indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
                 logger.info("Database %r collection %r index attributes %r", databaseNameMongo, collectionName, indexDL)

@@ -10,6 +10,8 @@
 #  8-Aug-2023 dwp Load full (unfiltered) taxonomy tree node list, and stop loading GO tree (will be loaded in DW instead)
 # 27-Aug-2024 dwp Update CARD ontology tree loading
 # 23-Jan-2025 dwp Change indexed field from 'update_id' to 'id'
+#  7-Aug-2025 dwp Change target DB and collection names to "dw" and "tree_*" (via configuration file);
+#                 Make use of configuration file for loading tree node lists and setting indexed fields
 #
 ##
 __docformat__ = "google en"
@@ -71,9 +73,6 @@ class TreeNodeListWorker(object):
     def load(self, updateId, loadType="full", doLoad=True):
         """Load tree node lists and status data -
 
-        # TODO: UPDATE BELOW SETTINGS IN ASSETS CONFIG AND MAKE USE OF HERE ONCE SCHEMA FILES ARE READY):
-        # Also TODO: Update default maxsteplength and chunksize for this task in weekly-update-code to be 8000 and 200
-
         Relevant configuration options:
 
         tree_node_lists_configuration:
@@ -88,7 +87,6 @@ class TreeNodeListWorker(object):
                 - tree_atc
                 - tree_card
                 - tree_ecod
-                - tree_go
             COLLECTION_INDICES:
                 - INDEX_NAME: primary
                 ATTRIBUTE_NAMES:
@@ -121,9 +119,9 @@ class TreeNodeListWorker(object):
             databaseNameMongo = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
             collectionNameList = self.__cfgOb.get("COLLECTION_NAME_LIST", sectionName=sectionName)
             collectionIndexList = self.__cfgOb.get("COLLECTION_INDICES", sectionName=sectionName)
-            # databaseName 'dw'
-            # collectionNameList ['tree_taxonomy', 'tree_ec', 'tree_scop', 'tree_scop2', 'tree_cath', 'tree_atc', 'tree_card', 'tree_ecod', 'tree_go']
-            # collectionIndexList [{'INDEX_NAME': 'primary', 'ATTRIBUTE_NAMES': ['id']}, {'INDEX_NAME': 'index_2', 'ATTRIBUTE_NAMES': ['parents']}]
+            # databaseNameMongo = 'dw'
+            # collectionNameList = ['tree_taxonomy', 'tree_ec', 'tree_scop', 'tree_scop2', 'tree_cath', 'tree_atc', 'tree_card', 'tree_ecod', 'tree_go']
+            # collectionIndexList = [{'INDEX_NAME': 'primary', 'ATTRIBUTE_NAMES': ['id']}, {'INDEX_NAME': 'index_2', 'ATTRIBUTE_NAMES': ['parents']}]
 
             # collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
             # addValues = {"_schema_version": collectionVersion}
