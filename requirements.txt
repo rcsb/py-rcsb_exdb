@@ -5,7 +5,7 @@ numpy
 jsonschema >= 2.6.0
 rcsb.utils.io >= 1.48
 rcsb.db >= 1.806
-rcsb.utils.chem >= 0.81
+rcsb.utils.chem >= 0.83
 rcsb.utils.chemref >= 0.91
 rcsb.utils.config >= 0.40
 rcsb.utils.ec >= 0.25
