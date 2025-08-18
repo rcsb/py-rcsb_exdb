@@ -81,8 +81,8 @@ class ObjectExtractorTests(unittest.TestCase):
         try:
             obEx = ObjectExtractor(
                 self.__cfgOb,
-                databaseName="bird_chem_comp_core",
-                collectionName="bird_chem_comp_core",
+                databaseName="dw",
+                collectionName="core_chem_comp",
                 cacheFilePath=os.path.join(self.__workPath, "drugbank-mapping-cache.json"),
                 useCache=False,
                 cacheKwargs=self.__testEntryCacheKwargs,
