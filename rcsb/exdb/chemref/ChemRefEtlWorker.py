@@ -7,6 +7,8 @@
 # Updates:
 #  9-Dec-2018  jdw add validation methods
 #  3-Sep-2019  jdw move to rcsb.exdb.chemref
+#  7-Aug-2025  dwp change target DB and collection from "drugbank_core" to "dw" and "core_drugbank" (as part of transition to DW);
+#                  make use of configuration file for loading drugbank collection and setting indexed fields
 #
 ##
 __docformat__ = "google en"
@@ -66,9 +68,10 @@ class ChemRefEtlWorker(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
             addValues = {}
+            collectionGroupName = "core_drugbank"
             #
             if extResource == "DrugBank":
-                databaseName = "drugbank_core"
+                databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
                 configName = self.__cfgOb.getDefaultSectionName()
                 user = self.__cfgOb.get("_DRUGBANK_AUTH_USERNAME", sectionName=configName)
                 pw = self.__cfgOb.get("_DRUGBANK_AUTH_PASSWORD", sectionName=configName)
@@ -81,10 +84,10 @@ class ChemRefEtlWorker(object):
                 #
                 logger.info("Resource %r extracted mapped document length %d", extResource, len(dList))
                 logger.debug("Objects %r", dList[:2])
-                sD, _, collectionList, _ = self.__schP.getSchemaInfo(databaseName)
+                _, _, collectionList, docIndexD = self.__schP.getSchemaInfo(collectionGroupName=collectionGroupName)
                 collectionName = collectionList[0] if collectionList else "unassigned"
-                indexL = sD.getDocumentIndex(collectionName, "primary")
-                logger.info("Database %r collection %r index attributes %r", databaseName, collectionName, indexL)
+                indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
+                logger.info("Database %r collection %r index attributes %r", databaseNameMongo, collectionName, indexDL)
                 #
                 # For some reason, 'addValues' was being overwritten with an empty dict (https://github.com/rcsb/py-rcsb_exdb/commit/26bd79e9a2fffc97c034b4116dece9248d1c1f39)
                 # Will need to review this -- do we want to add the schema version values or not? (Also, see similar logic in UniProtCoreEtlWorker.py)
@@ -103,8 +106,8 @@ class ChemRefEtlWorker(object):
                 readBackCheck=self.__readBackCheck,
             )
             #
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexL, keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            ok = dl.load(databaseNameMongo, collectionName, loadType=loadType, documentList=dList, keyNames=None, addValues=addValues, indexDL=indexDL)
+            self.__updateStatus(updateId, databaseNameMongo, collectionName, ok, statusStartTimestamp)
 
             return True
         except Exception as e:

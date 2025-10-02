@@ -162,7 +162,9 @@ class PdbxLoaderFixture(unittest.TestCase):
         ]
         self.__ldList = [
             {
-                "databaseName": "bird_chem_comp_core",
+                # "databaseName": "dw",
+                "collectionGroupName": "core_chem_comp",
+                "contentType": "bird_chem_comp_core",
                 "collectionNameList": None,
                 "loadType": "full",
                 "mergeContentTypes": None,
@@ -170,7 +172,9 @@ class PdbxLoaderFixture(unittest.TestCase):
                 "inputIdCodeList": self.__birdChemCompCoreIdList
             },
             {
-                "databaseName": "pdbx_core",
+                # "databaseName": "pdbx_core",
+                "collectionGroupName": "pdbx_core",
+                "contentType": "pdbx_core",
                 "collectionNameList": None,
                 "loadType": "replace",
                 "mergeContentTypes": ["vrpt"],
@@ -179,6 +183,8 @@ class PdbxLoaderFixture(unittest.TestCase):
             },
             # {
             #     "databaseName": "pdbx_comp_model_core",
+            #     "collectionGroupName": "pdbx_comp_model_core",
+            #     "contentType": "pdbx_comp_model_core",
             #     "collectionNameList": None,
             #     "loadType": "full",
             #     "mergeContentTypes": None,
@@ -220,7 +226,7 @@ class PdbxLoaderFixture(unittest.TestCase):
         """Wrapper for the PDBx loader module"""
         ok = False
         try:
-            logger.info("Loading %s", kwargs["databaseName"])
+            logger.info("Loading %s", kwargs["collectionGroupName"])
             mw = PdbxLoader(
                 self.__cfgOb,
                 cachePath=self.__cachePath,
@@ -235,8 +241,9 @@ class PdbxLoaderFixture(unittest.TestCase):
                 rebuildSchemaFlag=False,
             )
             ok = mw.load(
-                kwargs["databaseName"],
+                collectionGroupName=kwargs["collectionGroupName"],
                 collectionLoadList=kwargs["collectionNameList"],
+                contentType=kwargs["contentType"],
                 loadType=kwargs["loadType"],
                 inputPathList=None,
                 inputIdCodeList=kwargs["inputIdCodeList"],

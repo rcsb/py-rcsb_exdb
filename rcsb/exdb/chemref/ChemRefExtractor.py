@@ -7,6 +7,7 @@
 # Updates:
 #  7-Jan-2019  jdw moved from ChemRefEtlWorker.
 #  3-Sep-2019  jdw moved again to module rcsb.exdb.chemref
+# 14-Aug-2025  dwp rename bird_chem_comp_core to core_chem_comp
 #
 ##
 __docformat__ = "google en"
@@ -42,8 +43,8 @@ class ChemRefExtractor(object):
         """
         idD = {}
         try:
-            databaseName = "bird_chem_comp_core"
-            collectionName = "bird_chem_comp_core"
+            databaseName = "dw"
+            collectionName = "core_chem_comp"
             selectD = {"rcsb_chem_comp_related.resource_name": referenceResourceName}
             selectionList = ["rcsb_id", "rcsb_chem_comp_related"]
             logger.info("Searching %s %s with selection query %r", databaseName, collectionName, selectD)
