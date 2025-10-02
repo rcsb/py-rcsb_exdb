@@ -60,7 +60,7 @@ class ReferenceSequenceAnnotationAdapterTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    @unittest.skip("Disable test - no longer using in production, and fails too frequently with 'Bad xml text' when fetching from UniProt")
+    # @unittest.skip("Disable test - no longer using in production, and fails too frequently with 'Bad xml text' when fetching from UniProt")
     def testAnnotationAdapter(self):
         """Test case - create and read cache reference sequences assignments and related data."""
         try:
