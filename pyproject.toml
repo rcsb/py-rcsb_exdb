@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 # Add this to prevent uv from automatically creating venvs within individual packages when running 'uv run ...' from within the package directory
 [tool.uv]
 extra-index-url = ["https://pypi.anaconda.org/OpenEye/simple"]
-managed = false
+# managed = false
 
 
 [project]
