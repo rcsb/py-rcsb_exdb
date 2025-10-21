@@ -20,27 +20,28 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.13",
 ]
-dependencies = [
-    # OpenEye is needed here despite it not being a direct requirement of this package (it's used by rcsb.utils.chem)
-    # "OpenEye-toolkits >= 2024.1.1",
-    #
-    "numpy",
-    "jsonschema >= 2.6.0",
-    "rcsb.utils.io >= 1.48",
-    "rcsb.db >= 1.808",
-    "rcsb.utils.chem >= 0.84",
-    "rcsb.utils.chemref >= 0.91",
-    "rcsb.utils.config >= 0.40",
-    "rcsb.utils.ec >= 0.25",
-    "rcsb.utils.go >= 0.18",
-    "rcsb.utils.seq >= 0.82",
-    "rcsb.utils.targets >= 0.82",
-    "rcsb.utils.struct >= 0.47",
-    "rcsb.utils.taxonomy >= 0.43",
-    "rcsb.utils.dictionary >= 1.27",
-]
-dynamic = ["version"]
 
+# dependencies = [
+#     # OpenEye is needed here despite it not being a direct requirement of this package (it's used by rcsb.utils.chem)
+#     # "OpenEye-toolkits >= 2024.1.1",
+#     #
+#     "numpy",
+#     "jsonschema >= 2.6.0",
+#     "rcsb.utils.io >= 1.48",
+#     "rcsb.db >= 1.808",
+#     "rcsb.utils.chem >= 0.84",
+#     # "--extra-index-url https://pypi.anaconda.org/OpenEye/simple",
+#     "rcsb.utils.chemref >= 0.91",
+#     "rcsb.utils.config >= 0.40",
+#     "rcsb.utils.ec >= 0.25",
+#     "rcsb.utils.go >= 0.18",
+#     "rcsb.utils.seq >= 0.82",
+#     "rcsb.utils.targets >= 0.82",
+#     "rcsb.utils.struct >= 0.47",
+#     "rcsb.utils.taxonomy >= 0.43",
+#     "rcsb.utils.dictionary >= 1.27",
+# ]
+dynamic = ["dependencies", "version"]
 
 [project.optional-dependencies]
 dev = ["check-manifest"]
@@ -56,6 +57,7 @@ namespaces = false
 
 [tool.setuptools.dynamic]
 version = {attr = "rcsb.exdb.cli.__version__"}
+dependencies = {file = ["requirements.txt"]}
 
 ###################################################################################################
 #                            [tool.uv]
@@ -64,11 +66,11 @@ version = {attr = "rcsb.exdb.cli.__version__"}
 [tool.uv]
 managed = false
 
-[[tool.uv.index]]
-name = "openeye"
-url = "https://pypi.anaconda.org/OpenEye/simple/openeye-toolkits/"
+# [[tool.uv.index]]
+# name = "openeye"
+# url = "https://pypi.anaconda.org/OpenEye/simple/openeye-toolkits/"
 
-# Extra index for installing OpenEye
-[tool.uv.sources]
-OpenEye-toolkits = { index = "openeye" }
+# # Extra index for installing OpenEye
+# [tool.uv.sources]
+# OpenEye-toolkits = { index = "openeye" }
 # openeye-toolkits = { index = "openeye" }
