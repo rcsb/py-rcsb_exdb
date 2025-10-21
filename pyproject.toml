@@ -21,9 +21,8 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    # This line may be needed despite the OpenEye package not being a direct requirement of this package (it's used by rcsb.utils.chem)
-    "--extra-index-url https://pypi.anaconda.org/OpenEye/simple",
-    "# OpenEye-toolkits >= 2024.1.1",
+    # OpenEye is needed here despite it not being a direct requirement of this package (it's used by rcsb.utils.chem)
+    "OpenEye-toolkits >= 2024.1.1",
     #
     "numpy",
     "jsonschema >= 2.6.0",
@@ -41,6 +40,10 @@ dependencies = [
     "rcsb.utils.dictionary >= 1.27",
 ]
 dynamic = ["version"]
+
+# Extra index for installing OpenEye
+[tool.uv.pip]
+extra-index-url = ["https://pypi.anaconda.org/OpenEye/simple"]
 
 [project.optional-dependencies]
 dev = ["check-manifest"]
