@@ -2,14 +2,6 @@
 requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
-
-# Extra index for installing OpenEye
-# Add this to prevent uv from automatically creating venvs within individual packages when running 'uv run ...' from within the package directory
-[tool.uv]
-extra-index-url = ["https://pypi.anaconda.org/OpenEye/simple"]
-# managed = false
-
-
 [project]
 name = "rcsb.exdb"
 description = "RCSB Python ExDB data extraction and loading workflows"
@@ -30,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
     # OpenEye is needed here despite it not being a direct requirement of this package (it's used by rcsb.utils.chem)
-    "OpenEye-toolkits >= 2024.1.1",
+    # "OpenEye-toolkits >= 2024.1.1",
     #
     "numpy",
     "jsonschema >= 2.6.0",
@@ -65,3 +57,18 @@ namespaces = false
 [tool.setuptools.dynamic]
 version = {attr = "rcsb.exdb.cli.__version__"}
 
+###################################################################################################
+#                            [tool.uv]
+###################################################################################################
+# Add this to prevent uv from automatically creating venvs within individual packages when running 'uv run ...' from within the package directory
+[tool.uv]
+managed = false
+
+# Extra index for installing OpenEye
+[tool.uv.sources]
+# TODO: remove with legacy chem service
+openeye-toolkits = { index = "openeye" }
+[[tool.uv.index]]
+# TODO: remove with legacy chem service
+name = "openeye"
+url = "https://pypi.anaconda.org/OpenEye/simple"
