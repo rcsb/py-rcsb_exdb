@@ -64,11 +64,11 @@ version = {attr = "rcsb.exdb.cli.__version__"}
 [tool.uv]
 managed = false
 
-# Extra index for installing OpenEye
-[tool.uv.sources]
-# TODO: remove with legacy chem service
-openeye-toolkits = { index = "openeye" }
 [[tool.uv.index]]
-# TODO: remove with legacy chem service
 name = "openeye"
 url = "https://pypi.anaconda.org/OpenEye/simple"
+
+# Extra index for installing OpenEye
+[tool.uv.sources]
+OpenEye-toolkits = { index = "openeye" }
+# openeye-toolkits = { index = "openeye" }
