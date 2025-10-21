@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
     # OpenEye is needed here despite it not being a direct requirement of this package (it's used by rcsb.utils.chem)
-    # "OpenEye-toolkits >= 2024.1.1",
+    "OpenEye-toolkits >= 2024.1.1",
     #
     "numpy",
     "jsonschema >= 2.6.0",
