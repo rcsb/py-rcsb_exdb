@@ -2,6 +2,14 @@
 requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
+
+# Extra index for installing OpenEye
+# Add this to prevent uv from automatically creating venvs within individual packages when running 'uv run ...' from within the package directory
+[tool.uv]
+extra-index-url = ["https://pypi.anaconda.org/OpenEye/simple"]
+managed = false
+
+
 [project]
 name = "rcsb.exdb"
 description = "RCSB Python ExDB data extraction and loading workflows"
@@ -41,9 +49,6 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-# Extra index for installing OpenEye
-[tool.uv.pip]
-extra-index-url = ["https://pypi.anaconda.org/OpenEye/simple"]
 
 [project.optional-dependencies]
 dev = ["check-manifest"]
@@ -60,6 +65,3 @@ namespaces = false
 [tool.setuptools.dynamic]
 version = {attr = "rcsb.exdb.cli.__version__"}
 
-# Add this to prevent uv from automatically creating venvs within individual packages when running 'uv run ...' from within the package directory
-[tool.uv]
-managed = false
