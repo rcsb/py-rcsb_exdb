@@ -7,7 +7,6 @@
 # 13-Aug-2019  jdw export config support token prior to launching tox runner
 #
 ##
-##
 parameters:
   tox: ""
   python: ""
@@ -96,7 +95,7 @@ jobs:
             displayName: "Start Mongo service"
         #
       #
-      - script: 'python -c "import sys; print(sys.version); print(sys.executable)"'
+      - script: python -c "import sys; print(sys.version); print(sys.executable)"
         displayName: show python information
       #
       - script: python -m pip install --upgrade pip
@@ -105,7 +104,7 @@ jobs:
       - script: pip install .[tests] --extra-index-url https://pypi.anaconda.org/OpenEye/simple
         displayName: "Install dependencies"
       #
-      - script: python -c "import nltk; nltk.download('wordnet')"
+      - script: python -c "import nltk; nltk.download('popular')"
         displayName: "Download NLTK data"
       #
       - task: DownloadSecureFile@1
@@ -132,7 +131,7 @@ jobs:
       #  Build artifacts if this is a test target (i.e. labeled as py##)
       #
       - ${{ if startsWith(parameters.tox, 'py') }}:
-          - script: pip install --upgrade pip build twine
+          - script: pip install --upgrade pip build twine hatch
             displayName: "Acquire build tools"
           - script: python -m build --sdist --wheel --outdir "$(System.DefaultWorkingDirectory)/dist"
             displayName: "Build source and wheel distributions"

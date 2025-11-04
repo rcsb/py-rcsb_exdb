@@ -46,7 +46,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-tests = ["tox", "pylint", "black>=21.5b1", "flake8", "coverage", "rcsb.utils.citation >= 0.22"]
+tests = ["tox", "pylint", "black>=21.5b1", "flake8", "coverage", "rcsb.utils.citation>=0.25"]
 
 [project.urls]
 Homepage = "https://github.com/rcsb/py-rcsb_exdb"

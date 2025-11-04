@@ -5,7 +5,7 @@
 #       9-Jul-2019 jdw add publish jobs
 #      16-Oct-2024 dwp update to python 3.10
 #
-#       Only running py310 tasks with mysql and mongodb ----
+#       Only running py310 tasks with mongodb ----
 #
 name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
 
