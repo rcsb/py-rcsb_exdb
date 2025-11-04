@@ -14,14 +14,14 @@ maintainers = [
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-requires-python = ">=3.9,<3.13"  # Latest OpenEye (2025.1.1) only supports up to 3.12 (as of Nov. 2025)
+requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.12",  # Latest OpenEye (2025.1.1) only supports up to 3.12 (as of Nov. 2025)
 ]
 
 dependencies = [
