@@ -1,6 +1,9 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+# [build-system]
+# requires = ["setuptools>=61", "wheel"]
+# build-backend = "setuptools.build_meta"
 
 [project]
 name = "rcsb.exdb"
@@ -8,6 +11,9 @@ description = "RCSB Python ExDB data extraction and loading workflows"
 readme = "README.md"
 authors = [
     { name="John Westbrook", email="john.westbrook@rcsb.org" }
+]
+maintainers = [
+    { name="Dennis Piehl", email="dennis.piehl@rcsb.org" }
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -50,30 +56,73 @@ tests = ["tox", "pylint", "black>=21.5b1", "flake8", "coverage", "rcsb.utils.cit
 [project.urls]
 Homepage = "https://github.com/rcsb/py-rcsb_exdb"
 
-[tool.setuptools.packages.find]
-include = ["rcsb*"]  # must leave at "rcsb*" and not "rcsb.*", else the 'rcsb/__init__.py' file is dropped
-exclude = ["rcsb.exdb.test*", "rcsb.mock-*", "test*"]
-namespaces = false
+# [tool.setuptools.packages.find]
+# include = ["rcsb*"]  # must leave at "rcsb*" and not "rcsb.*", else the 'rcsb/__init__.py' file is dropped
+# exclude = ["rcsb.exdb.test*", "rcsb.mock-*", "test*"]
+# namespaces = false
 
-[tool.setuptools.dynamic]
-version = {attr = "rcsb.exdb.cli.__version__"}
-dependencies = {file = ["requirements.txt"]}
+# [tool.setuptools.dynamic]
+# version = {attr = "rcsb.exdb.cli.__version__"}
+# dependencies = {file = ["requirements.txt"]}
 
-###################################################################################################
-#    !!  THESE WILL ONLY CONTROL 'UV' BEHAVIOR!!!          [tool.uv]
-#        so...should we use uv to build the image...?
-#        IF I DO THAT, then I can use that one early version that actually built fine for me locally using UV...
-###################################################################################################
-# Add this to prevent uv from automatically creating venvs within individual packages when running 'uv run ...' from within the package directory
+
+# ----------------  hatch configuration ----------------
+[tool.hatch.version]
+path = "rcsb/exdb/cli/__init__.py"
+
+[tool.hatch.build]
+exclude = [
+    "/rcsb/exdb/test*/**",
+    "/rcsb/mock-*/**",
+    "test*/**"
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/rcsb/**",
+    "/README.md",
+    "/LICENSE",
+    "/HISTORY.txt",
+    "/pyproject.toml"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["rcsb"]
+
+[tool.hatch.envs.default]
+skip-install = true
+dependencies = ["OpenEye-toolkits>=2024.1.1"]
+
+[tool.hatch.envs.default.env-vars]
+PIP_EXTRA_INDEX_URL = "https://pypi.anaconda.org/OpenEye/simple"
+
+
+# ----------------  test configuration ----------------
+[tool.hatch.envs.hatch-test]
+dependencies = ["tox"]
+
+[tool.hatch.envs.hatch-test.scripts]
+run = ["tox"]
+
+
+# ----------------  UV configuration ----------------
 [tool.uv]
-managed = false
+extra-index-url = ["https://pypi.anaconda.org/OpenEye/simple"]
+managed = false  # This prevents uv from automatically creating venvs within individual packages when running 'uv run ...' from within the package directory
+
+# [tool.uv.pip]
+# extra-index-url = ["https://pypi.anaconda.org/OpenEye/simple"]
+
+
+# # # Extra index for installing OpenEye
+# [tool.uv.sources]
+# # OpenEye-toolkits = { index = "openeye" }
+# openeye-toolkits = [
+#     { index = "openeye" }
+# ]
 
 # [[tool.uv.index]]
 # name = "openeye"
 # url = "https://pypi.anaconda.org/OpenEye/simple"
-# https://pypi.anaconda.org/openeye/simple/openeye-toolkits/2025.1.1/OpenEye_toolkits-2025.1.1-py39.py310.py311.py312-none-manylinux_2_28_x86_64.whl
+# # https://pypi.anaconda.org/openeye/simple/openeye-toolkits/2025.1.1/OpenEye_toolkits-2025.1.1-py39.py310.py311.py312-none-manylinux_2_28_x86_64.whl
 
-# # Extra index for installing OpenEye
-# [tool.uv.sources]
-# # OpenEye-toolkits = { index = "openeye" }
-# openeye-toolkits = { index = "openeye" }
