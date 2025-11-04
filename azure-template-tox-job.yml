@@ -102,7 +102,7 @@ jobs:
       - script: python -m pip install --upgrade pip
         displayName: "Upgrade pip"
       #
-      - script: pip install .[tests]
+      - script: pip install .[tests] --extra-index-url https://pypi.anaconda.org/OpenEye/simple
         displayName: "Install dependencies"
       #
       #
