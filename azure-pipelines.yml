@@ -32,7 +32,7 @@ jobs:
     parameters: { tox: "test_coverage", python: "3.12", os: "linux", fixtures: 'mongodb'}
     #
   - template: azure-template-tox-job.yml
-    parameters: { tox: "py312", python: "3.12", os: "linux", fixtures: 'mongodb'}  #
+    parameters: { tox: "py312", python: "3.12", os: "linux", fixtures: 'mongodb'}
   # - template: azure-template-tox-job.yml
   #   parameters: { tox: "py312", python: "3.12", os: "macos", fixtures: 'mongodb'}
   #

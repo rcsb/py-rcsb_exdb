@@ -1,9 +1,6 @@
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-# [build-system]
-# requires = ["setuptools>=61", "wheel"]
-# build-backend = "setuptools.build_meta"
 
 [project]
 name = "rcsb.exdb"
@@ -36,7 +33,6 @@ dependencies = [
     "rcsb.utils.io >= 1.48",
     "rcsb.db >= 1.808",
     "rcsb.utils.chem >= 0.84",
-    # "--extra-index-url https://pypi.anaconda.org/OpenEye/simple",
     "rcsb.utils.chemref >= 0.91",
     "rcsb.utils.config >= 0.40",
     "rcsb.utils.ec >= 0.25",
@@ -50,21 +46,10 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["check-manifest"]
 tests = ["tox", "pylint", "black>=21.5b1", "flake8", "coverage", "rcsb.utils.citation >= 0.22"]
 
 [project.urls]
 Homepage = "https://github.com/rcsb/py-rcsb_exdb"
-
-# [tool.setuptools.packages.find]
-# include = ["rcsb*"]  # must leave at "rcsb*" and not "rcsb.*", else the 'rcsb/__init__.py' file is dropped
-# exclude = ["rcsb.exdb.test*", "rcsb.mock-*", "test*"]
-# namespaces = false
-
-# [tool.setuptools.dynamic]
-# version = {attr = "rcsb.exdb.cli.__version__"}
-# dependencies = {file = ["requirements.txt"]}
-
 
 # ----------------  hatch configuration ----------------
 [tool.hatch.version]
@@ -109,20 +94,3 @@ run = ["tox"]
 [tool.uv]
 extra-index-url = ["https://pypi.anaconda.org/OpenEye/simple"]
 managed = false  # This prevents uv from automatically creating venvs within individual packages when running 'uv run ...' from within the package directory
-
-# [tool.uv.pip]
-# extra-index-url = ["https://pypi.anaconda.org/OpenEye/simple"]
-
-
-# # # Extra index for installing OpenEye
-# [tool.uv.sources]
-# # OpenEye-toolkits = { index = "openeye" }
-# openeye-toolkits = [
-#     { index = "openeye" }
-# ]
-
-# [[tool.uv.index]]
-# name = "openeye"
-# url = "https://pypi.anaconda.org/OpenEye/simple"
-# # https://pypi.anaconda.org/openeye/simple/openeye-toolkits/2025.1.1/OpenEye_toolkits-2025.1.1-py39.py310.py311.py312-none-manylinux_2_28_x86_64.whl
-
