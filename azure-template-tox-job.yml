@@ -105,6 +105,8 @@ jobs:
       - script: pip install .[tests] --extra-index-url https://pypi.anaconda.org/OpenEye/simple
         displayName: "Install dependencies"
       #
+      - script: python -c "import nltk; nltk.download('wordnet')"
+        displayName: "Download NLTK data"
       #
       - task: DownloadSecureFile@1
         name: oelicense

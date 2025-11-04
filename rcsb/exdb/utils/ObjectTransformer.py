@@ -36,7 +36,6 @@ class ObjectTransformer(object):
         desp = DataExchangeStatus()
         statusStartTimestamp = desp.setStartTime()
         #
-        logger.info("doTransform A")
         databaseName = kwargs.get("databaseName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_entry")
         selectionQueryD = kwargs.get("selectionQuery", {})
@@ -45,10 +44,8 @@ class ObjectTransformer(object):
         updateId = kwargs.get("updateId", tU.getCurrentWeekSignature())
         #
         docSelectList = self.__selectObjectIds(databaseName, collectionName, selectionQueryD)
-        logger.info("doTransform B")
         docSelectList = docSelectList[:fetchLimit] if fetchLimit else docSelectList
         ok = self.__transform(databaseName, collectionName, docSelectList)
-        logger.info("doTransform C")
         #
         okS = True
         if updateId:
@@ -79,7 +76,6 @@ class ObjectTransformer(object):
         #
         ok = True
         try:
-            logger.info("in tranform 1")
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 if mg.collectionExists(databaseName, collectionName):
@@ -91,10 +87,8 @@ class ObjectTransformer(object):
                         del rObj["_id"]
                         #
                         fOk = True
-                        logger.info("in tranform 2")
                         if self.__oAdapt:
                             fOk, rObj = self.__oAdapt.filter(rObj)
-                        logger.info("in tranform 3")
                         if fOk:
                             rOk = mg.replace(databaseName, collectionName, rObj, dD)
                             if rOk is None:
@@ -107,7 +101,6 @@ class ObjectTransformer(object):
                         #
                         if ii % logIncrement == 0 or ii == numDoc:
                             logger.info("Replace status %r object (%d of %d)", ok, ii, numDoc)
-                        logger.info("in tranform 4")
                         #
         except Exception as e:
             logger.exception("Failing with %s", str(e))

@@ -76,13 +76,9 @@ class CitationAdapterTests(unittest.TestCase):
             ok = jtaP.testCache()
             self.assertTrue(ok)
             #
-            logger.info("Step 1")
             ca = CitationAdapter(crP, jtaP)
-            logger.info("Step 2")
             obTr = ObjectTransformer(self.__cfgOb, objectAdapter=ca)
-            logger.info("Step 3")
             ok = obTr.doTransform(databaseName=databaseName, collectionName=collectionName, fetchLimit=self.__fetchLimit)
-            logger.info("Step 4")
             self.assertTrue(ok)
 
         except Exception as e:
