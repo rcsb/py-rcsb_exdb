@@ -77,6 +77,10 @@ jobs:
             displayName: "Install flex"
           - script: sudo apt-get install bison
             displayName: "Install bison"
+          - script: |
+              sudo apt-get install curl
+              curl -LsSf https://astral.sh/uv/install.sh | sh
+            displayName: "Install uv"
         # -----
       - ? ${{ if and(contains(parameters.fixtures, 'mongodb'), startsWith(parameters.os, 'linux')) }}
         : # Mongo install
@@ -102,7 +106,7 @@ jobs:
       - script: python -m pip install --upgrade pip
         displayName: "Upgrade pip"
       #
-      - script: pip install .[tests] --extra-index-url https://pypi.anaconda.org/OpenEye/simple
+      - script: uv pip install .[tests] --system
         displayName: "Install dependencies"
       #
       #
@@ -118,17 +122,17 @@ jobs:
             export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
             ${{ format('python -m tox -e {0}', parameters.tox) }}
           displayName: 'Running tox task'
-      - ${{ if and(not(startsWith(parameters.tox, 'py')), startsWith(parameters.python, '3.13')) }}:
+      - ${{ if and(not(startsWith(parameters.tox, 'py')), startsWith(parameters.python, '3.12')) }}:
         - script: |
             export OE_LICENSE=$(oelicense.secureFilePath)
             export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
-            ${{ format('python -m tox -e {0}-py313', parameters.tox) }}
+            ${{ format('python -m tox -e {0}-py312', parameters.tox) }}
           displayName: 'Running tox task'
       #
       #  Build artifacts if this is a test target (i.e. labeled as py##)
       #
       - ${{ if startsWith(parameters.tox, 'py') }}:
-          - script: pip install --upgrade pip build twine
+          - script: uv pip install --upgrade pip build twine --system
             displayName: "Acquire build tools"
           - script: python -m build --sdist --wheel --outdir "$(System.DefaultWorkingDirectory)/dist"
             displayName: "Build source and wheel distributions"

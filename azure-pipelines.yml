@@ -25,17 +25,17 @@ schedules:
 
 jobs:
   - template: azure-template-tox-job.yml
-    parameters: { tox: "format_pep8", python: "3.13", os: "linux"}
+    parameters: { tox: "format_pep8", python: "3.12", os: "linux"}
   - template: azure-template-tox-job.yml
-    parameters: { tox: "lint_pylint", python: "3.13", os: "linux"}
+    parameters: { tox: "lint_pylint", python: "3.12", os: "linux"}
   - template: azure-template-tox-job.yml
-    parameters: { tox: "test_coverage", python: "3.13", os: "linux", fixtures: 'mongodb'}
+    parameters: { tox: "test_coverage", python: "3.12", os: "linux", fixtures: 'mongodb'}
     #
   - template: azure-template-tox-job.yml
-    parameters: { tox: "py313", python: "3.13", os: "linux", fixtures: 'mongodb'}  #
+    parameters: { tox: "py312", python: "3.12", os: "linux", fixtures: 'mongodb'}  #
   # - template: azure-template-tox-job.yml
-  #   parameters: { tox: "py313", python: "3.13", os: "macos", fixtures: 'mongodb'}
+  #   parameters: { tox: "py312", python: "3.12", os: "macos", fixtures: 'mongodb'}
   #
   - template: azure-template-publish-job.yml
-    parameters: { tox: "py313", python: "3.13", os: "linux" }
+    parameters: { tox: "py312", python: "3.12", os: "linux" }
   #
