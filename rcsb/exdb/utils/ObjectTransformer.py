@@ -36,6 +36,7 @@ class ObjectTransformer(object):
         desp = DataExchangeStatus()
         statusStartTimestamp = desp.setStartTime()
         #
+        logger.info("doTransform A")
         databaseName = kwargs.get("databaseName", "pdbx_core")
         collectionName = kwargs.get("collectionName", "pdbx_core_entry")
         selectionQueryD = kwargs.get("selectionQuery", {})
@@ -44,8 +45,10 @@ class ObjectTransformer(object):
         updateId = kwargs.get("updateId", tU.getCurrentWeekSignature())
         #
         docSelectList = self.__selectObjectIds(databaseName, collectionName, selectionQueryD)
+        logger.info("doTransform B")
         docSelectList = docSelectList[:fetchLimit] if fetchLimit else docSelectList
         ok = self.__transform(databaseName, collectionName, docSelectList)
+        logger.info("doTransform C")
         #
         okS = True
         if updateId:

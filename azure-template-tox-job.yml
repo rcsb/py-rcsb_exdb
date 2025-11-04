@@ -77,10 +77,6 @@ jobs:
             displayName: "Install flex"
           - script: sudo apt-get install bison
             displayName: "Install bison"
-          - script: |
-              sudo apt-get install curl
-              curl -LsSf https://astral.sh/uv/install.sh | sh
-            displayName: "Install uv"
         # -----
       - ? ${{ if and(contains(parameters.fixtures, 'mongodb'), startsWith(parameters.os, 'linux')) }}
         : # Mongo install
@@ -106,7 +102,7 @@ jobs:
       - script: python -m pip install --upgrade pip
         displayName: "Upgrade pip"
       #
-      - script: uv pip install .[tests] --system
+      - script: pip install .[tests] --extra-index-url https://pypi.anaconda.org/OpenEye/simple
         displayName: "Install dependencies"
       #
       #
@@ -134,7 +130,7 @@ jobs:
       #  Build artifacts if this is a test target (i.e. labeled as py##)
       #
       - ${{ if startsWith(parameters.tox, 'py') }}:
-          - script: uv pip install --upgrade pip build twine --system
+          - script: pip install --upgrade pip build twine --system
             displayName: "Acquire build tools"
           - script: python -m build --sdist --wheel --outdir "$(System.DefaultWorkingDirectory)/dist"
             displayName: "Build source and wheel distributions"
