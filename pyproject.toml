@@ -5,6 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "rcsb.exdb"
 description = "RCSB Python ExDB data extraction and loading workflows"
+version = "1.31"
 readme = "README.md"
 authors = [
     { name="John Westbrook", email="john.westbrook@rcsb.org" }
@@ -14,7 +15,7 @@ maintainers = [
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-requires-python = ">=3.9"
+requires-python = ">=3.9"  # Latest OpenEye (2025.1.1) only supports up to 3.12 (as of Nov. 2025)
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -43,36 +44,36 @@ dependencies = [
     "rcsb.utils.taxonomy >= 0.43",
     "rcsb.utils.dictionary >= 1.27",
 ]
-dynamic = ["version"]
 
 [project.optional-dependencies]
-tests = ["tox", "pylint", "black>=21.5b1", "flake8", "coverage", "rcsb.utils.citation>=0.25"]
+tests = ["tox", "pylint", "black>=21.5b1", "flake8", "coverage", "rcsb.utils.citation>=0.25", "check-manifest"]
 
 [project.urls]
 Homepage = "https://github.com/rcsb/py-rcsb_exdb"
 
 # ----------------  hatch configuration ----------------
-[tool.hatch.version]
-path = "rcsb/exdb/cli/__init__.py"
-
-[tool.hatch.build]
-exclude = [
-    "/rcsb/exdb/test*/**",
-    "/rcsb/mock-*/**",
-    "test*/**"
-]
-
 [tool.hatch.build.targets.sdist]
 include = [
     "/rcsb/**",
     "/README.md",
     "/LICENSE",
     "/HISTORY.txt",
-    "/pyproject.toml"
+    "/pyproject.toml",
+]
+exclude = [
+    "/rcsb/mock-*",
+    "/rcsb/exdb/test*/test*-*",
+    "/rcsb/exdb/test*/**.tdd",
+    "/rcsb/exdb/test*/**.txt",
+    "/rcsb/exdb/test*/**.sh",
 ]
 
 [tool.hatch.build.targets.wheel]
 packages = ["rcsb"]
+exclude = [
+    "/rcsb/db/test*",
+    "/rcsb/mock-*",
+]
 
 [tool.hatch.envs.default]
 skip-install = true
@@ -81,14 +82,12 @@ dependencies = ["OpenEye-toolkits>=2024.1.1"]
 [tool.hatch.envs.default.env-vars]
 PIP_EXTRA_INDEX_URL = "https://pypi.anaconda.org/OpenEye/simple"
 
-
 # ----------------  test configuration ----------------
 [tool.hatch.envs.hatch-test]
 dependencies = ["tox"]
 
 [tool.hatch.envs.hatch-test.scripts]
 run = ["tox"]
-
 
 # ----------------  UV configuration ----------------
 [tool.uv]
