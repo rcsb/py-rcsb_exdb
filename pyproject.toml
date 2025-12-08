@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "rcsb.exdb"
 description = "RCSB Python ExDB data extraction and loading workflows"
-version = "1.31"
+version = "1.32"
 readme = "README.md"
 authors = [
     { name="John Westbrook", email="john.westbrook@rcsb.org" }
@@ -71,7 +71,7 @@ exclude = [
 [tool.hatch.build.targets.wheel]
 packages = ["rcsb"]
 exclude = [
-    "/rcsb/db/test*",
+    "/rcsb/exdb/test*",
     "/rcsb/mock-*",
 ]
 
