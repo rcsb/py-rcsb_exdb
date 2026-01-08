@@ -56,7 +56,7 @@ class TreeNodeListWorker(object):
             useCache=False,
             useFilteredLists=False,
             treeCollectionList=None,
-        ):
+    ):
         self.__cfgOb = cfgOb
         self.__cachePath = os.path.abspath(cachePath)
         self.__readBackCheck = readBackCheck
