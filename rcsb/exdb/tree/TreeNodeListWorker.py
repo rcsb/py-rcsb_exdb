@@ -12,6 +12,8 @@
 # 23-Jan-2025 dwp Change indexed field from 'update_id' to 'id'
 #  7-Aug-2025 dwp Change target DB and collection names to "dw" and "tree_*" (via configuration file);
 #                 Make use of configuration file for loading tree node lists and setting indexed fields
+#  6-Jan-2026 dwp Raise error if a tree node list is empty or fails to load;
+#                 Add support for providing a manual list of tree node lists to load (for testing)
 #
 ##
 __docformat__ = "google en"
@@ -41,7 +43,20 @@ logger = logging.getLogger(__name__)
 class TreeNodeListWorker(object):
     """Prepare and load repository holdings and repository update data."""
 
-    def __init__(self, cfgOb, cachePath, numProc=1, chunkSize=10, maxStepLength=4000, readBackCheck=False, documentLimit=None, verbose=False, useCache=False, useFilteredLists=False):
+    def __init__(
+            self,
+            cfgOb,
+            cachePath,
+            numProc=1,
+            chunkSize=10,
+            maxStepLength=4000,
+            readBackCheck=False,
+            documentLimit=None,
+            verbose=False,
+            useCache=False,
+            useFilteredLists=False,
+            treeCollectionList=None,
+    ):
         self.__cfgOb = cfgOb
         self.__cachePath = os.path.abspath(cachePath)
         self.__readBackCheck = readBackCheck
@@ -55,6 +70,7 @@ class TreeNodeListWorker(object):
         self.__statusList = []
         self.__useCache = useCache
         self.__useFilteredLists = useFilteredLists
+        self.__treeCollectionList = treeCollectionList if treeCollectionList else []  # Manually specify tree collections to load
 
     def __updateStatus(self, updateId, databaseName, collectionName, status, startTimestamp):
         try:
@@ -95,43 +111,49 @@ class TreeNodeListWorker(object):
                 ATTRIBUTE_NAMES:
                     - parents
         """
-        try:
-            useCache = self.__useCache
-            #
-            logger.info("Starting with cache path %r (useCache=%r)", self.__cachePath, useCache)
-            #
-            self.__statusList = []
-            desp = DataExchangeStatus()
-            statusStartTimestamp = desp.setStartTime()
-            dl = DocumentLoader(
-                self.__cfgOb,
-                self.__cachePath,
-                self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                maxStepLength=self.__maxStepLength,
-                documentLimit=self.__documentLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-            )
-            #
-            sectionName = "tree_node_lists_configuration"
-            databaseNameMongo = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
-            collectionNameList = self.__cfgOb.get("COLLECTION_NAME_LIST", sectionName=sectionName)
-            collectionIndexList = self.__cfgOb.get("COLLECTION_INDICES", sectionName=sectionName)
-            # databaseNameMongo = 'dw'
-            # collectionNameList = ['tree_taxonomy', 'tree_ec', 'tree_scop', 'tree_scop2', 'tree_cath', 'tree_atc', 'tree_card', 'tree_ecod', 'tree_go']
-            # collectionIndexList = [{'INDEX_NAME': 'primary', 'ATTRIBUTE_NAMES': ['id']}, {'INDEX_NAME': 'index_2', 'ATTRIBUTE_NAMES': ['parents']}]
+        ok = True
+        useCache = self.__useCache
+        #
+        logger.info("Starting with cache path %r (useCache=%r)", self.__cachePath, useCache)
+        #
+        self.__statusList = []
+        desp = DataExchangeStatus()
+        statusStartTimestamp = desp.setStartTime()
+        dl = DocumentLoader(
+            self.__cfgOb,
+            self.__cachePath,
+            self.__resourceName,
+            numProc=self.__numProc,
+            chunkSize=self.__chunkSize,
+            maxStepLength=self.__maxStepLength,
+            documentLimit=self.__documentLimit,
+            verbose=self.__verbose,
+            readBackCheck=self.__readBackCheck,
+        )
+        #
+        sectionName = "tree_node_lists_configuration"
+        databaseNameMongo = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
+        collectionNameList = self.__cfgOb.get("COLLECTION_NAME_LIST", sectionName=sectionName)
+        collectionIndexList = self.__cfgOb.get("COLLECTION_INDICES", sectionName=sectionName)
+        # databaseNameMongo = 'dw'
+        # collectionNameList = ['tree_taxonomy', 'tree_ec', 'tree_scop', 'tree_scop2', 'tree_cath', 'tree_atc', 'tree_card', 'tree_ecod', 'tree_go']
+        # collectionIndexList = [{'INDEX_NAME': 'primary', 'ATTRIBUTE_NAMES': ['id']}, {'INDEX_NAME': 'index_2', 'ATTRIBUTE_NAMES': ['parents']}]
 
-            # collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
-            # addValues = {"_schema_version": collectionVersion}
-            addValues = None
+        if len(self.__treeCollectionList) > 0:
+            collectionNameList = [col for col in self.__treeCollectionList]
 
-            ok = True
-            for collectionName in collectionNameList:
-                nL = self.__getTreeDocList(collectionName, useCache)
-                if nL and doLoad:
-                    ok = dl.load(
+        # collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
+        # addValues = {"_schema_version": collectionVersion}
+        addValues = None
+
+        for collectionName in collectionNameList:
+            nL = self.__getTreeDocList(collectionName, useCache)
+            if doLoad:
+                if not nL or len(nL) == 0:
+                    logger.error("Empty node list returned for collectionName %r", collectionName)
+                    ok = False
+                else:
+                    okL = dl.load(
                         databaseNameMongo,
                         collectionName,
                         loadType=loadType,
@@ -140,18 +162,19 @@ class TreeNodeListWorker(object):
                         addValues=addValues,
                         schemaLevel=None,
                         indexDL=collectionIndexList
-                    ) and ok
+                    )
+                    ok = okL and ok
                     self.__updateStatus(updateId, databaseNameMongo, collectionName, ok, statusStartTimestamp)
-                logger.info(
-                    "Completed load of tree node list for database %r, collection %r, len(nL) %r (status %r)",
-                    databaseNameMongo, collectionName, len(nL), ok
-                )
-            # ---
-            logger.info("Completed tree node list loading operations with loadType %r (status %r)", loadType, ok)
-            return True
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-        return False
+
+                    logger.info(
+                        "Completed load of tree node list for database %r, collection %r, len(nL) %r (status %r)",
+                        databaseNameMongo, collectionName, len(nL), okL
+                    )
+        # ---
+        logger.info("Completed tree node list loading operations with loadType %r (status %r)", loadType, ok)
+        if not ok:
+            raise ValueError("Failed to load at least one tree node list.")
+        return ok
 
     def __checkTaxonNodeList(self, nL):
         eCount = 0
