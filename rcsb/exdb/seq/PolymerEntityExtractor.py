@@ -9,6 +9,7 @@
 #  9-Jan-2024 dwp Turn off use of uniprot_exdb DB for enriching protein entity details file (data not used)
 # 10-Dec-2024 dwp Sort extracted polymer entity sequence data by entity ID (alphabetically), to ensure consistent
 #                 ordering between coasts (order of sequence data influences results of mmseqs2 sequence searching)
+#  2-Feb-2026 dwp Handle case of missing 'rcsb_entity_source_organism.source_type'
 #
 ##
 __docformat__ = "google en"
@@ -115,7 +116,7 @@ class PolymerEntityExtractor(object):
                             begSeqNum = 1
                             endSeqNum = seqLen
                         srcId = tD["pdbx_src_id"]
-                        srcType = tD["source_type"]
+                        srcType = tD["source_type"] if "source_type" in tD else None
                         taxId = tD["ncbi_taxonomy_id"] if "ncbi_taxonomy_id" in tD else -1
                         if srcName and taxId == -1:
                             missingSrcD.setdefault(srcName, []).append(rId)
@@ -138,7 +139,7 @@ class PolymerEntityExtractor(object):
                     pD = eD["rcsb_polymer_entity"]
                     taxCount = pD["rcsb_source_taxonomy_count"]
                 except Exception:
-                    if srcType == "synthetic":
+                    if srcType is not None and srcType == "synthetic":
                         taxCount = 0
                     else:
                         logger.warning("%s (srcName %r) no source taxonomy count type %r", rId, srcName, srcType)
