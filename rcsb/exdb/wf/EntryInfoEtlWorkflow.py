@@ -6,6 +6,7 @@
 #
 #  Updates:
 #   1-Jun-2023 aae Don't back up resources to GitHub during cache update workflows
+#   7-May-2026 dwp Don't back up data to stash if empty
 #
 ##
 __docformat__ = "google en"
@@ -54,12 +55,14 @@ class EntryInfoEtlWorkflow(object):
             (bool): True for success or False otherwise
 
         """
+        ok = False
         try:
-            ok = False
             eiP = EntryInfoProvider(cachePath=self.__cachePath, useCache=True)
             eiP.update(self.__cfgOb, fmt="json", indent=3)
             #
             if backup:
+                if not eiP.testCache(minCount=100):
+                    raise ValueError("Test cache failed for EntryInfoProvider")
                 ok = eiP.backup(self.__cfgOb, self.__configName, self.__stashRemotePrefix, useGit=False, useStash=True)
                 logger.info("Backup entry-level annotations (%r)", ok)
             else:

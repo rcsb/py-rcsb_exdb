@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "rcsb.exdb"
 description = "RCSB Python ExDB data extraction and loading workflows"
-version = "1.34"
+version = "1.35"
 readme = "README.md"
 authors = [
     { name="John Westbrook", email="john.westbrook@rcsb.org" }
@@ -32,7 +32,7 @@ dependencies = [
     "numpy",
     "jsonschema >= 2.6.0",
     "rcsb.utils.io >= 1.48",
-    "rcsb.db >= 1.808",
+    "rcsb.db >= 1.814",
     "rcsb.utils.chem >= 0.84",
     "rcsb.utils.chemref >= 0.91",
     "rcsb.utils.config >= 0.40",
@@ -42,7 +42,7 @@ dependencies = [
     "rcsb.utils.targets >= 0.82",
     "rcsb.utils.struct >= 0.51",
     "rcsb.utils.taxonomy >= 0.43",
-    "rcsb.utils.dictionary >= 1.27",
+    "rcsb.utils.dictionary >= 1.39",
 ]
 
 [project.optional-dependencies]
