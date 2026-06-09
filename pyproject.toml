@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "rcsb.exdb"
 description = "RCSB Python ExDB data extraction and loading workflows"
-version = "1.35"
+version = "1.36"
 readme = "README.md"
 authors = [
     { name="John Westbrook", email="john.westbrook@rcsb.org" }

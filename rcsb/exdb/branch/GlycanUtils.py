@@ -2,18 +2,20 @@
 #  File:           GlycanUtils.py
 #  Date:           24-May-2021 jdw
 #
-#  Updated:
+# Updates:
+#  8-Jun-2026 dwp Switch to using built-in requests library; update GlyTouCan API URL
 ##
 """
 Utilities for fetching and mapping glycan accessions.
 """
 
+import time
 import logging
 import os.path
+import requests
 
 from rcsb.exdb.branch.BranchedEntityExtractor import BranchedEntityExtractor
 from rcsb.utils.io.MarshalUtil import MarshalUtil
-from rcsb.utils.io.UrlRequestUtil import UrlRequestUtil
 
 logger = logging.getLogger(__name__)
 
@@ -88,18 +90,66 @@ class GlycanUtils:
         return entityAccessionMapD
 
     def getAccessionMapping(self, wurcsTupL):
-        """Fetch GlyTouCan accessions for the input WURCS desriptor list"""
+        """Fetch GlyTouCan accessions for the input WURCS descriptor list.
+        Retries on timeouts, connection errors, and HTTP 5XX responses, while immediately failing on 4XX responses.
+
+        Example:
+          curl -d wurcs='WURCS=2.0/1,2,1/[a2122h-1a_1-5]/1-1/a4-b1' https://api.glycosmos.org/sparqlist/wurcs2gtcids
+
+        Docs: https://doc.glycosmos.org/api/glytoucan
+        """
         accessionMapD = {}
-        logger.info("Fetching (%d) WURCS descriptors", len(wurcsTupL))
-        baseUrl = "https://api.glycosmos.org"
-        endPoint = "glytoucan/sparql/wurcs2gtcids"
         numDescriptors = len(wurcsTupL)
+        logger.info("Fetching (%d) WURCS descriptors", numDescriptors)
+        url = "https://api.glycosmos.org/sparqlist/wurcs2gtcids"
+
         for ii, (entityId, wurcs) in enumerate(wurcsTupL, 1):
             try:
-                pD = {}
-                pD["wurcs"] = wurcs
-                uR = UrlRequestUtil()
-                rDL, retCode = uR.post(baseUrl, endPoint, pD, returnContentType="JSON")
+                maxRetries = 3
+                for attempt in range(maxRetries):
+                    try:
+                        response = requests.post(url, data={"wurcs": wurcs}, timeout=30)
+                        retCode = response.status_code
+
+                        if 500 <= retCode < 600:
+                            raise requests.HTTPError(f"Server error ({retCode})", response=response)
+
+                        response.raise_for_status()
+                        rDL = response.json()
+                        break
+
+                    except (requests.Timeout, requests.ConnectionError) as e:
+                        if attempt == maxRetries - 1:
+                            raise
+                        waitTime = 2 ** attempt
+                        logger.warning(
+                            "Retry %d/%d for entityId %r after %d second(s) due to %s",
+                            attempt + 1,
+                            maxRetries,
+                            entityId,
+                            waitTime,
+                            str(e),
+                        )
+                        time.sleep(waitTime)
+
+                    except requests.HTTPError as e:
+                        if e.response is not None and 400 <= e.response.status_code < 500:
+                            raise
+
+                        if attempt == maxRetries - 1:
+                            raise
+
+                        waitTime = 2 ** attempt
+                        logger.warning(
+                            "Retry %d/%d for entityId %r after %d second(s) due to HTTP %d",
+                            attempt + 1,
+                            maxRetries,
+                            entityId,
+                            waitTime,
+                            retCode,
+                        )
+                        time.sleep(waitTime)
+
                 logger.debug(" %r wurcs fetch result (%r) %r", entityId, retCode, rDL)
                 if rDL:
                     for rD in rDL:
@@ -107,8 +157,13 @@ class GlycanUtils:
                             accessionMapD.setdefault(wurcs, []).append(rD["id"])
                         else:
                             logger.info("%r fetch fails (%r) (%r) %r", entityId, retCode, wurcs, rDL)
+                else:
+                    logger.info("No results returned (%r) for entityId %r wurcs '%r'", retCode, entityId, wurcs)
+
                 if ii % 5 == 0:
                     logger.info("Fetched %d/%d", ii, numDescriptors)
-            except Exception as e:
+
+            except requests.RequestException as e:
                 logger.exception("Failing for (%r) wurcs (%r) with %s", entityId, wurcs, str(e))
+
         return accessionMapD
