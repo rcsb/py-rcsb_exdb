@@ -117,3 +117,4 @@
  6-Jan-2026 V1.33 Updates to TreeNodeListWorker to raise errors upon failures and allow for manual specification of tree lists to load
  2-Feb-2026 V1.34 Handle case of missing 'rcsb_entity_source_organism.source_type' in PolymerEntityExtractor
  7-May-2026 V1.35 Update EntryInfoEtlWorkflow to not stash data file if empty
+ 8-Jun-2026 V1.36 Update GlycanUtils to use built-in requests and new GlyTouCan API URL
