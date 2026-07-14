@@ -5,6 +5,8 @@
 # Selected utilities to update reference sequence assignments information
 # in the core_entity collection.
 #
+# NOTE: I don't think this file is used anymore...else, check handling of extendedIds (see "[:4]" references)
+#
 # Updates:
 #
 ##
