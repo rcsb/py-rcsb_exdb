@@ -96,6 +96,10 @@ class LigandNeighborMappingProvider(StashableBase):
         try:
             lnmEx = LigandNeighborMappingExtractor(cfgOb)
             lnD = lnmEx.getLigandNeighbors()
+            if not lnD:
+                # Guard against overwriting a good mapping file with an empty one
+                logger.error("No ligand neighbor mapping data returned - skipping export")
+                return False
             fp = self.__getMappingDataPath()
             tS = datetime.datetime.now().isoformat()
             vS = datetime.datetime.now().strftime("%Y-%m-%d")
