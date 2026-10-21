@@ -118,3 +118,5 @@
  2-Feb-2026 V1.34 Handle case of missing 'rcsb_entity_source_organism.source_type' in PolymerEntityExtractor
  7-May-2026 V1.35 Update EntryInfoEtlWorkflow to not stash data file if empty
  8-Jun-2026 V1.36 Update GlycanUtils to use built-in requests and new GlyTouCan API URL
+21-Oct-2026 V1.37 Stop forcing upper case on IDs in EntryInfoProvider and LigandNeighborMappingProvider (extended IDs); disable unused ReferenceSequence tests;
+                  fail the DrugBank load in ChemRefEtlWorker if the cache is missing or yields no documents, instead of loading an empty collection
