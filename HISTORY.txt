@@ -120,3 +120,5 @@
  8-Jun-2026 V1.36 Update GlycanUtils to use built-in requests and new GlyTouCan API URL
 21-Oct-2026 V1.37 Stop forcing upper case on IDs in EntryInfoProvider and LigandNeighborMappingProvider (extended IDs); disable unused ReferenceSequence tests;
                   fail the DrugBank load in ChemRefEtlWorker if the cache is missing or yields no documents, instead of loading an empty collection
+22-Oct-2026 V1.38 Remove unused ReferenceSequence* modules, UniProtCoreEtlWorker, their disabled tests and examples-seq scripts;
+                  drop the rcsb.utils.ec, rcsb.utils.go and rcsb.utils.seq dependencies (only used by the removed modules)
