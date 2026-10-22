@@ -52,7 +52,7 @@ class EntryInfoProvider(StashableBase):
             (dict): of entry-level annotations
         """
         try:
-            return self.__entryInfoD["entryInfo"][entryId.upper()] if entryId.upper() in self.__entryInfoD["entryInfo"] else {}
+            return self.__entryInfoD["entryInfo"][entryId] if entryId in self.__entryInfoD["entryInfo"] else {}
         except Exception as e:
             logger.error("Failing with %r", str(e))
         return {}

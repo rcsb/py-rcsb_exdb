@@ -4,6 +4,9 @@
 #
 # Utilities to cache content required to update referencence sequence annotations.
 #
+# NOTE: Confirm if this script is no longer used; else, will need to update to handle extendedIds (see "[:4]" references)
+#       --> Looks like it isn't used...
+#
 # Updates:
 #  25-May-2022 dwp Add error checking for SIFTS data loading
 ##

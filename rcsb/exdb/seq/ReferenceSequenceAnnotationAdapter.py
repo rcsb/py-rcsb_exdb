@@ -5,6 +5,9 @@
 # Selected utilities to update reference sequence annotations information
 # in the core_entity collection.
 #
+# NOTE: Confirm if this script is no longer used; else, will need to update to handle extendedIds (see "[:4]" references)
+#       --> Looks like it isn't used...
+#
 # Updates:
 #
 ##

@@ -4,6 +4,9 @@
 #
 # Utilities to cache referencence sequence data and mappings.
 #
+# NOTE: Confirm if this script is no longer used; else, will need to update to handle extendedIds (see "[:4]" references)
+#       --> Looks like it isn't used...(except by ReferenceSequenceAnnotationProvider.py, which itself isn't used)
+#
 # Updates:
 # 8-Apr-2020 jdw change testCache() conditions to specifically track missing matched reference Id codes.
 #

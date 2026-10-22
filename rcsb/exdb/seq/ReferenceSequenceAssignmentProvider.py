@@ -4,6 +4,9 @@
 #
 # Utilities to cache content required to update referencence sequence assignments.
 #
+# NOTE: Confirm if this script is no longer used; else, will need to update to handle extendedIds (see "[:4]" references)
+#       --> Possibly used by UniProtCoreEtlWorker.py...but operation 'etl_uniprot_core' is never used anymore
+#
 # Updates:
 #
 ##
