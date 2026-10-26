@@ -4,7 +4,8 @@
 # Date:    22-Sep-2021
 #
 # Update:
-#
+#  21-Oct-2026  dwp Look up entries by their stored ID case (provider no longer forces upper case); assert the
+#                   lookup result in testGetEntryInfo
 #
 ##
 """
@@ -53,8 +54,9 @@ class EntryInfoProviderTests(unittest.TestCase):
         self.assertTrue(ok)
         ok = eiP.update(self.__cfgOb, fmt="json", indent=3)
         self.assertTrue(ok)
-        riD = eiP.getEntryInfo("4en8")
+        riD = eiP.getEntryInfo("4EN8")
         logger.info("riD (%d) %r", len(riD), riD)
+        self.assertGreaterEqual(len(riD), 1)
         rL = eiP.getEntriesByPolymerEntityCount(count=2)
         self.assertGreaterEqual(len(rL), 5)
         ok = eiP.testCache(minCount=minCount)
@@ -72,7 +74,7 @@ class EntryInfoProviderTests(unittest.TestCase):
         ok = eiP.testCache(minCount=minCount)
         ok = eiP.update(cfgOb, fmt="json", indent=3)
         self.assertTrue(ok)
-        riD = eiP.getEntryInfo("1kip")
+        riD = eiP.getEntryInfo("1KIP")
         logger.info("riD (%d)", len(riD))
         self.assertGreaterEqual(len(riD), 1)
         configName = "site_info_configuration"

@@ -9,6 +9,9 @@
 #  3-Sep-2019  jdw move to rcsb.exdb.chemref
 #  7-Aug-2025  dwp change target DB and collection from "drugbank_core" to "dw" and "core_drugbank" (as part of transition to DW);
 #                  make use of configuration file for loading drugbank collection and setting indexed fields
+# 21-Oct-2026  dwp fail without loading if the DrugBank cache fails testCache() or yields no documents, rather than
+#                  replacing the collection with an empty one
+# 22-Oct-2026  dwp remove stale reference to the removed UniProtCoreEtlWorker
 #
 ##
 __docformat__ = "google en"
@@ -77,10 +80,16 @@ class ChemRefEtlWorker(object):
                 pw = self.__cfgOb.get("_DRUGBANK_AUTH_PASSWORD", sectionName=configName)
                 #
                 dbP = DrugBankProvider(cachePath=self.__cachePath, useCache=self.__useCache, username=user, password=pw)
+                if not dbP.testCache():
+                    logger.error("Resource %r cache is missing or incomplete in %r; skipping load", extResource, self.__cachePath)
+                    return False
                 #
                 crExt = ChemRefExtractor(self.__cfgOb)
                 idD = crExt.getChemCompAccessionMapping(extResource)
                 dList = dbP.getDocuments(mapD=idD)
+                if not dList:
+                    logger.error("Resource %r yielded no mapped documents; skipping load", extResource)
+                    return False
                 #
                 logger.info("Resource %r extracted mapped document length %d", extResource, len(dList))
                 logger.debug("Objects %r", dList[:2])
@@ -90,7 +99,7 @@ class ChemRefEtlWorker(object):
                 logger.info("Database %r collection %r index attributes %r", databaseNameMongo, collectionName, indexDL)
                 #
                 # For some reason, 'addValues' was being overwritten with an empty dict (https://github.com/rcsb/py-rcsb_exdb/commit/26bd79e9a2fffc97c034b4116dece9248d1c1f39)
-                # Will need to review this -- do we want to add the schema version values or not? (Also, see similar logic in UniProtCoreEtlWorker.py)
+                # Will need to review this -- do we want to add the schema version values or not?
                 # collectionVersion = sD.getCollectionVersion(collectionName)
                 # addValues = {"_schema_version": collectionVersion}
             #
