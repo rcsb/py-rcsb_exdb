@@ -6,6 +6,9 @@
 #
 # Updates:
 # 27-Jun-2019  jdw add JSON path tracking utilities.
+# 15-Sep-2026  dwp Retrieve document selections in batches (MongoDbUtil.fetchBatched) and build the
+#                  object dictionary incrementally; distinguish an empty result set from a failed
+#                  fetch and propagate the latter to the caller (see 'raiseOnFailure')
 #
 ##
 __docformat__ = "google en"
@@ -29,15 +32,35 @@ class ObjectExtractor(object):
     """Utilities to extract document features from the document object server."""
 
     def __init__(self, cfgOb, **kwargs):
+        """Extract document selections from the document object server.
+
+        Args:
+            cfgOb (obj): instance of ConfigUtil()
+            fetchBatchSize (int, optional): documents retrieved per server round trip. 0 disables
+                batching and restores the legacy single-cursor behavior. Defaults to the
+                MongoDbUtil default (DEFAULT_FETCH_BATCH_SIZE).
+            fetchSortKey (str, optional): indexed attribute used to page the result set. Defaults to "_id".
+            raiseOnFailure (bool, optional): re-raise on a failed selection rather than silently
+                returning an empty/partial result. Defaults to True. Note that a query which simply
+                matches no documents is NOT a failure - it returns an empty result with status True.
+        """
         self.__cfgOb = cfgOb
         self.__resourceName = "MONGO_DB"
         self.__mU = MarshalUtil()
         #
+        self.__statusOk = False
+        self.__selectionOk = True
         self.__objectD = self.__rebuildCache(**kwargs)
         self.__objPathD = {}
         self.__stringPathList = []
         self.__objValD = {}
         #
+
+    def getStatus(self):
+        """Return True if the selection completed successfully (including the case of a
+        successful selection that matched no documents), or False otherwise.
+        """
+        return self.__statusOk
 
     def getObjects(self):
         return self.__objectD
@@ -78,6 +101,7 @@ class ObjectExtractor(object):
         useCache = kwargs.get("useCache", True)
         keyAttribute = kwargs.get("keyAttribute", "entry")
         selectL = kwargs.get("selectionList", [])
+        raiseOnFailure = kwargs.get("raiseOnFailure", True)
         #
         cD = {keyAttribute: {}}
         try:
@@ -94,8 +118,14 @@ class ObjectExtractor(object):
                     ok = self.__mU.mkdir(pth)
                     ok = self.__mU.doExport(cacheFilePath, cD, **cacheKwargs)
                     logger.info("Saved object results (%d) status %r in %s", len(objectD), ok, cacheFilePath)
+            self.__statusOk = self.__selectionOk
         except Exception as e:
+            # A failed selection must not be silently reported as an empty one - downstream
+            # consumers would export empty/truncated resource files from a transient Mongo error.
             logger.exception("Failing with %s", str(e))
+            self.__statusOk = False
+            if raiseOnFailure:
+                raise
         return cD[keyAttribute]
 
     def __selectObjects(self, **kwargs):
@@ -111,38 +141,48 @@ class ObjectExtractor(object):
         stripObjectId = kwargs.get("stripObjectId", False)
         logIncrement = kwargs.get("logIncrement", 10000)
         #
+        fetchBatchSize = kwargs.get("fetchBatchSize", None)
+        fetchSortKey = kwargs.get("fetchSortKey", "_id")
+        #
         objectD = {}
-        try:
-            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                mg = MongoDbUtil(client)
-                if mg.collectionExists(databaseName, collectionName):
-                    logger.info("%s %s document count is %d", databaseName, collectionName, mg.count(databaseName, collectionName))
-                    qD = {}
-                    if selectionQueryD:
-                        qD.update(selectionQueryD)
-                    selectL = ["_id"]
-                    dL = mg.fetch(databaseName, collectionName, selectL, queryD=qD)
-                    numDoc = len(dL) if dL else 0
-                    logger.info("Selection %r fetch result count %d", selectL, numDoc)
+        with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+            mg = MongoDbUtil(client)
+            if not mg.collectionExists(databaseName, collectionName):
+                # Not raised - some collections are legitimately absent before their first load -
+                # but the selection is flagged so callers can tell this from an empty result set.
+                logger.error("Collection %s %s does not exist", databaseName, collectionName)
+                self.__selectionOk = False
+                return objectD
+            logger.info("%s %s estimated document count is %d", databaseName, collectionName, mg.estimatedCount(databaseName, collectionName))
+            qD = {}
+            if selectionQueryD:
+                qD.update(selectionQueryD)
+            selectL = ["_id"]
+            #
+            ii = 0
+            done = False
+            for dL in mg.fetchBatched(databaseName, collectionName, selectL, queryD=qD, batchSize=fetchBatchSize, sortKey=fetchSortKey):
+                for dD in dL:
+                    ii += 1
+                    if "_id" not in dD:
+                        continue
+                    rObj = mg.fetchOne(databaseName, collectionName, "_id", dD["_id"])
+                    if stripObjectId and rObj and "_id" in rObj:
+                        rObj.pop("_id")
+                    else:
+                        rObj["_id"] = str(rObj["_id"])
                     #
-                    for ii, dD in enumerate(dL, 1):
-                        if "_id" not in dD:
-                            continue
-                        rObj = mg.fetchOne(databaseName, collectionName, "_id", dD["_id"])
-                        if stripObjectId and rObj and "_id" in rObj:
-                            rObj.pop("_id")
-                        else:
-                            rObj["_id"] = str(rObj["_id"])
-                        #
-                        stKey = ".".join([rObj[ky] for ky in uniqueAttributes])
-                        objectD[stKey] = copy.copy(rObj)
-                        if objLimit and ii >= objLimit:
-                            break
-                        logger.debug("Saving %d %s", ii, stKey)
-                        if ii % logIncrement == 0 or ii == numDoc:
-                            logger.info("Extracting object (%d of %d)", ii, numDoc)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
+                    stKey = ".".join([rObj[ky] for ky in uniqueAttributes])
+                    objectD[stKey] = copy.copy(rObj)
+                    if objLimit and ii >= objLimit:
+                        done = True
+                        break
+                    logger.debug("Saving %d %s", ii, stKey)
+                    if ii % logIncrement == 0:
+                        logger.info("Extracting object (%d)", ii)
+                if done:
+                    break
+            logger.info("Selection %r fetch result count %d", selectL, ii)
         return objectD
         #
 
@@ -160,30 +200,44 @@ class ObjectExtractor(object):
         tV = kwargs.get("objectLimit", None)
         objLimit = int(tV) if tV is not None else None
         #
+        fetchBatchSize = kwargs.get("fetchBatchSize", None)
+        fetchSortKey = kwargs.get("fetchSortKey", "_id")
+        #
         objectD = {}
-        try:
-            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                mg = MongoDbUtil(client)
-                if mg.collectionExists(databaseName, collectionName):
-                    logger.info("%s %s document count is %d", databaseName, collectionName, mg.count(databaseName, collectionName))
-                    qD = {}
-                    if selectionQueryD:
-                        qD.update(selectionQueryD)
-                    dL = mg.fetch(databaseName, collectionName, selectL, queryD=qD, suppressId=True)
-                    logger.info("Selection %r fetch result count %d", selectL, len(dL))
-                    #
-                    for ii, rObj in enumerate(dL, 1):
-                        stKey = ".".join([rObj[ky] for ky in uniqueAttributes])
-                        if stripObjectId and rObj and "_id" in rObj:
-                            rObj.pop("_id")
-                        objectD[stKey] = copy.copy(rObj)
-                        if objLimit and ii >= objLimit:
-                            break
-                        # logger.debug("Saving %d %s", ii, stKey)
-                        # logger.debug("Current objectD keys %r", list(objectD.keys()))
-
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
+        with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+            mg = MongoDbUtil(client)
+            if not mg.collectionExists(databaseName, collectionName):
+                # Not raised - some collections are legitimately absent before their first load -
+                # but the selection is flagged so callers can tell this from an empty result set.
+                logger.error("Collection %s %s does not exist", databaseName, collectionName)
+                self.__selectionOk = False
+                return objectD
+            logger.info("%s %s estimated document count is %d", databaseName, collectionName, mg.estimatedCount(databaseName, collectionName))
+            qD = {}
+            if selectionQueryD:
+                qD.update(selectionQueryD)
+            #
+            # Documents are consumed batch-by-batch so that peak memory tracks the batch size
+            # rather than the size of the full result set. Any failure to retrieve a batch is
+            # raised here (after the retries applied by fetchBatched) rather than being
+            # reported as an empty selection.
+            #
+            ii = 0
+            done = False
+            for dL in mg.fetchBatched(databaseName, collectionName, selectL, queryD=qD, suppressId=True, batchSize=fetchBatchSize, sortKey=fetchSortKey):
+                for rObj in dL:
+                    ii += 1
+                    stKey = ".".join([rObj[ky] for ky in uniqueAttributes])
+                    if stripObjectId and rObj and "_id" in rObj:
+                        rObj.pop("_id")
+                    objectD[stKey] = copy.copy(rObj)
+                    if objLimit and ii >= objLimit:
+                        done = True
+                        break
+                logger.debug("Selection %r running fetch count %d", selectL, ii)
+                if done:
+                    break
+            logger.info("Selection %r fetch result count %d", selectL, ii)
         return objectD
         #
 

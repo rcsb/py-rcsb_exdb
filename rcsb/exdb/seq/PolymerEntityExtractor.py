@@ -10,6 +10,8 @@
 # 10-Dec-2024 dwp Sort extracted polymer entity sequence data by entity ID (alphabetically), to ensure consistent
 #                 ordering between coasts (order of sequence data influences results of mmseqs2 sequence searching)
 #  2-Feb-2026 dwp Handle case of missing 'rcsb_entity_source_organism.source_type'
+# 15-Sep-2026 dwp Propagate polymer entity fetch failures instead of returning an empty result,
+#                 and refuse to export an empty FASTA/taxon/details set
 #
 ##
 __docformat__ = "google en"
@@ -56,9 +58,19 @@ class PolymerEntityExtractor(object):
         logger.info("Exporting (%d) protein sequence records with missing source count (%d) status %r", len(rD), len(missingSrcD), ok1 and ok2)
 
     def getProteinSequenceDetails(self, minSeqLen=0):
-        """Get protein sequence and taxonomy data (required to build protein sequence fasta file)"""
+        """Get protein sequence and taxonomy data (required to build protein sequence fasta file)
+
+        Returns:
+            (dict, dict): protein sequence details keyed by entity id, and missing source names
+
+        Raises:
+            Exception: if the polymer entity selection could not be retrieved. Note that this is
+                distinct from a selection that legitimately returns no documents, which yields
+                an empty result without raising.
+        """
         missingSrcD = {}
         rD = {}
+        sortedD = OrderedDict()
         try:
             obEx = ObjectExtractor(
                 self.__cfgOb,
@@ -79,6 +91,8 @@ class PolymerEntityExtractor(object):
                 ],
             )
             #
+            if not obEx.getStatus():
+                raise ValueError("Selection failed for pdbx_core pdbx_core_polymer_entity")
             eCount = obEx.getCount()
             logger.info("Polymer entity count is %d", eCount)
             objD = obEx.getObjects()
@@ -183,7 +197,10 @@ class PolymerEntityExtractor(object):
             sortedD = OrderedDict((k, rD.pop(k)) for k in sorted(rD))
 
         except Exception as e:
+            # Do not mask a failed fetch as an empty result set - downstream steps would build
+            # and stash an empty FASTA and search database.
             logger.exception("Failing with %s", str(e))
+            raise
         return sortedD, missingSrcD
 
     def __getSourcePart(self, entityId, sourceOrgL, entityBeg, seqLen):
@@ -294,6 +311,10 @@ class PolymerEntityExtractor(object):
         """
         proteinSeqD, _ = self.getProteinSequenceDetails(minSeqLen=minSeqLen)
         ok = False
+        if not proteinSeqD:
+            # Guard against overwriting good resource files with empty ones
+            logger.error("No protein entity sequence data returned - skipping export of %r", fastaPath)
+            return False
 
         try:
             taxonL = []

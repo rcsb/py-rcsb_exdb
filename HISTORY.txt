@@ -122,3 +122,6 @@
                   fail the DrugBank load in ChemRefEtlWorker if the cache is missing or yields no documents, instead of loading an empty collection
 22-Oct-2026 V1.38 Remove unused ReferenceSequence* modules, UniProtCoreEtlWorker, their disabled tests and examples-seq scripts;
                   drop the rcsb.utils.ec, rcsb.utils.go and rcsb.utils.seq dependencies (only used by the removed modules)
+26-Oct-2026 V1.39 Fetch document selections in batches in ObjectExtractor (MongoDbUtil.fetchBatched, requires rcsb.db >= 1.816),
+                  and propagate fetch failures (rather than reporting them as empty result sets) in ObjectExtractor,
+                  PolymerEntityExtractor and LigandNeighborMappingExtractor
