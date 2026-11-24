@@ -10,7 +10,8 @@
 #                  object dictionary incrementally; distinguish an empty result set from a failed
 #                  fetch and propagate the latter to the caller (see 'raiseOnFailure')
 # 24-Nov-2026  dwp Don't write the cache file for a failed selection (e.g. a missing collection), so that a
-#                  later useCache run doesn't load it as a successful one
+#                  later useCache run doesn't load it as a successful one; take the paged-fetch defaults from the
+#                  configuration (MongoDbUtil(client, cfgOb=...): MONGO_DB_FETCH_*)
 #
 ##
 __docformat__ = "google en"
@@ -39,8 +40,8 @@ class ObjectExtractor(object):
         Args:
             cfgOb (obj): instance of ConfigUtil()
             fetchBatchSize (int, optional): documents retrieved per server round trip. 0 disables
-                batching and restores the legacy single-cursor behavior. Defaults to the
-                MongoDbUtil default (DEFAULT_FETCH_BATCH_SIZE).
+                batching and restores the legacy single-cursor behavior. Defaults to the configured
+                MONGO_DB_FETCH_BATCH_SIZE, else the MongoDbUtil default (10000).
             fetchSortKey (str, optional): indexed attribute used to page the result set. Defaults to "_id".
             raiseOnFailure (bool, optional): re-raise on a failed selection rather than silently
                 returning an empty/partial result. Defaults to True. Note that a query which simply
@@ -148,7 +149,7 @@ class ObjectExtractor(object):
         #
         objectD = {}
         with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-            mg = MongoDbUtil(client)
+            mg = MongoDbUtil(client, cfgOb=self.__cfgOb)
             if not mg.collectionExists(databaseName, collectionName):
                 # Not raised - some collections are legitimately absent before their first load -
                 # but the selection is flagged so callers can tell this from an empty result set.
@@ -207,7 +208,7 @@ class ObjectExtractor(object):
         #
         objectD = {}
         with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-            mg = MongoDbUtil(client)
+            mg = MongoDbUtil(client, cfgOb=self.__cfgOb)
             if not mg.collectionExists(databaseName, collectionName):
                 # Not raised - some collections are legitimately absent before their first load -
                 # but the selection is flagged so callers can tell this from an empty result set.

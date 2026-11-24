@@ -124,4 +124,5 @@
                   drop the rcsb.utils.ec, rcsb.utils.go and rcsb.utils.seq dependencies (only used by the removed modules)
 26-Oct-2026 V1.39 Fetch document selections in batches in ObjectExtractor (MongoDbUtil.fetchBatched, requires rcsb.db >= 1.818),
                   and propagate fetch failures (rather than reporting them as empty result sets) in ObjectExtractor,
-                  PolymerEntityExtractor and LigandNeighborMappingExtractor; don't cache a failed ObjectExtractor selection
+                  PolymerEntityExtractor and LigandNeighborMappingExtractor; don't cache a failed ObjectExtractor selection;
+                  ObjectExtractor takes its paged-fetch defaults from the configuration (MONGO_DB_FETCH_*)
