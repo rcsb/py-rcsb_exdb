@@ -32,7 +32,7 @@ dependencies = [
     "numpy",
     "jsonschema >= 2.6.0",
     "rcsb.utils.io >= 1.48",
-    "rcsb.db >= 1.816",
+    "rcsb.db >= 1.818",
     "rcsb.utils.chem >= 0.84",
     "rcsb.utils.chemref >= 0.91",
     "rcsb.utils.config >= 0.40",

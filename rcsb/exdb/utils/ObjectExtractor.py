@@ -9,6 +9,8 @@
 # 15-Sep-2026  dwp Retrieve document selections in batches (MongoDbUtil.fetchBatched) and build the
 #                  object dictionary incrementally; distinguish an empty result set from a failed
 #                  fetch and propagate the latter to the caller (see 'raiseOnFailure')
+# 24-Nov-2026  dwp Don't write the cache file for a failed selection (e.g. a missing collection), so that a
+#                  later useCache run doesn't load it as a successful one
 #
 ##
 __docformat__ = "google en"
@@ -113,7 +115,7 @@ class ObjectExtractor(object):
                 else:
                     objectD = self.__selectObjects(**kwargs)
                 cD[keyAttribute] = objectD
-                if cacheFilePath:
+                if cacheFilePath and self.__selectionOk:
                     pth, _ = os.path.split(cacheFilePath)
                     ok = self.__mU.mkdir(pth)
                     ok = self.__mU.doExport(cacheFilePath, cD, **cacheKwargs)
