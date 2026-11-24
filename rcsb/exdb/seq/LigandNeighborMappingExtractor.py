@@ -6,6 +6,7 @@
 #
 # Updates:
 #  17-Jul-2024 dwp Stop fetching and including rcsb_ligand_neighbors.ligand_is_bound, since no longer populating that field
+#  15-Sep-2026 dwp Propagate polymer entity instance fetch failures instead of returning None
 #
 ##
 __docformat__ = "google en"
@@ -32,6 +33,10 @@ class LigandNeighborMappingExtractor(object):
 
         Returns:
             dict: {'entryId_entityId':  [(chem_comp_id, isBound),...], }
+
+        Raises:
+            Exception: if the polymer entity instance selection could not be retrieved. A
+                selection that legitimately matches no documents returns an empty dict instead.
         """
         return self.__extractLigandNeighbors()
 
@@ -61,6 +66,8 @@ class LigandNeighborMappingExtractor(object):
                     "rcsb_ligand_neighbors.ligand_comp_id",
                 ],
             )
+            if not obEx.getStatus():
+                raise ValueError("Selection failed for %s %s" % (databaseName, collectionName))
             eCount = obEx.getCount()
             logger.info("Total neighbor count (%d)", eCount)
             rD = {}
@@ -81,4 +88,7 @@ class LigandNeighborMappingExtractor(object):
             logger.info("Unique instance %d", len(rD))
             return rD
         except Exception as e:
+            # Do not mask a failed fetch as an empty mapping - the caller would export and
+            # potentially stash an empty ligand neighbor mapping file.
             logger.exception("Failing with %s", str(e))
+            raise
